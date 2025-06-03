@@ -45,6 +45,7 @@ public class OperatorStaff {
     private String role;
 
     @Column(name = "status", length = 20)
+    @Enumerated
     private String status;
 
     @Column(name = "created_at")

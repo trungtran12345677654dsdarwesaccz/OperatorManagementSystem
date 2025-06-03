@@ -43,6 +43,7 @@ public class Manager {
 
     // CHK_Manager_Status CHECK  (([status]='retired' OR [status]='inactive' OR [status]='active'))
     @Column(name = "status", length = 20)
+    @Enumerated
     private String status;
 
     @Column(name = "created_at")
