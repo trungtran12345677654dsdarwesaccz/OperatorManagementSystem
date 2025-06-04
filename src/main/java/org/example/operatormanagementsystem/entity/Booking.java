@@ -15,6 +15,7 @@ import java.util.Set;
 @Table(name = "booking")
 @ToString(of = {"bookingId", "status", "deliveryDate"})
 public class Booking {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_id")
@@ -55,7 +56,7 @@ public class Booking {
     private Set<Feedback> feedbacks;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<GoogleMapLog> ggMapsLogs;
+    private Set<GoogleMapLog> googleMapLogs;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<IssueLog> issueLogs;

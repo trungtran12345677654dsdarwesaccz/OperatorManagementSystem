@@ -13,29 +13,30 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "transport_unit")
-@ToString(of = {"transportId", "name"})
+@ToString(of = {"transportId", "name", "licensePlate"})
 public class TransportUnit {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "transport_id")
     private Integer transportId;
 
-    @Column(length = 100)
+    @Column(name = "name", length = 100)
     private String name;
 
     @Column(name = "driver_name", length = 100)
     private String driverName;
 
-    @Column(length = 20)
+    @Column(name = "phone", length = 20)
     private String phone;
 
     @Column(name = "license_plate", length = 20)
     private String licensePlate;
 
-    @Column(length = 30)
+    @Column(name = "status", length = 30)
     private String status;
 
-    @Column(length = 255)
+    @Column(name = "note", length = 255)
     private String note;
 
     @Column(name = "created_at")
@@ -46,8 +47,8 @@ public class TransportUnit {
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
     }
 }

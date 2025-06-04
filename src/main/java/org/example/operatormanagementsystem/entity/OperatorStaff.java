@@ -2,7 +2,6 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -38,8 +37,6 @@ public class OperatorStaff {
     @Column(length = 30)
     private String role;
 
-    @Column(name = "status", length = 20)
-    @Enumerated
     @Column(length = 20)
     private String status;
 
@@ -50,9 +47,9 @@ public class OperatorStaff {
     @JoinColumn(name = "manager_id")
     private Manager manager;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_id")
-    private Users admin;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id")
+    private Users users;
 
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Booking> bookings;

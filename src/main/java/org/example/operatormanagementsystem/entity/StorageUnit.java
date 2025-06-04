@@ -6,33 +6,38 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "storage_unit")
-@ToString(of = {"storageId", "name"})
+@ToString(of = {"storageId", "name", "status"})
 public class StorageUnit {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "storage_id")
     private Integer storageId;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(length = 255)
+    @Column(name = "address", length = 255)
     private String address;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
     private Manager manager;
 
-    @Column(length = 20)
+    @Column(name = "phone", length = 20)
     private String phone;
 
-    @Column(length = 30)
+    @Column(name = "status", length = 30)
     private String status;
 
-    @Column(length = 255)
+    @Column(name = "note", length = 255)
     private String note;
 
     @Column(name = "created_at")
@@ -43,6 +48,8 @@ public class StorageUnit {
 
     @PrePersist
     protected void onCreate() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
     }
 }

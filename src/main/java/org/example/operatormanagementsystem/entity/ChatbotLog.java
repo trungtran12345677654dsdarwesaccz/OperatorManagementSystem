@@ -5,11 +5,16 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "chatbot_log")
-@ToString(of = {"chatbotId", "question"})
+@ToString(of = {"chatbotId", "askedAt"})
 public class ChatbotLog {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "chatbot_id")
@@ -23,17 +28,21 @@ public class ChatbotLog {
     @JoinColumn(name = "operator_id")
     private OperatorStaff operatorStaff;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "question", columnDefinition = "NVARCHAR(MAX)")
     private String question;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "response", columnDefinition = "NVARCHAR(MAX)")
     private String response;
 
     @Column(name = "asked_at")
     private LocalDateTime askedAt;
 
     @PrePersist
-    protected void onCreate() {
-        if (askedAt == null) askedAt = LocalDateTime.now();
+    protected void onAsk() {
+        if (this.askedAt == null) {
+            this.askedAt = LocalDateTime.now();
+        }
     }
 }
