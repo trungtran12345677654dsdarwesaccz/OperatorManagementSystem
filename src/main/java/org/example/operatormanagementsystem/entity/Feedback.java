@@ -1,27 +1,22 @@
 package org.example.operatormanagementsystem.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "feedback")
-@ToString(of = {"feedbackId", "createdAt"})
+@ToString(of = {"feedbackId", "content"})
 public class Feedback {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "feedback_id")
     private Integer feedbackId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id") // FK column name in 'feedback' table
+    @JoinColumn(name = "booking_id")
     private Booking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,19 +27,20 @@ public class Feedback {
     @JoinColumn(name = "operator_id")
     private OperatorStaff operatorStaff;
 
-    @Column(name = "content", length = 500)
+    @Column(length = 500)
     private String content;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "process_status") // SQL type is datetime
+    @Column(name = "process_status")
     private LocalDateTime processStatus;
+
+    @Column(name = "order_id")
+    private Integer orderId;
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        if (createdAt == null) createdAt = LocalDateTime.now();
     }
 }

@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -14,7 +15,6 @@ import java.util.Set;
 @Table(name = "booking")
 @ToString(of = {"bookingId", "status", "deliveryDate"})
 public class Booking {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_id")
@@ -55,7 +55,7 @@ public class Booking {
     private Set<Feedback> feedbacks;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<GoogleMapLog> googleMapLogs;
+    private Set<GoogleMapLog> ggMapsLogs;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<IssueLog> issueLogs;

@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Getter
