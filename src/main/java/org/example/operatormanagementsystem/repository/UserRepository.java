@@ -1,11 +1,12 @@
 package org.example.operatormanagementsystem.repository;
 
-import org.springframework.security.core.userdetails.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.example.operatormanagementsystem.entity.Users;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-
-public interface UserRepository {
-    Optional<Users> findByUsername(String username);
-    Optional<Users> findByEmail(String username);
+@Repository
+public interface UserRepository extends JpaRepository<Users, String> {
+    Optional<Users> findByFullName(String fullName);
+    Optional<Users> findByEmail(String email);
 }

@@ -9,9 +9,8 @@ import lombok.Data;
 
 @Data
 public class LoginRequest {
-    @NotBlank(message = "UserName không được để trống ")
-    @Size(min = 4, max = 20, message = "UserName từ 4->20 Kí tự")
-    private String username;
+    @NotBlank(message = "Email không được để trống ")
+    private String email;
 // @NotPlank : chuỗi (String) không được rỗng (null), không được trống ("")
 // và không được chỉ chứa các ký tự khoảng trắng (ví dụ: " ").
     @NotBlank(message = "Mật khẩu không được rỗng")

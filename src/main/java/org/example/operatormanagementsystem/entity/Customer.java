@@ -2,6 +2,8 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -50,8 +52,8 @@ public class Customer {
 
     // CHK_Customer_Status CHECK  (([status]='suspended' OR [status]='inactive' OR [status]='active'))
     @Column(name = "status", length = 20)
-    @Enumerated
-    private String status;
+    @Enumerated(EnumType.STRING)
+    UserStatus status;
 
 
 

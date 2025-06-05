@@ -2,39 +2,37 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
-@Table(name = "transport") // SQL table name
-@ToString(of = {"progressId", "status", "updatedAt"})
-public class Transport { // Class name from your image
-
+@Table(name = "transport")
+@ToString(of = {"progressId", "status"})
+public class Transport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "progress_id") // SQL PK column name
+    @Column(name = "progress_id")
     private Integer progressId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id") // FK column name in 'transport' table
+    @JoinColumn(name = "booking_id")
     private Booking booking;
 
-    @Column(name = "status", length = 50)
+    @Column(length = 50)
     private String status;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "note", length = 255)
+    @Column(length = 255)
     private String note;
 
+    @Column(name = "order_id")
+    private Integer orderId;
+
     @PrePersist
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    protected void onCreate() {
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
     }
 }
