@@ -19,8 +19,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 
-@AllArgsConstructor @Builder
-
 @Entity
 @Table(name = "storage_unit")
 @ToString(of = {"storageId", "name", "status"})

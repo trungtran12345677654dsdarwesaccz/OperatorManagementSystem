@@ -61,7 +61,7 @@ public class Customer {
     private String status;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id") // This 'id' column in 'customer' table is the FK to 'users.id'
     private Users users;
 
