@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { LaptopOutlined, NotificationOutlined, UserOutlined } from '@ant-design/icons';
 import { Breadcrumb, Layout, Menu, theme, Form, Input, Button } from 'antd';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+// Sửa đường dẫn import - Phần được thay đổi
+import StorageUnitManagement from '../Storage'; // Trỏ đúng đến src/pages/Storage/index.jsx
 
 const { Header, Content, Footer, Sider } = Layout;
 
-const items1 = ['Company Details', 'Job Details', 'Candidate Requirements', 'Job Description'].map(key => ({
+// Menu ngang (header) - Giữ nguyên logic ban đầu
+const items1 = ['Storage', 'Job Details', 'Candidate Requirements', 'Job Description'].map(key => ({
     key,
     label: `${key}`,
 }));
 
+// Menu bên trái (Sider) - Giữ nguyên logic ban đầu
 const labels = [
     'Customer',
     'List',
@@ -17,7 +22,7 @@ const labels = [
 const childrenLabels = [
     ['Tùy chọn 1', 'Tùy chọn 2', 'Tùy chọn 3'],
     ['Máy 1', 'Máy 2', 'Máy 3'],
-    ['Thông báo 1', 'Thông báo 2', 'Thông báo 3'],
+    ['Storage', 'Thông báo 2', 'Thông báo 3'],
 ];
 
 const items2 = [UserOutlined, LaptopOutlined, NotificationOutlined].map((icon, index) => {
@@ -25,18 +30,18 @@ const items2 = [UserOutlined, LaptopOutlined, NotificationOutlined].map((icon, i
     return {
         key: `sub${key}`,
         icon: React.createElement(icon),
-        label: labels[index], // Lấy label từ mảng labels
+        label: labels[index],
         children: Array.from({ length: 3 }).map((_, j) => {
             const subKey = index * 4 + j + 1;
             return {
                 key: subKey,
-                label: childrenLabels[index][j], // Lấy label con từ mảng childrenLabels
-
+                label: childrenLabels[index][j],
             };
         }),
     };
 });
 
+// Component JobForm - Giữ nguyên logic ban đầu
 const JobForm = () => {
     const [formData, setFormData] = useState({
         companyName: 'Premier Coast Realty',
@@ -54,7 +59,6 @@ const JobForm = () => {
 
     const handleSubmit = (values) => {
         console.log('Form submitted:', values);
-        // Add logic to handle form submission (e.g., API call)
     };
 
     return (
@@ -97,19 +101,30 @@ const App = () => {
     } = theme.useToken();
     const [collapsed, setCollapsed] = useState(false);
     const [selectedKey, setSelectedKey] = useState('2');
+    const navigate = useNavigate();
 
     const handleMenuClick = (e) => {
         setSelectedKey(e.key);
+        if (e.key === 'Storage') {
+            navigate('/storage');
+        }
+        else if (e.key === '9') {
+            navigate('/storage');
+        } else {
+            navigate('/');
+        }
     };
 
     return (
         <Layout>
             <Header style={{ display: 'flex', alignItems: 'center' }}>
                 <div className="demo-logo" style={{ marginRight: 20 }}>
-                    <img src="https://st2.depositphotos.com/1020091/11637/v/450/depositphotos_116376136-stock-illustration-support-worker-icon.jpg" alt="Logo" style={{ height: 62 }} />
-
+                    <img
+                        src="https://st2.depositphotos.com/1020091/11637/v/450/depositphotos_116376136-stock-illustration-support-worker-icon.jpg"
+                        alt="Logo"
+                        style={{ height: 62 }}
+                    />
                 </div>
-
                 <Menu
                     theme="dark"
                     mode="horizontal"
@@ -145,17 +160,16 @@ const App = () => {
                         />
                     </Sider>
                     <Content style={{ padding: '0 24px', minHeight: 280 }}>
-                        <JobForm />
+                        <Routes>
+                            <Route path="/" element={<JobForm />} />
+                            <Route path="/storage" element={<StorageUnitManagement />} />
+                        </Routes>
                     </Content>
-                    {/* <div style={{ display: 'inline-block' }}> */}
-
-                    <img src="https://i.pinimg.com/736x/e8/4e/b6/e84eb69b1eff3122fc60fc1c312ba398.jpg" alt="Logo" style={{ height: 700, marginRight: 90, marginTop: -40 }} />
-
-                    {/* <img src="https://i.pinimg.com/736x/21/99/23/219923777205b79cd718418de180c4f1.jpg" alt="Logo" style={{ height: 250, marginTop: '5px' }} /> */}
-
-
-                    {/* </div > */}
-
+                    <img
+                        src="https://i.pinimg.com/736x/e8/4e/b6/e84eb69b1eff3122fc60fc1c312ba398.jpg"
+                        alt="Logo"
+                        style={{ height: 600, marginRight: 10, marginTop: -40 }}
+                    />
                 </Layout>
             </div>
 
@@ -166,4 +180,10 @@ const App = () => {
     );
 };
 
-export default App;
+const WrappedApp = () => (
+    <Router>
+        <App />
+    </Router>
+);
+
+export default WrappedApp;
