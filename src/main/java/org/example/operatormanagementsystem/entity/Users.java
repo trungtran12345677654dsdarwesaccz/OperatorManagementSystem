@@ -1,8 +1,16 @@
 package org.example.operatormanagementsystem.entity;
 
+<<<<<<< Updated upstream
 
 import jakarta.persistence.*;
 import lombok.*;
+=======
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+
+>>>>>>> Stashed changes
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -23,10 +31,24 @@ public class Users { // Class name from your image
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "full_name", nullable = false, length = 100)
+    @Column(name = "full_name", nullable = false, length = 50)
     private String fullName;
 
+<<<<<<< Updated upstream
     @Column(name = "email", nullable = false, length = 100) // Uniqueness handled by @Table
+=======
+
+
+
+    @Column(name = "username", nullable = false, length = 50)
+    private String username;
+
+    @Column(name = "gender", length = 10)
+    private String gender;
+
+    @Column(name = "email", nullable = false, length = 100) // Uniqueness handled by @Table
+
+>>>>>>> Stashed changes
     private String email;
 
     @Column(name = "phone", length = 20)
@@ -47,6 +69,19 @@ public class Users { // Class name from your image
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private OperatorStaff operatorStaff;
 
+<<<<<<< Updated upstream
+=======
+
+
+    @CreatedDate
+    @Column(updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    private LocalDateTime createdDate;
+
+
+
+
+>>>>>>> Stashed changes
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {

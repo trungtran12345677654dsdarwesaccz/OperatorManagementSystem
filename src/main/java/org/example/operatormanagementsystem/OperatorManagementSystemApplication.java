@@ -11,3 +11,7 @@ public class OperatorManagementSystemApplication {
     }
 
 }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes

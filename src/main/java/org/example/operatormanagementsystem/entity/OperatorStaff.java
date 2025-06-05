@@ -32,8 +32,16 @@ public class OperatorStaff {
     @Column(name = "username", nullable = false, length = 50)
     private String username;
 
+
     @Column(name = "password", nullable = false, length = 100)
     private String password;
+
+    @Column(name = "gender", length = 10)
+    private String gender;
+
+
+
+
 
     @Column(name = "email", length = 100)
     private String email;
@@ -68,6 +76,7 @@ public class OperatorStaff {
 
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<GoogleMapLog> googleMapLogs;
+
 
     @PrePersist
     protected void onCreate() {

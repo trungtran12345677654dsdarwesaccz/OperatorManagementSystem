@@ -1,5 +1,12 @@
 package org.example.operatormanagementsystem.entity;
 
+
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -8,8 +15,12 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
+<<<<<<< Updated upstream
 @AllArgsConstructor
 @Builder
+=======
+@AllArgsConstructor @Builder
+>>>>>>> Stashed changes
 @Entity
 @Table(name = "storage_unit")
 @ToString(of = {"storageId", "name", "status"})

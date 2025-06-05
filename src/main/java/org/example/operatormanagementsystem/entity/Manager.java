@@ -35,6 +35,9 @@ public class Manager {
     @Column(name = "password", nullable = false, length = 100) // Should be password_hash
     private String password;
 
+    @Column(name = "gender", length = 10)
+    private String gender;
+
     @Column(name = "email", length = 100) // Potentially redundant
     private String email;
 
@@ -57,11 +60,13 @@ public class Manager {
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<StorageUnit> storageUnits;
 
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+
         // Sync from User if needed, e.g., upon creation if these fields should match Users
         // if (this.user != null) {
         //     this.fullname = this.user.getFullName();

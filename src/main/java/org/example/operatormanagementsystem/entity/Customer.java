@@ -22,8 +22,22 @@ public class Customer {
     @Column(name = "customer_id")
     private Integer customerId;
 
+<<<<<<< Updated upstream
+=======
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    // This annotation ensures that 'managerId' (PK of Manager) is populated with the ID of the associated 'Users' entity.
+    @JoinColumn(name = "customer_id") // Specifies that 'manager_id' column is used for both PK and FK.
+    private Users user;
+
+>>>>>>> Stashed changes
     @Column(name = "fullname", nullable = false, length = 100)
     private String fullname;
+
+
+
+    @Column(name = "gender", length = 10)
+    private String gender;
 
     @Column(name = "email", length = 100)
     private String email;
@@ -47,10 +61,13 @@ public class Customer {
     @Column(name = "status", length = 20)
     private String status;
 
+<<<<<<< Updated upstream
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id") // This 'id' column in 'customer' table is the FK to 'users.id'
     private Users user;
 
+=======
+>>>>>>> Stashed changes
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Booking> bookings;
 
@@ -60,10 +77,24 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Feedback> feedbacks;
 
+
     @PrePersist
+
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
     }
+<<<<<<< Updated upstream
 }
+=======
+
+
+//    @PrePersist
+//    protected void onCreate() {
+//        if (createdAt == null) {
+//            createdAt = LocalDateTime.now();
+//        }
+//    }
+}
+>>>>>>> Stashed changes
