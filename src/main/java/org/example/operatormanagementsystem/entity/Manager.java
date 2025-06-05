@@ -1,9 +1,8 @@
 package org.example.operatormanagementsystem.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -46,17 +45,11 @@ public class Manager {
 
     // CHK_Manager_Status CHECK  (([status]='retired' OR [status]='inactive' OR [status]='active'))
     @Column(name = "status", length = 20)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    UserStatus status;
 
-    @CreatedDate
-    @Column(name = "created_at", updatable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    //@CreatedDate
-    //@Column(name = "created_date", updatable = false)
-    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    //private LocalDateTime createdDate;
 
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<CustomerService> customerServices;
@@ -67,13 +60,16 @@ public class Manager {
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<StorageUnit> storageUnits;
 
-
-
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
         // Sync from User if needed, e.g., upon creation if these fields should match Users
         // if (this.user != null) {
         //     this.fullname = this.user.getFullName();
         //     this.email = this.user.getEmail();
         //     this.phone = this.user.getPhone();
         // }
-
+    }
 }
