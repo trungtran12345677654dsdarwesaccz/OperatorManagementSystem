@@ -12,4 +12,3 @@ public interface StorageUnitRepository extends JpaRepository<StorageUnit, Long> 
     List<StorageUnit> findByNameContainingOrAddressContainingOrStatusContaining(String name, String address, String status);
 
 }
-
