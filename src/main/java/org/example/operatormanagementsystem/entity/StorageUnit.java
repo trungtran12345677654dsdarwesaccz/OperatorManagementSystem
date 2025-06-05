@@ -15,12 +15,12 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-<<<<<<< Updated upstream
+
 @AllArgsConstructor
 @Builder
-=======
+
 @AllArgsConstructor @Builder
->>>>>>> Stashed changes
+
 @Entity
 @Table(name = "storage_unit")
 @ToString(of = {"storageId", "name", "status"})
