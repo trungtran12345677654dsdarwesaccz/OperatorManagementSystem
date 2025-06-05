@@ -6,16 +6,11 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "revenue")
-@ToString(of = {"revenueId", "beneficiaryType", "amount", "date"})
+@ToString(of = {"revenueId", "amount"})
 public class Revenue {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "revenue_id")
@@ -37,12 +32,12 @@ public class Revenue {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
-    @Column(name = "amount", precision = 18, scale = 2)
+    @Column(precision = 18, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "date") // SQL type is 'date'
+    @Column
     private LocalDate date;
 
-    @Column(name = "description", length = 255)
+    @Column(length = 255)
     private String description;
 }

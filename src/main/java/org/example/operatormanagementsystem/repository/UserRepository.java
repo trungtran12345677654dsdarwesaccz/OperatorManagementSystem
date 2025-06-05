@@ -1,11 +1,12 @@
 package org.example.operatormanagementsystem.repository;
 
-import org.springframework.security.core.userdetails.User;
+import org.example.operatormanagementsystem.base.BaseRepository;
 import org.example.operatormanagementsystem.entity.Users;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-public interface UserRepository {
-    Optional<Users> findByUsername(String username);
-    Optional<Users> findByEmail(String username);
+@Repository
+public interface UserRepository extends BaseRepository<Users, Integer> {
+    Optional<Users> findByEmail(String email);
 }

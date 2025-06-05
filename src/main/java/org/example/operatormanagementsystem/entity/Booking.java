@@ -1,9 +1,7 @@
 package org.example.operatormanagementsystem.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -17,7 +15,6 @@ import java.util.Set;
 @Table(name = "booking")
 @ToString(of = {"bookingId", "status", "deliveryDate"})
 public class Booking {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_id")
@@ -42,11 +39,7 @@ public class Booking {
     @Column(name = "status", length = 30)
     private String status;
 
-    @CreatedDate
-    //@Column(name = "created_date", updatable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    //private LocalDateTime createdDate;
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "delivery_date")
@@ -62,7 +55,7 @@ public class Booking {
     private Set<Feedback> feedbacks;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<GoogleMapLog> googleMapLogs;
+    private Set<GoogleMapLog> ggMapsLogs;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<IssueLog> issueLogs;
@@ -79,10 +72,10 @@ public class Booking {
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Transport> transports;
 
-//    @PrePersist
-//    protected void onCreate() {
-//        if (this.createdAt == null) {
-//            this.createdAt = LocalDateTime.now();
-//        }
-//    }
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+    }
 }
