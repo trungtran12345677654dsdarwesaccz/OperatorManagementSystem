@@ -1,7 +1,10 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -40,7 +43,15 @@ public class Customer {
     @Column(name = "district", length = 50)
     private String district;
 
-    @Column(name = "created_at")
+    @Column(name = "password", nullable = false, length = 100) // Should be password_hash
+    private String password;
+
+    @CreatedDate
+    //@Column(name = "created_date", updatable = false)
+    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    //private LocalDateTime createdDate;
+    @Column(name = "created_at", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdAt;
 
     // CHK_Customer_Status CHECK  (([status]='suspended' OR [status]='inactive' OR [status]='active'))
@@ -60,10 +71,10 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Feedback> feedbacks;
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
+//    @PrePersist
+//    protected void onCreate() {
+//        if (createdAt == null) {
+//            createdAt = LocalDateTime.now();
+//        }
+//    }
 }

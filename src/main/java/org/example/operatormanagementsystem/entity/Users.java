@@ -1,9 +1,11 @@
 package org.example.operatormanagementsystem.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import org.springframework.data.annotation.CreatedDate;
 import java.util.Set;
 
 @Getter
@@ -35,6 +37,12 @@ public class Users { // Class name from your image
     @Column(name = "address", length = 255)
     private String address;
 
+    @Column(length = 30)
+    private String role;
+
+    @Column(name = "password", nullable = false, length = 100) // Should be password_hash
+    private String password;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -47,10 +55,11 @@ public class Users { // Class name from your image
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private OperatorStaff operatorStaff;
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
+    @CreatedDate
+    @Column(updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    private LocalDateTime createdDate;
+
+
+
 }

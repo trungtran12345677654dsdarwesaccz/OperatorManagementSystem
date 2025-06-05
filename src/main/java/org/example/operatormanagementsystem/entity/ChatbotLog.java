@@ -1,7 +1,9 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -36,13 +38,18 @@ public class ChatbotLog {
     @Column(name = "response", columnDefinition = "NVARCHAR(MAX)")
     private String response;
 
-    @Column(name = "asked_at")
+    @CreatedDate
+    //@Column(name = "created_date", updatable = false)
+    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    //private LocalDateTime createdDate;
+    @Column(name = "asked_at", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime askedAt;
 
-    @PrePersist
-    protected void onAsk() {
-        if (this.askedAt == null) {
-            this.askedAt = LocalDateTime.now();
-        }
-    }
+//    @PrePersist
+//    protected void onAsk() {
+//        if (this.askedAt == null) {
+//            this.askedAt = LocalDateTime.now();
+//        }
+//    }
 }

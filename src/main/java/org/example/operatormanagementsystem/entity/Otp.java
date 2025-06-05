@@ -1,7 +1,9 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -24,16 +26,24 @@ public class Otp {
     @Column(name = "created_by", length = 100)
     private String createdBy;
 
-    @Column(name = "created_date")
+    @CreatedDate
+    @Column(name = "created_date", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdDate;
 
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
+    //@CreatedDate
+    //@Column(name = "created_date", updatable = false)
+    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    //private LocalDateTime createdDate;
+
     @Column(name = "updated_date")
     private LocalDateTime updatedDate;
 
-    @Column(name = "expired_time", nullable = false)
+    @Column(name = "expired_time", nullable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime expiredTime;
 
     @Column(length = 20, nullable = false)

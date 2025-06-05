@@ -1,7 +1,9 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -33,17 +35,23 @@ public class GoogleMapLog {
     @Column(name = "map_url", length = 500)
     private String mapUrl;
 
-    @Column(name = "requested_at")
+    //@CreatedDate
+    //@Column(name = "created_date", updatable = false)
+    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    //private LocalDateTime createdDate;
+    @CreatedDate
+    @Column(name = "requested_at", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime requestedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "operator_id")
     private OperatorStaff operatorStaff;
 
-    @PrePersist
-    protected void onRequest() {
-        if (this.requestedAt == null) {
-            this.requestedAt = LocalDateTime.now();
-        }
-    }
+//    @PrePersist
+//    protected void onRequest() {
+//        if (this.requestedAt == null) {
+//            this.requestedAt = LocalDateTime.now();
+//        }
+//    }
 }

@@ -1,8 +1,10 @@
 package org.example.operatormanagementsystem.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -36,10 +38,18 @@ public class Feedback {
     @Column(name = "content", length = 500)
     private String content;
 
-    @Column(name = "created_at")
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdAt;
 
-    @Column(name = "process_status") // SQL type is datetime
+    //@CreatedDate
+    //@Column(name = "created_date", updatable = false)
+    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    //private LocalDateTime createdDate;
+
+    @Column(name = "process_status", updatable = false) // SQL type is datetime
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime processStatus;
 
     @PrePersist

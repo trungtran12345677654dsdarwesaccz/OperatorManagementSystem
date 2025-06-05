@@ -1,7 +1,9 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -46,8 +48,15 @@ public class Manager {
     @Column(name = "status", length = 20)
     private String status;
 
-    @Column(name = "created_at")
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdAt;
+
+    //@CreatedDate
+    //@Column(name = "created_date", updatable = false)
+    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    //private LocalDateTime createdDate;
 
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<CustomerService> customerServices;
@@ -58,16 +67,13 @@ public class Manager {
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<StorageUnit> storageUnits;
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
+
+
         // Sync from User if needed, e.g., upon creation if these fields should match Users
         // if (this.user != null) {
         //     this.fullname = this.user.getFullName();
         //     this.email = this.user.getEmail();
         //     this.phone = this.user.getPhone();
         // }
-    }
+
 }
