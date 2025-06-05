@@ -21,26 +21,35 @@ public class Otp {
     @Column(length = 100)
     private String email;
 
-    @Column(name = "created_by", length = 100)
-    private String createdBy;
 
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
+        @Column(name = "created_date")
+//         Thời điểm bản ghi được tạo ra lần đầu trong database.
+        private LocalDateTime createdDate;
 
-    @Column(name = "updated_by", length = 100)
-    private String updatedBy;
 
-    @Column(name = "updated_date")
-    private LocalDateTime updatedDate;
+        @Column(name = "updated_date")
+//         Thời điểm bản ghi được cập nhật lần cuối.
+        private LocalDateTime updatedDate;
 
-    @Column(name = "expired_time", nullable = false)
-    private LocalDateTime expiredTime;
+        @Column(name = "expired_time", nullable = false)
+        private LocalDateTime expiredTime;
+//         Thời điểm hết hiệu lực của bản ghi đó
 
     @Column(length = 20, nullable = false)
     private String otp;
 
     @PrePersist
     protected void onCreate() {
-        if (createdDate == null) createdDate = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        if (createdDate == null) createdDate = now;
+        if (updatedDate == null) updatedDate = now;
+        if (expiredTime == null) expiredTime = now.plusMinutes(1);
     }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedDate = LocalDateTime.now();
+        expiredTime = updatedDate.plusMinutes(1); // Cập nhật hiệu lực sau 1 phút mỗi lần update
+    }
+
 }

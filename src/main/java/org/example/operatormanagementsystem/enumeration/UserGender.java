@@ -1,5 +1,5 @@
 package org.example.operatormanagementsystem.enumeration;
 
-public enum UserStatus {
-    ACTIVE, INACTIVE
+public enum UserGender {
+    MALE,FEMALE,OTHER;
 }

@@ -3,7 +3,9 @@ package org.example.operatormanagementsystem.controller;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.example.operatormanagementsystem.dto.request.LoginRequest;
+import org.example.operatormanagementsystem.dto.request.RegisterRequest;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
+import org.example.operatormanagementsystem.dto.response.UserResponse;
 import org.example.operatormanagementsystem.service.AuthenticationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,8 +30,12 @@ public class AuthenticationController {
         // Điều này sẽ trả về HTTP status 200 OK và AuthLoginResponse trong body
         return ResponseEntity.ok(authLoginResponse);
     }
-    @GetMapping("/me")
-    public ResponseEntity<String> getMe(Authentication authentication) {
-        return ResponseEntity.ok("Hello " + authentication.getName());
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request)  {
+        UserResponse userResponse = authenticationService.register(request);
+        return ResponseEntity.ok(userResponse);
     }
+
+
 }

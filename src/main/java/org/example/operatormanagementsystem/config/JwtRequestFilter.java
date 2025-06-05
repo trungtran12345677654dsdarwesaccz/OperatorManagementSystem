@@ -30,7 +30,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // ✅ CHẶN FILTER đối với các endpoint công khai
+        //  CHẶN FILTER đối với các endpoint công khai
         if (
                 path.equals("/api/auth/login") ||
                         path.equals("/api/auth/register") ||

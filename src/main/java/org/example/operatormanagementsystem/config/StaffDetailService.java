@@ -26,7 +26,8 @@ public class StaffDetailService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole()))
+                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name())) // doi tra ve string
+//         user.getRole().name() chuyển enum thành chuỗi (ví dụ: "STAFF").
         );
     }
 }
