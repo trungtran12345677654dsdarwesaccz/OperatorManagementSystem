@@ -1,9 +1,8 @@
 package org.example.operatormanagementsystem.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -25,6 +24,11 @@ public class Customer {
     @Column(name = "customer_id")
     private Integer customerId;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId // This annotation ensures that 'managerId' (PK of Manager) is populated with the ID of the associated 'Users' entity.
+    @JoinColumn(name = "customer_id") // Specifies that 'manager_id' column is used for both PK and FK.
+    private Users user;
+
     @Column(name = "fullname", nullable = false, length = 100)
     private String fullname;
 
@@ -43,24 +47,15 @@ public class Customer {
     @Column(name = "district", length = 50)
     private String district;
 
-    @Column(name = "password", nullable = false, length = 100) // Should be password_hash
-    private String password;
-
-    @CreatedDate
-    //@Column(name = "created_date", updatable = false)
-    //@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    //private LocalDateTime createdDate;
-    @Column(name = "created_at", updatable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     // CHK_Customer_Status CHECK  (([status]='suspended' OR [status]='inactive' OR [status]='active'))
     @Column(name = "status", length = 20)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    UserStatus status;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id") // This 'id' column in 'customer' table is the FK to 'users.id'
-    private Users users;
+
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Booking> bookings;
@@ -71,10 +66,10 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Feedback> feedbacks;
 
-//    @PrePersist
-//    protected void onCreate() {
-//        if (createdAt == null) {
-//            createdAt = LocalDateTime.now();
-//        }
-//    }
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }
