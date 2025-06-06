@@ -34,11 +34,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-security</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -75,17 +74,28 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+<<<<<<< Updated upstream
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
+=======
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-thymeleaf</artifactId>-->
+        <!--        </dependency>-->
+>>>>>>> Stashed changes
         <!-- Spring Web để dùng @Controller, @GetMapping -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+<<<<<<< Updated upstream
         <!-- Thymeleaf (nếu dùng HTML template) -->
+=======
+        <!--         Thymeleaf (nếu dùng HTML template) -->
+>>>>>>> Stashed changes
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -106,8 +116,8 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
-            <scope>provided</scope>
+            <version>1.18.30</version> <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -132,12 +142,35 @@
             <version>0.11.1</version>
             <scope>runtime</scope>
         </dependency>
+<<<<<<< Updated upstream
 
 <!--        <dependency>-->
 <!--            <groupId>org.springframework.security</groupId>-->
 <!--            <artifactId>spring-security-test</artifactId>-->
 <!--            <scope>test</scope>-->
 <!--        </dependency>-->
+=======
+        <dependency>
+            <groupId>jakarta.mail</groupId>
+            <artifactId>jakarta.mail-api</artifactId>
+            <version>2.1.2</version> </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <!--        jakarta.mail-api: Cung cấp API (giao diện) để viết code gửi email.
+        spring-boot-starter-mail: Giúp thực hiện và tự động cấu hình việc
+        gửi email trong ứng dụng Spring Boot.-->
+
+        <!--        jakarta.mail-api là lý thuyết (các hàm có thể gọi).
+        spring-boot-starter-mail là thực hành (làm cho các hàm đó chạy được
+        và tự động chuẩn bị môi trường cho bạn).-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-security</artifactId>-->
+        <!--        </dependency>-->
+>>>>>>> Stashed changes
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
