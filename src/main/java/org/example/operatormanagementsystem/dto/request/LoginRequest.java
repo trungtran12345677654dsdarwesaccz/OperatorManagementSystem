@@ -11,7 +11,7 @@ import lombok.Data;
 public class LoginRequest {
     @NotBlank(message = "Email không được để trống ")
     private String email;
-    // @NotPlank : chuỗi (String) không được rỗng (null), không được trống ("")
+// @NotPlank : chuỗi (String) không được rỗng (null), không được trống ("")
 // và không được chỉ chứa các ký tự khoảng trắng (ví dụ: " ").
     @NotBlank(message = "Mật khẩu không được rỗng")
     @Size(min = 6, message = "Mật khẩu phải từ 6 Kí tự ")

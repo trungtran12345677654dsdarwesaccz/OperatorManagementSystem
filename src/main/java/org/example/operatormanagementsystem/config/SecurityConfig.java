@@ -44,7 +44,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return new BCryptPasswordEncoder(); // Sử dụng BCryptPasswordEncoder
     }
 
-    @Bean
+   @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);

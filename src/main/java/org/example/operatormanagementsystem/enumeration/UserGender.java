@@ -1,5 +1,6 @@
 package org.example.operatormanagementsystem.enumeration;
 
-public enum UserRole {
-    STAFF, MANAGER, CUSTOMER;
+public enum UserGender {
+    MALE,FEMALE,OTHER;
 }
+    

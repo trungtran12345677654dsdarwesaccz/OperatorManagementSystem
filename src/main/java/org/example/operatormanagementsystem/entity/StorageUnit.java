@@ -1,5 +1,12 @@
 package org.example.operatormanagementsystem.entity;
 
+
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 
