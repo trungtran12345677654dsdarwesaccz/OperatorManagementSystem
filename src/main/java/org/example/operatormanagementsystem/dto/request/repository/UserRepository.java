@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.repository;
+package org.example.operatormanagementsystem.dto.request.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
