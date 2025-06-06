@@ -1,7 +1,7 @@
 package org.example.operatormanagementsystem.entity;
 
 
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +12,11 @@ import org.springframework.data.annotation.CreatedDate;
 
 
 import java.time.LocalDateTime;
+
+import org.example.operatormanagementsystem.enumeration.UserGender;
+import org.example.operatormanagementsystem.enumeration.UserRole;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
+import org.springframework.data.annotation.CreatedDate;
 import java.util.Set;
 
 @Getter
@@ -23,7 +28,7 @@ import java.util.Set;
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
 })
-@ToString(of = {"id", "fullName", "email"})
+@ToString(of = {"id", "username", "email"})
 public class Users { // Class name from your image
 
     @Id
@@ -34,15 +39,10 @@ public class Users { // Class name from your image
     @Column(name = "full_name", nullable = false, length = 50)
     private String fullName;
 
-
-
-
-
-    @Column(name = "username", nullable = false, length = 50)
+    @Column(name = "username", nullable = false, length = 100)
     private String username;
 
-    @Column(name = "gender", length = 10)
-    private String gender;
+
 
     @Column(name = "email", nullable = false, length = 100) // Uniqueness handled by @Table
 
@@ -55,16 +55,31 @@ public class Users { // Class name from your image
     @Column(name = "address", length = 255)
     private String address;
 
+    @Column(name ="role")
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
+
+    @Column(name = "gender")
+    @Enumerated(EnumType.STRING)
+    private UserGender gender;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
+
+    @Column(name = "password", nullable = false, length = 100) // Should be password_hash
+    private String password;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Customer customer;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Manager manager;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private OperatorStaff operatorStaff;
 
 
@@ -75,12 +90,4 @@ public class Users { // Class name from your image
 
 
 
-
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
 }

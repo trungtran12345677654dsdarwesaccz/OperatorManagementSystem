@@ -1,7 +1,10 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -12,9 +15,9 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "manager", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username")
+        @UniqueConstraint(columnNames = "manager_id")
 })
-@ToString(of = {"managerId", "username"})
+@ToString(of = {"managerId"})
 public class Manager {
 
     @Id // No @GeneratedValue because manager_id gets its value from Users.id
@@ -23,33 +26,9 @@ public class Manager {
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId // This annotation ensures that 'managerId' (PK of Manager) is populated with the ID of the associated 'Users' entity.
-    @JoinColumn(name = "manager_id") // Specifies that 'manager_id' column is used for both PK and FK.
-    private Users user;
+    @JoinColumn(name = "id") // Specifies that 'manager_id' column is used for both PK and FK.
+    private Users users;
 
-    @Column(name = "fullname", nullable = false, length = 100) // Potentially redundant if Users has fullname
-    private String fullname;
-
-    @Column(name = "username", nullable = false, length = 50)
-    private String username;
-
-    @Column(name = "password", nullable = false, length = 100) // Should be password_hash
-    private String password;
-
-    @Column(name = "gender", length = 10)
-    private String gender;
-
-    @Column(name = "email", length = 100) // Potentially redundant
-    private String email;
-
-    @Column(name = "phone", length = 20) // Potentially redundant
-    private String phone;
-
-    // CHK_Manager_Status CHECK  (([status]='retired' OR [status]='inactive' OR [status]='active'))
-    @Column(name = "status", length = 20)
-    private String status;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<CustomerService> customerServices;
@@ -61,17 +40,4 @@ public class Manager {
     private Set<StorageUnit> storageUnits;
 
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-
-        // Sync from User if needed, e.g., upon creation if these fields should match Users
-        // if (this.user != null) {
-        //     this.fullname = this.user.getFullName();
-        //     this.email = this.user.getEmail();
-        //     this.phone = this.user.getPhone();
-        // }
-    }
 }
