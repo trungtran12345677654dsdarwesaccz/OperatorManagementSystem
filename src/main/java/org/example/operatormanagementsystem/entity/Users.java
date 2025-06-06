@@ -4,6 +4,13 @@ package org.example.operatormanagementsystem.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+
+
 import java.time.LocalDateTime;
 
 import org.example.operatormanagementsystem.enumeration.UserGender;
@@ -38,6 +45,8 @@ public class Users { // Class name from your image
 
 
     @Column(name = "email", nullable = false, length = 100) // Uniqueness handled by @Table
+
+
     private String email;
 
     @Column(name = "phone", length = 20)
