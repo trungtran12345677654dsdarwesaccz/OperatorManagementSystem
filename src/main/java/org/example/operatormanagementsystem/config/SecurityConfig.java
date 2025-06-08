@@ -54,7 +54,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/register", "/api/auth/login", "/api/auth/me", "/api/auth/sendOTP", "/api/auth/verifyOTP", "/auth/verify-email-code",
             "/api/user/forget-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
-            "/api/users", "/api/users/{id}", "/api/users/{id}/status"
+            "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp","/api/auth/sendOTP"
     };
 
     private static final String[] GET_PUBLIC_ENDPOINTS = {
