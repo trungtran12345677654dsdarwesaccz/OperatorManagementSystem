@@ -21,17 +21,13 @@ import java.util.Set;
 public class Manager {
 
     @Id // No @GeneratedValue because manager_id gets its value from Users.id
-    @Column(name = "manager_id")
+    @Column(name = "manager_id", nullable = false)
     private Integer managerId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId // This annotation ensures that 'managerId' (PK of Manager) is populated with the ID of the associated 'Users' entity.
-    @JoinColumn(name = "id") // Specifies that 'manager_id' column is used for both PK and FK.
+    @JoinColumn(name = "manager_id") // Specifies that 'manager_id' column is used for both PK and FK.
     private Users users;
-
-
-    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<CustomerService> customerServices;
 
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<OperatorStaff> managedOperatorStaffs; // Renamed to avoid conflict if OperatorStaff also has a manager field for a different purpose
@@ -39,5 +35,11 @@ public class Manager {
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<StorageUnit> storageUnits;
 
+    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Feedback> feedbacks;
+
+    // Mối quan hệ mới: Manager có nhiều bản thống kê doanh số
+    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ManagerSaleSummary> salesSummaries;
 
 }

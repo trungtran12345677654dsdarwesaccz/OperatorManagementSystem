@@ -27,17 +27,21 @@ public class OperatorStaff {
     @JoinColumn(name = "operator_id")
     private Users users;
 
-    @Column(name = "admin_id") // Simple integer ID, no explicit FK in provided DDL
-    private Integer adminId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private Manager manager;
 
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Booking> bookings;
 
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Feedback> feedbacks;
+
+    @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ChatbotLog> chatbotLogs;
 
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Feedback> feedbacks;
-
+    private Set<ManagerFeedbackToStaff> receivedFeedbacks;
 }
+
 
