@@ -80,6 +80,9 @@ public class Users  implements UserDetails { // Class name from your image
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private OperatorStaff operatorStaff;
 
+    @Column(name = "last_password_reset_date")
+    private LocalDateTime lastPasswordResetDate; // Thời gian cuối cùng mật khẩu được đặt lại thành công
+
 
     @CreatedDate
     @Column(updatable = false)
@@ -101,6 +104,7 @@ public class Users  implements UserDetails { // Class name from your image
         // Đã có trường 'password' trong class Users của bạn.
         return this.password;
     }
+
 
     @Override
     public String getUsername() {

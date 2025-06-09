@@ -3,23 +3,24 @@ package org.example.operatormanagementsystem.controller;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.example.operatormanagementsystem.dto.request.LoginRequest;
-import org.example.operatormanagementsystem.dto.request.RegisterRequest;
-import org.example.operatormanagementsystem.dto.request.SendOTPRequest;
-import org.example.operatormanagementsystem.dto.request.VerifyOTPRequest;
+import org.example.operatormanagementsystem.dto.request.*;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.dto.response.UserResponse;
+import org.example.operatormanagementsystem.entity.Users;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.service.AuthenticationService;
 import org.example.operatormanagementsystem.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
+import java.util.List;
 
 
 @RequestMapping("/api/auth")
@@ -29,76 +30,179 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final EmailService emailService;
 
-    @RestController
-    @RequestMapping("/api/auth")
-    public class AuthController {
+    // Đây là endpoint cho BƯỚC 1: Xác thực password và GỬI OTP
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) { // <-- Thay đổi AuthLoginResponse thành String ở đây
+        try {
+            // authenticationService.login(request) bây giờ trả về String
+            String message = authenticationService.login(request); // <-- Dòng này bây giờ đã đúng kiểu
 
-        @Autowired
-        private AuthenticationService authenticationService;
+            // Trả về HTTP status 200 OK và thông báo String
+            return ResponseEntity.ok(message);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (MessagingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send OTP: " + e.getMessage());
+        }
+    }
 
-        // Đây là endpoint cho BƯỚC 1: Xác thực password và GỬI OTP
-        @PostMapping("/login")
-        public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) { // <-- Thay đổi AuthLoginResponse thành String ở đây
-            try {
-                // authenticationService.login(request) bây giờ trả về String
-                String message = authenticationService.login(request); // <-- Dòng này bây giờ đã đúng kiểu
+    // Bạn vẫn cần endpoint riêng cho BƯỚC 2: Xác minh OTP và nhận token
+    // (như đã thảo luận ở các câu trả lời trước đó)
+    @PostMapping("/login/verify-otp")
+    public ResponseEntity<?> completeLoginWithOtp(@Valid @RequestBody VerifyOTPRequest request) {
+        try {
+            // Gọi phương thức verifyOtp mới đã được sửa đổi trong EmailServiceImpl (Canvas)
+            AuthLoginResponse authLoginResponse = emailService.verifyOtp(request);
+            return ResponseEntity.ok(authLoginResponse);
 
-                // Trả về HTTP status 200 OK và thông báo String
-                return ResponseEntity.ok(message);
-            } catch (AuthenticationException e) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-            } catch (MessagingException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send OTP: " + e.getMessage());
+        } catch (BadCredentialsException e) {
+            // Xử lý các lỗi BadCredentialsException (OTP không hợp lệ/hết hạn/không tìm thấy, hoặc tài khoản inactive)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            // Xử lý lỗi khi không tìm thấy người dùng sau xác minh OTP
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // Hoặc HttpStatus.UNAUTHORIZED
+        } catch (AuthenticationException e) {
+            // Xử lý các loại AuthenticationException khác
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (Exception e) {
+            // Xử lý các lỗi không mong muốn khác
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred during OTP verification: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/sendOTP")
+    public ResponseEntity<String> sendOTP(@Valid @RequestBody SendOTPRequest request) { // Đã thay đổi kiểu trả về
+        try {
+            emailService.sendOTP(request.getEmail());
+
+            // Trả về chuỗi thông báo thành công
+            return ResponseEntity.ok("OTP has been sent to your email.");
+        } catch (MessagingException e) {
+            // Xử lý lỗi khi gửi email
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to send OTP email: " + e.getMessage());
+        } catch (Exception e) {
+            // Xử lý các lỗi không mong muốn khác
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        UserResponse userResponse = authenticationService.register(request);
+        return ResponseEntity.ok(userResponse);
+    }
+
+    // Endpoint Yêu cầu thay đổi trạng thái (VD: từ INACTIVE -> PENDING_APPROVAL)
+    @PostMapping("/request-status-change")
+    public ResponseEntity<String> requestStatusChange(@Valid @RequestBody StatusChangeRequest request) {
+        try {
+            String message = authenticationService.requestStatusChange(request);
+            return ResponseEntity.ok(message);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to submit status change request: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/manager/update-status/{email}")
+    @PreAuthorize("hasRole('MANAGER')") // Chỉ người dùng có vai trò MANAGER mới được truy cập
+    public ResponseEntity<String> updateUserStatusByManager(@PathVariable String email,
+                                                            @Valid @RequestBody ManagerStatusUpdateRequest request) { // <-- Nhận request body với trạng thái mới
+        try {
+            // Gọi phương thức service với userId và newStatus từ request body
+            Users updatedUser = authenticationService.updateStatusByManager(email, request.getNewStatus());
+
+            String responseMessage;
+            if (request.getNewStatus() == UserStatus.ACTIVE) {
+                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " has been activated.";
+            } else if (request.getNewStatus() == UserStatus.REJECTED) {
+                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " has been rejected.";
+            } else if (request.getNewStatus() == UserStatus.INACTIVE) {
+                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " has been set to inactive.";
+            } else {
+                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " status updated to " + request.getNewStatus();
             }
+            return ResponseEntity.ok(responseMessage);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (IllegalArgumentException e) { // Bắt thêm IllegalArgumentException nếu có từ service
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + e.getMessage());
         }
+    }
 
-        // Bạn vẫn cần endpoint riêng cho BƯỚC 2: Xác minh OTP và nhận token
-        // (như đã thảo luận ở các câu trả lời trước đó)
-        @PostMapping("/login/verify-otp")
-        public ResponseEntity<?> completeLoginWithOtp(@Valid @RequestBody VerifyOTPRequest request) {
-            try {
-                // Gọi phương thức verifyOtp mới đã được sửa đổi trong EmailServiceImpl (Canvas)
-                AuthLoginResponse authLoginResponse = emailService.verifyOtp(request);
-                return ResponseEntity.ok(authLoginResponse);
-
-            } catch (BadCredentialsException e) {
-                // Xử lý các lỗi BadCredentialsException (OTP không hợp lệ/hết hạn/không tìm thấy, hoặc tài khoản inactive)
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-            } catch (UsernameNotFoundException e) {
-                // Xử lý lỗi khi không tìm thấy người dùng sau xác minh OTP
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // Hoặc HttpStatus.UNAUTHORIZED
-            } catch (AuthenticationException e) {
-                // Xử lý các loại AuthenticationException khác
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-            } catch (Exception e) {
-                // Xử lý các lỗi không mong muốn khác
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred during OTP verification: " + e.getMessage());
-            }
+    @GetMapping("/manager/user-details/{email}")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<UserResponse> getUserDetailsForManager(@PathVariable String email) {
+        try {
+            UserResponse userDetails = authenticationService.getUserDetailsForManager(email);
+            return ResponseEntity.ok(userDetails);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new UserResponse());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new UserResponse());
         }
+    }
 
-        @PostMapping("/sendOTP")
-        public ResponseEntity<String> sendOTP(@Valid @RequestBody SendOTPRequest request) { // Đã thay đổi kiểu trả về
-            try {
-                emailService.sendOTP(request.getEmail());
-
-                // Trả về chuỗi thông báo thành công
-                return ResponseEntity.ok("OTP has been sent to your email.");
-            } catch (MessagingException e) {
-                // Xử lý lỗi khi gửi email
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Failed to send OTP email: " + e.getMessage());
-            } catch (Exception e) {
-                // Xử lý các lỗi không mong muốn khác
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("An unexpected error occurred: " + e.getMessage());
-            }
+    // Endpoint để lấy danh sách người dùng theo trạng thái
+    @GetMapping("/manager/users-by-status/{status}")
+//    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<List<UserResponse>> getUsersByStatus(@PathVariable UserStatus status) {
+        List<UserResponse> users = authenticationService.getUsersByStatus(status);
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 204 No Content nếu danh sách rỗng
         }
+        return ResponseEntity.ok(users); // Trả về danh sách trực tiếp
+    }
 
-        @PostMapping("/register")
-        public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-            UserResponse userResponse = authenticationService.register(request);
-            return ResponseEntity.ok(userResponse);
+    // Endpoint để lấy danh sách người dùng cần quản lý hành động (PENDING_APPROVAL hoặc INACTIVE)
+    @GetMapping("/manager/users-for-action")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<List<UserResponse>> getUsersNeedingManagerAction() {
+        List<UserResponse> users = authenticationService.getUsersNeedingManagerAction();
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 204 No Content nếu danh sách rỗng
         }
+        return ResponseEntity.ok(users); // Trả về danh sách trực tiếp
+    }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            authenticationService.requestPasswordReset(request.getEmail());
+            // Luôn trả về thông báo chung chung để tránh tiết lộ email tồn tại hay không
+            return ResponseEntity.ok("If an account with that email exists, a password reset link has been sent.");
+        } catch (UsernameNotFoundException e) {
+            // Vẫn trả về thông báo chung ngay cả khi không tìm thấy người dùng
+            return ResponseEntity.ok("If an account with that email exists, a password reset link has been sent.");
+        } catch (MessagingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send password reset email: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred during password reset request: " + e.getMessage());
+        }
+    }
+
+    // --- NEW ENDPOINT: Đặt lại mật khẩu ---
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            authenticationService.resetPassword(request.getToken(), request.getNewPassword());
+            return ResponseEntity.ok("Password has been reset successfully.");
+        } catch (BadCredentialsException e) { // Dùng BadCredentialsException cho token không hợp lệ/hết hạn
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (UsernameNotFoundException e) { // Người dùng không tìm thấy dù token hợp lệ (ít xảy ra)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) { // Mật khẩu mới không hợp lệ (ví dụ: quá ngắn, quá dài)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred during password reset: " + e.getMessage());
+        }
     }
 }
+

@@ -1,6 +1,8 @@
 package org.example.operatormanagementsystem.dto.response;
 import jakarta.persistence.Enumerated;
 import lombok.Data;
+import org.example.operatormanagementsystem.enumeration.UserRole;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
 
 @Data
 public class UserResponse {
@@ -11,7 +13,7 @@ public class UserResponse {
     private String password;
     private String email;
     @Enumerated
-    private String status;
+    private UserStatus status;
     @Enumerated
-    private String role;
+    private UserRole role;
 }
