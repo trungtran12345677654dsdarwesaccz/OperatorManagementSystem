@@ -1,22 +1,22 @@
+
 package org.example.operatormanagementsystem.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-
-
 import java.time.LocalDateTime;
 
 import org.example.operatormanagementsystem.enumeration.UserGender;
 import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+
+import java.util.Collections;
 import java.util.Set;
 
 @Getter
@@ -29,7 +29,7 @@ import java.util.Set;
         @UniqueConstraint(columnNames = "email")
 })
 @ToString(of = {"id", "username", "email"})
-public class Users { // Class name from your image
+public class Users  implements UserDetails { // Class name from your image
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,8 +45,6 @@ public class Users { // Class name from your image
 
 
     @Column(name = "email", nullable = false, length = 100) // Uniqueness handled by @Table
-
-
     private String email;
 
     @Column(name = "phone", length = 20)
@@ -89,5 +87,56 @@ public class Users { // Class name from your image
     private LocalDateTime createdDate;
 
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Trả về danh sách các quyền (roles) của người dùng.
+        // Dựa trên trường 'role' (enum UserRole) bạn đã có.
+        // Spring Security thường yêu cầu các quyền có tiền tố "ROLE_".
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        // Trả về mật khẩu của người dùng.
+        // Đã có trường 'password' trong class Users của bạn.
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        // Trả về tên đăng nhập của người dùng.
+        // Trong trường hợp này, bạn có trường 'username' hoặc có thể dùng 'email'.
+        // Dựa trên cấu trúc của bạn, 'email' có vẻ là username duy nhất.
+        // Nếu bạn muốn dùng 'username' làm tên đăng nhập, hãy trả về 'this.username'.
+        return this.email; // Hoặc return this.username; tùy theo thiết kế của bạn
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        // Trả về true nếu tài khoản không hết hạn.
+        // Mặc định là true nếu bạn không có logic hết hạn tài khoản.
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        // Trả về true nếu tài khoản không bị khóa.
+        // Mặc định là true nếu bạn không có logic khóa tài khoản.
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        // Trả về true nếu thông tin xác thực (mật khẩu) không hết hạn.
+        // Mặc định là true nếu bạn không có logic hết hạn mật khẩu.
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        // Trả về true nếu tài khoản được kích hoạt.
+        // Dựa trên trường 'status' (enum UserStatus) bạn đã có.
+        return this.status == UserStatus.ACTIVE;
+    }
 
 }

@@ -27,6 +27,11 @@ public class Feedback {
     @JoinColumn(name = "operator_id")
     private OperatorStaff operatorStaff;
 
+    // Trong Entity Feedback.java (bạn đã cung cấp)
+    @ManyToOne(fetch = FetchType.LAZY   )
+    @JoinColumn(name = "manager_id") // <-- Đây là trường "manager" trong Feedback
+    private Manager manager; // <-- Nó có tồn tại!
+
     @Column(length = 500)
     private String content;
 

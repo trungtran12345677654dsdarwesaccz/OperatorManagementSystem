@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,53 +18,74 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
+    // 1. View receipts list - GET all payments
     @GetMapping
-    public List<Payment> getAllPayments() {
-        return paymentService.getAllPayments();
+    public ResponseEntity<List<Payment>> getAllPayments() {
+        List<Payment> payments = paymentService.getAllPayments();
+        return ResponseEntity.ok(payments);
     }
 
+    // 2. View receipts detail - GET payment by ID
     @GetMapping("/{id}")
     public ResponseEntity<Payment> getPaymentById(@PathVariable Integer id) {
-        Optional<Payment> payment = paymentService.getPaymentById(id);
-        return payment.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Payment payment = paymentService.getPaymentById(id);
+        if (payment != null) {
+            return ResponseEntity.ok(payment);
+        }
+        return ResponseEntity.notFound().build();
     }
 
+    // 3. Search receipts - Search by various criteria
+    @GetMapping("/search")
+    public ResponseEntity<List<Payment>> searchPayments(
+            @RequestParam(required = false) String payerType,
+            @RequestParam(required = false) Integer payerId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
+
+        List<Payment> payments = paymentService.searchPayments(payerType, payerId, status, startDate, endDate);
+        return ResponseEntity.ok(payments);
+    }
+
+    // 4. Manage Customer Receipts - CREATE new payment
     @PostMapping
-    public Payment createPayment(@RequestBody Payment payment) {
-        return paymentService.savePayment(payment);
+    public ResponseEntity<Payment> createPayment(@RequestBody Payment payment) {
+        Payment savedPayment = paymentService.createPayment(payment);
+        return ResponseEntity.ok(savedPayment);
     }
 
+    // 5. Manage Customer Receipts - UPDATE existing payment
     @PutMapping("/{id}")
-    public ResponseEntity<Payment> updatePayment(@PathVariable Integer id, @RequestBody Payment updatedPayment) {
-        return paymentService.getPaymentById(id)
-                .map(payment -> {
-                    // Update các field cho đúng (hoặc dùng modelMapper)
-                    payment.setBooking(updatedPayment.getBooking());
-                    payment.setPayerType(updatedPayment.getPayerType());
-                    payment.setPayerId(updatedPayment.getPayerId());
-                    payment.setAmount(updatedPayment.getAmount());
-                    payment.setPaidDate(updatedPayment.getPaidDate());
-                    payment.setStatus(updatedPayment.getStatus());
-                    payment.setNote(updatedPayment.getNote());
-                    Payment saved = paymentService.savePayment(payment);
-                    return ResponseEntity.ok(saved);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Payment> updatePayment(@PathVariable Integer id, @RequestBody Payment payment) {
+        Payment updatedPayment = paymentService.updatePayment(id, payment);
+        if (updatedPayment != null) {
+            return ResponseEntity.ok(updatedPayment);
+        }
+        return ResponseEntity.notFound().build();
     }
 
+    // 6. Manage Customer Receipts - DELETE payment
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePayment(@PathVariable Integer id) {
-        if (paymentService.getPaymentById(id).isPresent()) {
-            paymentService.deletePayment(id);
+        boolean deleted = paymentService.deletePayment(id);
+        if (deleted) {
             return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/search")
-    public List<Payment> searchPayments(@RequestParam("q") String keyword) {
-        return paymentService.searchPayments(keyword);
+    // 7. Get payments by status
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<Payment>> getPaymentsByStatus(@PathVariable String status) {
+        List<Payment> payments = paymentService.getPaymentsByStatus(status);
+        return ResponseEntity.ok(payments);
+    }
+
+    // 8. Get payments by payer type
+    @GetMapping("/payer-type/{payerType}")
+    public ResponseEntity<List<Payment>> getPaymentsByPayerType(@PathVariable String payerType) {
+        List<Payment> payments = paymentService.getPaymentsByPayerType(payerType);
+        return ResponseEntity.ok(payments);
     }
 }
