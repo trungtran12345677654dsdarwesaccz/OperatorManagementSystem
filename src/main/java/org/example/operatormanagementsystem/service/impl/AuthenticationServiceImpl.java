@@ -50,7 +50,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        // Lấy thông tin user sau khi xác thực thành công
+        // Lấyx thông tin user sau khi xác thực thành công
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         Users user = userRepository.findByEmail(userDetails.getUsername())
