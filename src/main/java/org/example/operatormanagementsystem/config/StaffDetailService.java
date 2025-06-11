@@ -31,4 +31,3 @@ public class StaffDetailService implements UserDetailsService {
         );
     }
 }
-
