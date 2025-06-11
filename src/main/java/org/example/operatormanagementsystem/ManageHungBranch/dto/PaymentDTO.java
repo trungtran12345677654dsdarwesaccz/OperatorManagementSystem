@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @Builder
 public class PaymentDTO {
     private Integer paymentId;
-    private Integer bookingId;
     private String payerType;
     private Integer payerId;
     private BigDecimal amount;

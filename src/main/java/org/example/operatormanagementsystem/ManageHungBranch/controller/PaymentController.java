@@ -1,8 +1,11 @@
 package org.example.operatormanagementsystem.ManageHungBranch.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.PaymentDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.service.PaymentService;
 import org.example.operatormanagementsystem.entity.Payment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,79 +15,65 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/payments")
+@Tag(name = "Receipt Management", description = "API tiếp nhận hóa đơn khách hàng - Manage Customer Receipts Received by Staff")
 public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;
 
-    // 1. View receipts list - GET all payments
+    // GET: Lấy danh sách tất cả payment receipts
     @GetMapping
-    public ResponseEntity<List<Payment>> getAllPayments() {
-        List<Payment> payments = paymentService.getAllPayments();
+    public ResponseEntity<List<PaymentDTO>> getAllPayments() {
+        List<PaymentDTO> payments = paymentService.getAllPayments();
         return ResponseEntity.ok(payments);
     }
 
-    // 2. View receipts detail - GET payment by ID
+    // GET: Lấy chi tiết payment receipt theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<Payment> getPaymentById(@PathVariable Integer id) {
-        Payment payment = paymentService.getPaymentById(id);
-        if (payment != null) {
-            return ResponseEntity.ok(payment);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable Integer id) {
+        PaymentDTO payment = paymentService.getPaymentById(id);
+        return ResponseEntity.ok(payment);
     }
 
-    // 3. Search receipts - Search by various criteria
+    // GET: Tìm kiếm payment receipts theo status
     @GetMapping("/search")
-    public ResponseEntity<List<Payment>> searchPayments(
-            @RequestParam(required = false) String payerType,
-            @RequestParam(required = false) Integer payerId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate) {
-
-        List<Payment> payments = paymentService.searchPayments(payerType, payerId, status, startDate, endDate);
+    public ResponseEntity<List<PaymentDTO>> searchPaymentsByStatus(@RequestParam String status) {
+        List<PaymentDTO> payments = paymentService.searchPaymentsByStatus(status);
         return ResponseEntity.ok(payments);
     }
 
-    // 4. Manage Customer Receipts - CREATE new payment
+    // GET: Tìm kiếm payment receipts theo payer type
+    @GetMapping("/search/payer-type")
+    public ResponseEntity<List<PaymentDTO>> searchPaymentsByPayerType(@RequestParam String payerType) {
+        List<PaymentDTO> payments = paymentService.searchPaymentsByPayerType(payerType);
+        return ResponseEntity.ok(payments);
+    }
+
+    // POST: Tạo payment receipt mới (Staff nhận payment từ customer)
     @PostMapping
-    public ResponseEntity<Payment> createPayment(@RequestBody Payment payment) {
-        Payment savedPayment = paymentService.createPayment(payment);
-        return ResponseEntity.ok(savedPayment);
+    public ResponseEntity<PaymentDTO> createPayment(@RequestBody PaymentDTO paymentDTO) {
+        PaymentDTO createdPayment = paymentService.createPayment(paymentDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPayment);
     }
 
-    // 5. Manage Customer Receipts - UPDATE existing payment
+    // PUT: Cập nhật payment receipt
     @PutMapping("/{id}")
-    public ResponseEntity<Payment> updatePayment(@PathVariable Integer id, @RequestBody Payment payment) {
-        Payment updatedPayment = paymentService.updatePayment(id, payment);
-        if (updatedPayment != null) {
-            return ResponseEntity.ok(updatedPayment);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<PaymentDTO> updatePayment(@PathVariable Integer id, @RequestBody PaymentDTO paymentDTO) {
+        PaymentDTO updatedPayment = paymentService.updatePayment(id, paymentDTO);
+        return ResponseEntity.ok(updatedPayment);
     }
 
-    // 6. Manage Customer Receipts - DELETE payment
+    // DELETE: Xóa payment receipt
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePayment(@PathVariable Integer id) {
-        boolean deleted = paymentService.deletePayment(id);
-        if (deleted) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    // 7. Get payments by status
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Payment>> getPaymentsByStatus(@PathVariable String status) {
-        List<Payment> payments = paymentService.getPaymentsByStatus(status);
-        return ResponseEntity.ok(payments);
-    }
-
-    // 8. Get payments by payer type
-    @GetMapping("/payer-type/{payerType}")
-    public ResponseEntity<List<Payment>> getPaymentsByPayerType(@PathVariable String payerType) {
-        List<Payment> payments = paymentService.getPaymentsByPayerType(payerType);
-        return ResponseEntity.ok(payments);
+        paymentService.deletePayment(id);
+        return ResponseEntity.noContent().build();
     }
 }
+//POST: Tạo payment mới với JSON như ví dụ trên
+//GET: Xem danh sách payments
+//GET /{id}: Xem chi tiết payment
+//PUT /{id}: Cập nhật payment
+//DELETE /{id}: Xóa payment
+//GET /search: Test tìm kiếm theo status
+//GET /search/payer-type: Test tìm kiếm theo payer type
