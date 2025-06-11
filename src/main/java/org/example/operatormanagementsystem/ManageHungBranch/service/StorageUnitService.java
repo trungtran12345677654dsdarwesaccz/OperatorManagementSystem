@@ -1,12 +1,12 @@
-package org.example.operatormanagementsystem.service;
+package org.example.operatormanagementsystem.ManageHungBranch.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.operatormanagementsystem.dto.StorageUnitDTO;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
 import org.example.operatormanagementsystem.entity.Manager;
 import org.example.operatormanagementsystem.entity.StorageUnit;
-import org.example.operatormanagementsystem.repository.ManagerRepository;
-import org.example.operatormanagementsystem.repository.StorageUnitRepository;
+import org.example.operatormanagementsystem.ManageHungBranch.repository.ManagerRepository;
+import org.example.operatormanagementsystem.ManageHungBranch.repository.StorageUnitRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

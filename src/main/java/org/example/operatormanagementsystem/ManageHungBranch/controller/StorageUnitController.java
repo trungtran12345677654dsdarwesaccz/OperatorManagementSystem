@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.controller;
+package org.example.operatormanagementsystem.ManageHungBranch.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,8 +8,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.operatormanagementsystem.dto.StorageUnitDTO;
-import org.example.operatormanagementsystem.service.StorageUnitService;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
+import org.example.operatormanagementsystem.ManageHungBranch.service.StorageUnitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

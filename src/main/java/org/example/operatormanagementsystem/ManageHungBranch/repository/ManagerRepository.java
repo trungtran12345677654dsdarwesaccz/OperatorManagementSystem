@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.repository;
+package org.example.operatormanagementsystem.ManageHungBranch.repository;
 
 import org.example.operatormanagementsystem.entity.Manager;
 import org.springframework.data.jpa.repository.JpaRepository;

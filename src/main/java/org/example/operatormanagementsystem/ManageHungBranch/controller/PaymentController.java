@@ -1,14 +1,13 @@
-package org.example.operatormanagementsystem.controller;
+package org.example.operatormanagementsystem.ManageHungBranch.controller;
 
+import org.example.operatormanagementsystem.ManageHungBranch.service.PaymentService;
 import org.example.operatormanagementsystem.entity.Payment;
-import org.example.operatormanagementsystem.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController

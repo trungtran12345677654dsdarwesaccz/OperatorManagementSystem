@@ -1,7 +1,7 @@
-package org.example.operatormanagementsystem.service;
+package org.example.operatormanagementsystem.ManageHungBranch.service;
 
 import org.example.operatormanagementsystem.entity.Payment;
-import org.example.operatormanagementsystem.repository.PaymentRepository;
+import org.example.operatormanagementsystem.ManageHungBranch.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

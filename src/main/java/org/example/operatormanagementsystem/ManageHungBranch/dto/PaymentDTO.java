@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.dto;
+package org.example.operatormanagementsystem.ManageHungBranch.dto;
 
 import lombok.*;
 
