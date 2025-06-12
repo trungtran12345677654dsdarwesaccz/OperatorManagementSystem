@@ -1,108 +1,126 @@
 package org.example.operatormanagementsystem.ManageHungBranch.service;
 
+import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.PaymentDTO;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.PaymentSearchDTO;
 import org.example.operatormanagementsystem.entity.Payment;
 import org.example.operatormanagementsystem.ManageHungBranch.repository.PaymentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class PaymentService {
 
-    @Autowired
-    private PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
 
-    // Lấy tất cả payments
-    public List<PaymentDTO> getAllPayments() {
-        return paymentRepository.findAll()
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public Page<PaymentDTO> searchPayments(PaymentSearchDTO searchDTO, Pageable pageable) {
+        Page<Payment> payments = paymentRepository.searchPayments(searchDTO, pageable);
+        return payments.map(this::convertToDTO);
     }
 
-    // Lấy payment theo ID
-    public PaymentDTO getPaymentById(Integer id) {
-        Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + id));
+    public Page<PaymentDTO> getAllPayments(Pageable pageable) {
+        Page<Payment> payments = paymentRepository.findAll(pageable);
+        return payments.map(this::convertToDTO);
+    }
+
+    public PaymentDTO getPaymentById(Integer paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found with id: " + paymentId));
         return convertToDTO(payment);
     }
 
-    // Tìm kiếm payments theo status
-    public List<PaymentDTO> searchPaymentsByStatus(String status) {
-        return paymentRepository.findByStatusContainingIgnoreCase(status)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    // Tìm kiếm payments theo payer type
-    public List<PaymentDTO> searchPaymentsByPayerType(String payerType) {
-        return paymentRepository.findByPayerTypeContainingIgnoreCase(payerType)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    // Tạo payment mới
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
         Payment payment = convertToEntity(paymentDTO);
-        payment.setPaidDate(LocalDate.now()); // Tự động set ngày thanh toán
+        // Sử dụng save() để lưu vào database
         Payment savedPayment = paymentRepository.save(payment);
         return convertToDTO(savedPayment);
     }
 
-    // Cập nhật payment
-    public PaymentDTO updatePayment(Integer id, PaymentDTO paymentDTO) {
-        Payment existingPayment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + id));
+    public PaymentDTO updatePayment(Integer paymentId, PaymentDTO paymentDTO) {
+        Payment existingPayment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found with id: " + paymentId));
 
-        // Cập nhật các field
-        existingPayment.setPayerType(paymentDTO.getPayerType());
-        existingPayment.setPayerId(paymentDTO.getPayerId());
-        existingPayment.setAmount(paymentDTO.getAmount());
-        existingPayment.setStatus(paymentDTO.getStatus());
-        existingPayment.setNote(paymentDTO.getNote());
-
+        updatePaymentFields(existingPayment, paymentDTO);
+        // Sử dụng save() để cập nhật vào database
         Payment updatedPayment = paymentRepository.save(existingPayment);
         return convertToDTO(updatedPayment);
     }
 
-    // Xóa payment
-    public void deletePayment(Integer id) {
-        if (!paymentRepository.existsById(id)) {
-            throw new RuntimeException("Payment not found with ID: " + id);
+    public void deletePayment(Integer paymentId) {
+        if (!paymentRepository.existsById(paymentId)) {
+            throw new RuntimeException("Payment not found with id: " + paymentId);
         }
-        paymentRepository.deleteById(id);
+        paymentRepository.deleteById(paymentId);
     }
 
-    // Convert Entity to DTO
+    public List<PaymentDTO> getOverduePayments() {
+        List<Payment> overduePayments = paymentRepository.findOverduePayments();
+        return overduePayments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<PaymentDTO> getPendingPayments() {
+        List<Payment> pendingPayments = paymentRepository.findByStatus("PENDING");
+        return pendingPayments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private PaymentDTO convertToDTO(Payment payment) {
-        PaymentDTO dto = new PaymentDTO();
-        dto.setPaymentId(payment.getPaymentId());
-        dto.setPayerType(payment.getPayerType());
-        dto.setPayerId(payment.getPayerId());
-        dto.setAmount(payment.getAmount());
-        dto.setPaidDate(payment.getPaidDate());
-        dto.setStatus(payment.getStatus());
-        dto.setNote(payment.getNote());
+        PaymentDTO dto = PaymentDTO.builder()
+                .paymentId(payment.getPaymentId())
+                .bookingId(payment.getBooking() != null ? payment.getBooking().getBookingId() : null)
+                .payerType(payment.getPayerType())
+                .payerId(payment.getPayerId())
+                .amount(payment.getAmount())
+                .paidDate(payment.getPaidDate())
+                .status(payment.getStatus())
+                .note(payment.getNote())
+                .build();
+
+        // Tính toán thông tin quá hạn
+        if (payment.getPaidDate() != null && "PENDING".equals(payment.getStatus())) {
+            LocalDate today = LocalDate.now();
+            if (payment.getPaidDate().isBefore(today)) {
+                dto.setIsOverdue(true);
+                dto.setDaysPastDue((int) ChronoUnit.DAYS.between(payment.getPaidDate(), today));
+            } else {
+                dto.setIsOverdue(false);
+                dto.setDaysPastDue(0);
+            }
+        }
+
         return dto;
     }
 
-    // Convert DTO to Entity
     private Payment convertToEntity(PaymentDTO dto) {
-        Payment payment = new Payment();
-        payment.setPaymentId(dto.getPaymentId());
+        return Payment.builder()
+                .paymentId(dto.getPaymentId())
+                .payerType(dto.getPayerType())
+                .payerId(dto.getPayerId())
+                .amount(dto.getAmount())
+                .paidDate(dto.getPaidDate())
+                .status(dto.getStatus())
+                .note(dto.getNote())
+                .build();
+    }
+
+    private void updatePaymentFields(Payment payment, PaymentDTO dto) {
         payment.setPayerType(dto.getPayerType());
         payment.setPayerId(dto.getPayerId());
         payment.setAmount(dto.getAmount());
         payment.setPaidDate(dto.getPaidDate());
         payment.setStatus(dto.getStatus());
         payment.setNote(dto.getNote());
-        return payment;
     }
 }
