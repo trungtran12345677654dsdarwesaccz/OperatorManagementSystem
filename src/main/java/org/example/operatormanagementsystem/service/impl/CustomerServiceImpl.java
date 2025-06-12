@@ -56,7 +56,8 @@ public class CustomerServiceImpl extends BaseServiceImpl<Customer, Integer> impl
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isPresent()) {
             Customer customer = optionalCustomer.get();
-            customer.setUsers(UserStatus.INACTIVE);
+            // Set the status on the user entity, don't replace the user
+            customer.getUsers().setStatus(UserStatus.INACTIVE);
             customerRepository.save(customer);
         } else {
             throw new RuntimeException("Customer not found");
