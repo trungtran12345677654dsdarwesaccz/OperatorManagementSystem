@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.dto.request.repository;
+package org.example.operatormanagementsystem.repository;
 
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.UserRole;

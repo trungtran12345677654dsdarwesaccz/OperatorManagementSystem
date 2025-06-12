@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.dto.request.repository;
+package org.example.operatormanagementsystem.repository;
 
 import org.example.operatormanagementsystem.entity.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;

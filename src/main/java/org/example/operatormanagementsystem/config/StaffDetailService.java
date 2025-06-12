@@ -2,7 +2,7 @@ package org.example.operatormanagementsystem.config;
 
 
 import org.example.operatormanagementsystem.entity.Users;
-import org.example.operatormanagementsystem.dto.request.repository.UserRepository;
+import org.example.operatormanagementsystem.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,4 +31,3 @@ public class StaffDetailService implements UserDetailsService {
         );
     }
 }
-
