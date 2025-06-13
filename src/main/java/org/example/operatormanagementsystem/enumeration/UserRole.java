@@ -1,5 +1,5 @@
 package org.example.operatormanagementsystem.enumeration;
 
 public enum UserRole {
-    STAFF, MANAGER, CUSTOMER;
+    STAFF, MANAGER, CUSTOMER, SYSTEM;
 }

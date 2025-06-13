@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "chatbot_log")
 @ToString(of = {"chatbotId", "question"})
 public class ChatbotLog {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "chatbot_id")
