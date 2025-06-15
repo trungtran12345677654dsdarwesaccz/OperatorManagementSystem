@@ -33,6 +33,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         //  CHẶN FILTER đối với các endpoint công khai
         if (
                 path.equals("/api/auth/login") ||
+                        path.equals("/api/auth/login/verify-otp") ||
                         path.equals("/api/auth/register") ||
                         path.startsWith("/v3/api-docs") ||
                         path.startsWith("/swagger") ||

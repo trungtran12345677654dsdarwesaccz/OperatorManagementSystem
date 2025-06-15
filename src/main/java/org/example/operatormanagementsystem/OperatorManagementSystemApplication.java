@@ -7,8 +7,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "org.example.operatormanagementsystem.repository")
+@EnableJpaRepositories(basePackages = {
+        "org.example.operatormanagementsystem.repository",
+        "org.example.operatormanagementsystem.managestaff_yen.repository"
+})
 @EntityScan(basePackages = "org.example.operatormanagementsystem.entity")
+
 public class OperatorManagementSystemApplication {
     public static void main(String[] args) {
         SpringApplication.run(OperatorManagementSystemApplication.class, args);
