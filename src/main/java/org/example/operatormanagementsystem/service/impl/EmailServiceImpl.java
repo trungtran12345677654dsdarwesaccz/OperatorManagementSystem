@@ -8,7 +8,6 @@ import org.example.operatormanagementsystem.dto.request.VerifyOTPRequest;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.entity.Otp; // Import Otp entity
 import org.example.operatormanagementsystem.entity.Users;
-import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.repository.OTPVerificationRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
@@ -19,14 +18,11 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.Random;
 
@@ -83,7 +79,7 @@ public class EmailServiceImpl implements EmailService {
         verification.setEmail(cleanRecipient); // SỬ DỤNG cleanRecipient
         verification.setOtp(otpCode); // Đảm bảo trường này trong Otp entity là 'otpCode'
         verification.setCreatedDate(LocalDateTime.now());
-        verification.setExpiredTime(LocalDateTime.now().plusMinutes(5));
+        verification.setExpiredTime(LocalDateTime.now().plusMinutes(1));
         verification.setStatus(Otp.OtpStatus.PENDING);
         verification.setUsers(user); // Liên kết OTP với Users entity
 
@@ -156,47 +152,16 @@ public class EmailServiceImpl implements EmailService {
         }
 
         // 6. Tạo JWT token
-        String token; // Khai báo token ở đây để có thể dùng sau
-        UserRole assignedRole = null; // Khởi tạo là null
+        String token = jwtUtil.generateToken(user);
+        String role = user.getAuthorities().stream()
+                .findFirst()
+                .map(Object::toString)
+                .orElse("USER");
 
-        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
-
-        if (authorities != null && !authorities.isEmpty()) {
-            String roleStringFromAuthority = authorities.iterator().next().getAuthority();
-            if (roleStringFromAuthority.startsWith("ROLE_")) {
-                roleStringFromAuthority = roleStringFromAuthority.substring(5); // Cắt bỏ "ROLE_"
-            }
-
-            try {
-                UserRole potentialRole = UserRole.valueOf(roleStringFromAuthority.toUpperCase());
-
-                if (potentialRole == UserRole.MANAGER || potentialRole == UserRole.STAFF) {
-                    assignedRole = potentialRole;
-                } else {
-                    System.err.println("Attempted login with disallowed role: '" + potentialRole + "' for user " + user.getUsername());
-                    throw new InsufficientAuthenticationException("Access denied: Only MANAGER and STAFF roles are allowed.");
-                }
-            } catch (IllegalArgumentException e) {
-                System.err.println("Invalid role string found from user authorities: " + roleStringFromAuthority + ". For user: " + user.getUsername());
-                throw new InsufficientAuthenticationException("Access denied: Invalid user role.");
-            }
-        } else {
-            System.err.println("User " + user.getUsername() + " has no assigned authorities.");
-            throw new InsufficientAuthenticationException("Access denied: User has no assigned roles.");
-        }
-
-        if (assignedRole == null) {
-            System.err.println("Unexpected state: assignedRole is null after processing for user " + user.getUsername());
-            throw new InsufficientAuthenticationException("Access denied: Role could not be determined.");
-        }
-
-
-        token = jwtUtil.generateToken(user);
-
-// 7. Trả về AuthLoginResponse
+        // 7. Trả về AuthLoginResponse
         AuthLoginResponse authLoginResponse = new AuthLoginResponse();
         authLoginResponse.setAccessToken(token);
-        authLoginResponse.setRole(assignedRole); // Gán vai trò đã được xác định
+        authLoginResponse.setRole(role);
         return authLoginResponse;
     }
 

@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.base;
+package org.example.operatormanagementsystem.managercustomer.base;
 
 import java.util.List;
 import java.util.Optional;
