@@ -2,7 +2,6 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.operatormanagementsystem.enumeration.UserStatus;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -14,7 +13,7 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "transport_unit")
-@ToString(of = {"transportId", "nameCompany", "namePersonContact"})
+@ToString(of = {"transportId", "name"})
 public class TransportUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,22 +21,19 @@ public class TransportUnit {
     private Integer transportId;
 
     @Column(length = 100)
-    private String nameCompany;
+    private String name;
 
-    @Column(length = 100)
-    private String namePersonContact;
-
+    @Column(name = "driver_name", length = 100)
+    private String driverName;
 
     @Column(length = 20)
     private String phone;
-
 
     @Column(name = "license_plate", length = 20)
     private String licensePlate;
 
     @Column(length = 30)
-    @Enumerated(EnumType.STRING)
-    private UserStatus status;
+    private String status;
 
     @Column(length = 255)
     private String note;
@@ -52,9 +48,6 @@ public class TransportUnit {
     protected void onCreate() {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
-        }
-        if (this.status == null) {
-            this.status = UserStatus.PENDING_APPROVAL; // Hoặc một trạng thái mặc định khác tùy theo logic của bạn
         }
     }
 }
