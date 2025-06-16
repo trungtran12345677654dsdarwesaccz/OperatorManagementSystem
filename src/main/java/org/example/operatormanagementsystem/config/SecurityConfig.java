@@ -9,8 +9,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // Import BCryptPasswordEncoder
@@ -26,6 +28,7 @@ import java.util.List;
 
 @Configuration // Đánh dấu đây là lớp cấu hình của Spring
 @RequiredArgsConstructor
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của bạn
     private final JwtRequestFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
@@ -55,8 +58,13 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/api/auth/register", "/api/auth/login", "/api/auth/me", "/api/auth/sendOTP", "/api/auth/verifyOTP", "/auth/verify-email-code",
             "/api/user/forget-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
             "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp","/api/auth/sendOTP",
-            "/api/auth/request-status-change","/api/auth/manager/update-status/{email}",
-            "/api/auth/manager/users-for-action",  "/api/auth/manager/user-details/{email}"
+            "/api/auth/request-status-change", "/api/onboarding/transport-unit-via-email"
+            // dg test
+//            ,"/api/transport-units/",
+//            "/api/transport-units/search/",
+//            "/api/transport-units/search-advanced/",
+//            "/api/transport-units/{id}/",
+//            "/api/transport-units/{id}/bookings/"
 
     };
 
@@ -80,17 +88,19 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Cho phép các endpoint trong danh sách trắng (Swagger, API docs)
                         .requestMatchers(WHITELIST_ENDPOINTS).permitAll()
+                        // Cho phép các endpoint công khai đã xác định
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-//                        .requestMatchers("/api/auth/manager/users-by-status/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login",
-                                "/api/auth/forgot-password", // <-- ĐẢM BẢO DÒNG NÀY CÓ Ở ĐÂY
+                        // Cho phép các POST method công khai cụ thể
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/auth/login",
+                                "/api/auth/forgot-password",
                                 "/api/auth/reset-password").permitAll()
 
-                                // thêm dòng này để đảm bảo
+                        // Bất kỳ request nào khác đều phải được xác thực
+                        // Và sau khi xác thực, @PreAuthorize sẽ kiểm tra vai trò
                         .anyRequest().authenticated()
-
-
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -107,5 +117,11 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
+    }
+
+    // --- THÊM BEAN NÀY VÀO ĐÂY ---
+    @Bean
+    public GrantedAuthorityDefaults grantedAuthorityDefaults() {
+        return new GrantedAuthorityDefaults(""); // Đặt tiền tố mặc định là chuỗi rỗng
     }
 }
