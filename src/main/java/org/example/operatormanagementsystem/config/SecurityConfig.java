@@ -56,7 +56,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/api/user/forget-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
             "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp","/api/auth/sendOTP",
             "/api/auth/request-status-change","/api/auth/manager/update-status/{email}",
-            "/api/auth/manager/users-for-action",  "/api/auth/manager/user-details/{email}", "/api/v1/manager/**"
+            "/api/auth/manager/users-for-action",  "/api/auth/manager/user-details/{email}","/api/promotions/**"
 
 
     };

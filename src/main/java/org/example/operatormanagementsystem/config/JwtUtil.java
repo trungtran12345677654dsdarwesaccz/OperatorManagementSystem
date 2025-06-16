@@ -58,6 +58,9 @@ public class JwtUtil {
         } else {
             claims.put("role", "ROLE_USER"); // Mặc định nếu không có vai trò
         }
+        if (user.getManager() != null) {
+            claims.put("managerId", user.getManager().getManagerId());
+        }
         return createToken(claims, user.getEmail()); // Sử dụng email làm subject
     }
 

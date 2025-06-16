@@ -35,6 +35,9 @@ public class Booking {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "operator_id", nullable = false)
     private OperatorStaff operatorStaff;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "promotion_id", nullable = true)
+    private Promotion promotion;
 
     @Column(name = "status", length = 30)
     private String status;

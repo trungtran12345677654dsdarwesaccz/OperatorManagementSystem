@@ -42,4 +42,7 @@ public class Manager {
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ManagerSaleSummary> salesSummaries;
 
+    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Promotion> promotions;
+
 }
