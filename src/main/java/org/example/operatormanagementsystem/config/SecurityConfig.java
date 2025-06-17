@@ -44,7 +44,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return new BCryptPasswordEncoder(); // Sử dụng BCryptPasswordEncoder
     }
 
-   @Bean
+    @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
@@ -56,8 +56,10 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/api/user/forget-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
             "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp","/api/auth/sendOTP",
             "/api/auth/request-status-change","/api/auth/manager/update-status/{email}",
-            "/api/auth/manager/users-for-action",  "/api/auth/manager/user-details/{email}"
-
+            "/api/auth/manager/users-for-action",  "/api/auth/manager/user-details/{email}",
+            "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
+            "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
+            "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**"
     };
 
     private static final String[] GET_PUBLIC_ENDPOINTS = {
@@ -80,15 +82,15 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(WHITELIST_ENDPOINTS).permitAll()
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                                .requestMatchers(WHITELIST_ENDPOINTS).permitAll()
+                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 //                        .requestMatchers("/api/auth/manager/users-by-status/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login",
-                                "/api/auth/forgot-password", // <-- ĐẢM BẢO DÒNG NÀY CÓ Ở ĐÂY
-                                "/api/auth/reset-password").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/login",
+                                        "/api/auth/forgot-password", // <-- ĐẢM BẢO DÒNG NÀY CÓ Ở ĐÂY
+                                        "/api/auth/reset-password").permitAll()
 
                                 // thêm dòng này để đảm bảo
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
 
 
                 )
