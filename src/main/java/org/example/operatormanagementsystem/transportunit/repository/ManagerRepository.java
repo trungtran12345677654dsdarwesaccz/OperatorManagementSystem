@@ -1,11 +1,12 @@
-package org.example.operatormanagementsystem.ManageHungBranch.repository;
+package org.example.operatormanagementsystem.transportunit.repository;
 
 import org.example.operatormanagementsystem.entity.Manager;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface ManagerRepository extends JpaRepository<Manager, Integer> {
-    // Repository cơ bản cho Manager entity
-    // Các phương thức CRUD cơ bản sẽ được kế thừa từ JpaRepository
+    Optional<Manager> findByUsers_Id(Integer userId);
 }

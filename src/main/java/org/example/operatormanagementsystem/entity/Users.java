@@ -142,32 +142,11 @@ public class Users  implements UserDetails { // Class name from your image
         return this.email; // Hoặc return this.username; tùy theo thiết kế của bạn
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        // Trả về true nếu tài khoản không hết hạn.
-        // Mặc định là true nếu bạn không có logic hết hạn tài khoản.
-        return true;
-    }
 
-    @Override
-    public boolean isAccountNonLocked() {
-        // Trả về true nếu tài khoản không bị khóa.
-        // Mặc định là true nếu bạn không có logic khóa tài khoản.
-        return true;
-    }
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        // Trả về true nếu thông tin xác thực (mật khẩu) không hết hạn.
-        // Mặc định là true nếu bạn không có logic hết hạn mật khẩu.
-        return true;
-    }
 
-    @Override
-    public boolean isEnabled() {
-        // Trả về true nếu tài khoản được kích hoạt.
-        // Dựa trên trường 'status' (enum UserStatus) bạn đã có.
-        return this.status == UserStatus.ACTIVE;
-    }
+
+
+
 
 }

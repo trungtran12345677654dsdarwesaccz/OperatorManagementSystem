@@ -14,4 +14,3 @@ public interface EmailService {
     void sendTransportUnitApprovalNotification(String recipientEmail, String userName, String transportUnitName, ApprovalStatus status, String managerNote) throws MessagingException;
     void sendHtmlEmail(String recipientEmail, String subject, String htmlBody) throws MessagingException;
 }
-

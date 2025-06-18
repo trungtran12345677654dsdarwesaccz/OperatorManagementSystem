@@ -4,9 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
 
 @Data
-public class TransportUnitEmailRequest {
+public class TransportUnitRequest {
     @NotBlank(message = "Company name cannot be blank")
     @Size(max = 100, message = "Company name cannot exceed 100 characters")
     private String nameCompany;
@@ -23,8 +24,8 @@ public class TransportUnitEmailRequest {
     @Size(max = 20, message = "License plate cannot exceed 20 characters")
     private String licensePlate;
 
+    private UserStatus status;
+
     @Size(max = 255, message = "Note cannot exceed 255 characters")
     private String note;
-
-    private String senderEmail;
 }

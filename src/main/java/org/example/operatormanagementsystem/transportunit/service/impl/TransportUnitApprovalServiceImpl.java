@@ -7,7 +7,6 @@ import org.example.operatormanagementsystem.transportunit.dto.response.Transport
 import org.example.operatormanagementsystem.entity.Manager;
 import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.entity.TransportUnitApproval;
-import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;

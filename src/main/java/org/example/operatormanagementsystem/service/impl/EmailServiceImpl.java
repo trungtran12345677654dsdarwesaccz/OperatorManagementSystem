@@ -8,6 +8,7 @@ import org.example.operatormanagementsystem.dto.request.VerifyOTPRequest;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.entity.Otp;
 import org.example.operatormanagementsystem.entity.Users;
+import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.repository.OTPVerificationRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
@@ -18,11 +19,14 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Random;
 
@@ -72,7 +76,7 @@ public class EmailServiceImpl implements EmailService {
         verification.setEmail(cleanRecipient);
         verification.setOtp(otpCode);
         verification.setCreatedDate(LocalDateTime.now());
-        verification.setExpiredTime(LocalDateTime.now().plusMinutes(1));
+        verification.setExpiredTime(LocalDateTime.now().plusMinutes(5));
         verification.setStatus(Otp.OtpStatus.PENDING);
         verification.setUsers(user);
 
@@ -168,7 +172,7 @@ public class EmailServiceImpl implements EmailService {
 
         AuthLoginResponse authLoginResponse = new AuthLoginResponse();
         authLoginResponse.setAccessToken(token);
-        authLoginResponse.setRole(assignedRole);
+        authLoginResponse.setRole(String.valueOf(assignedRole));
         return authLoginResponse;
     }
 
