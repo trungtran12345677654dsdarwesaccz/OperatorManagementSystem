@@ -15,7 +15,6 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "customer")
-@ToString(of = {"customerId"})
 public class Customer {
 
     @Id

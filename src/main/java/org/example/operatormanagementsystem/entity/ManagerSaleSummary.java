@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "manager_sale_summary")
-@ToString(exclude = {"manager"}) // Exclude linked entity to prevent infinite loops
 public class ManagerSaleSummary {
 
     @Id

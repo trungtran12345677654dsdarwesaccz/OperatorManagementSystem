@@ -9,6 +9,7 @@ import org.example.operatormanagementsystem.entity.Users; // Giữ nguyên impor
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+//ConcurrentHashMap.newKeySet() duoc dung de dam bao blacklistedTokens co the duoc truy cap va sua doi boi nhieu luong dong thoi mot cach an toan ma van duy tri hieu suat cao.
 
 import java.security.Key; // Thay đổi từ javax.crypto.SecretKey sang java.security.Key
 import java.time.ZoneId;
@@ -17,6 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.Set; // Import Set
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class JwtUtil {
@@ -30,12 +33,21 @@ public class JwtUtil {
     @Value("${application.security.jwt.reset-password-expiration}")
     private long resetPasswordExpiration;
 
+    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
+
     // Đổi tên từ getSigningKey() sang getSignKey() cho nhất quán với thư viện io.jsonwebtoken
     private Key getSignKey() {
         // SỬA: Sử dụng Decoders.BASE64.decode để xử lý secret key
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+    public void blacklistToken(String token) {
+        blacklistedTokens.add(token);
+    }
+    public boolean isTokenBlacklisted(String token) {
+        return blacklistedTokens.contains(token);
+    }
+
 
 //    // Phương thức generateToken nhận UserDetails
 //    public String generateToken(UserDetails userDetails) {
@@ -58,6 +70,9 @@ public class JwtUtil {
         } else {
             claims.put("role", "ROLE_USER"); // Mặc định nếu không có vai trò
         }
+        System.out.println("Generating token for user: " + user.getUsername());
+        claims.put("username", user.getUsername()); // <-- Thêm dòng này để lưu username vào token
+        System.out.println("Generated token claims: " + claims);
         return createToken(claims, user.getEmail()); // Sử dụng email làm subject
     }
 
@@ -163,4 +178,5 @@ public class JwtUtil {
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 }

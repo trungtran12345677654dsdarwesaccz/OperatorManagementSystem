@@ -13,7 +13,6 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "transport_unit")
-@ToString(of = {"transportId", "name"})
 public class TransportUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

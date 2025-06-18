@@ -1,8 +1,10 @@
 package org.example.operatormanagementsystem.controller;
 
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.example.operatormanagementsystem.config.JwtUtil;
 import org.example.operatormanagementsystem.dto.request.*;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.dto.response.UserResponse;
@@ -26,10 +28,15 @@ import java.util.List;
 @RequestMapping("/api/auth")
 @RestController
 @AllArgsConstructor
+@CrossOrigin(
+        origins = {"http://localhost:5173", "http://localhost:3000"},
+        allowCredentials = "true",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
+)
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final EmailService emailService;
-
+    private final JwtUtil jwtUtil;
     // Đây là endpoint cho BƯỚC 1: Xác thực password và GỬI OTP
     @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) { // <-- Thay đổi AuthLoginResponse thành String ở đây
@@ -202,6 +209,27 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred during password reset: " + e.getMessage());
+        }
+    }
+    @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()") // Yêu cầu người dùng phải được xác thực để thực hiện logout
+    public ResponseEntity<String> logout(HttpServletRequest request) { // <-- Thay đổi tham số để lấy request
+        try {
+            // Lấy token từ header Authorization (ví dụ: Bearer <token>)
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7); // Lấy phần token sau "Bearer "
+                jwtUtil.blacklistToken(token); // Thêm token vào blacklist
+                System.out.println("DEBUG: Token blacklisted: " + token);
+                return ResponseEntity.ok("Logged out successfully.");
+            } else {
+                System.err.println("WARN: Could not extract token from Authorization header for logout.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or missing Authorization header for logout.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error during logout: " + e.getMessage());
+            e.printStackTrace(); // In stack trace để debug
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to logout: " + e.getMessage());
         }
     }
 }
