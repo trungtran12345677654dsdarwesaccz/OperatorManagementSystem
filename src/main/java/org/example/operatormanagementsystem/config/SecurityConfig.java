@@ -79,6 +79,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers(WHITELIST_ENDPOINTS).permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // thêm dòng này để đảm bảo
+                        .requestMatchers("/api/payments/**").permitAll()
                         .anyRequest().authenticated()
 
 

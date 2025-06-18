@@ -3,6 +3,7 @@ package org.example.operatormanagementsystem.ManageHungBranch.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.PaymentDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.PaymentSearchDTO;
@@ -10,6 +11,7 @@ import org.example.operatormanagementsystem.ManageHungBranch.service.PaymentServ
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/payments")
+@PermitAll
 @RequiredArgsConstructor
 @Tag(name = "Payment Management", description = "APIs for managing customer receipts and payments")
 public class PaymentController {
@@ -85,11 +88,5 @@ public class PaymentController {
         List<PaymentDTO> pendingPayments = paymentService.getPendingPayments();
         return ResponseEntity.ok(pendingPayments);
     }
+
 }
-//POST: Tạo payment mới với JSON như ví dụ trên
-//GET: Xem danh sách payments
-//GET /{id}: Xem chi tiết payment
-//PUT /{id}: Cập nhật payment
-//DELETE /{id}: Xóa payment
-//GET /search: Test tìm kiếm theo status
-//GET /search/payer-type: Test tìm kiếm theo payer type

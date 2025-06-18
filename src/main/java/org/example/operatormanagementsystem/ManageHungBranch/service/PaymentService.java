@@ -3,6 +3,7 @@ package org.example.operatormanagementsystem.ManageHungBranch.service;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.PaymentDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.PaymentSearchDTO;
+import org.example.operatormanagementsystem.entity.Customer;
 import org.example.operatormanagementsystem.entity.Payment;
 import org.example.operatormanagementsystem.ManageHungBranch.repository.PaymentRepository;
 import org.springframework.data.domain.Page;
@@ -77,7 +78,7 @@ public class PaymentService {
     }
 
     private PaymentDTO convertToDTO(Payment payment) {
-        PaymentDTO dto = PaymentDTO.builder()
+        PaymentDTO.PaymentDTOBuilder builder = PaymentDTO.builder()
                 .paymentId(payment.getPaymentId())
                 .bookingId(payment.getBooking() != null ? payment.getBooking().getBookingId() : null)
                 .payerType(payment.getPayerType())
@@ -85,23 +86,27 @@ public class PaymentService {
                 .amount(payment.getAmount())
                 .paidDate(payment.getPaidDate())
                 .status(payment.getStatus())
-                .note(payment.getNote())
-                .build();
+                .note(payment.getNote());
 
-        // Tính toán thông tin quá hạn
-        if (payment.getPaidDate() != null && "PENDING".equals(payment.getStatus())) {
-            LocalDate today = LocalDate.now();
-            if (payment.getPaidDate().isBefore(today)) {
-                dto.setIsOverdue(true);
-                dto.setDaysPastDue((int) ChronoUnit.DAYS.between(payment.getPaidDate(), today));
+        // Lấy bookingCode (nếu có field code, nếu không thì lấy bookingId)
+        if (payment.getBooking() != null) {
+            builder.bookingCode(String.valueOf(payment.getBooking().getBookingId()));
+
+            // Lấy customerName từ Users
+            Customer customer = payment.getBooking().getCustomer();
+            if (customer != null && customer.getUsers() != null) {
+                builder.customerName(customer.getUsers().getFullName());
+                // Nếu muốn username: builder.customerName(customer.getUsers().getUsername());
             } else {
-                dto.setIsOverdue(false);
-                dto.setDaysPastDue(0);
+                builder.customerName("Không xác định");
             }
         }
-
-        return dto;
+        // Xử lý overdue nếu cần...
+        return builder.build();
     }
+
+
+
 
     private Payment convertToEntity(PaymentDTO dto) {
         return Payment.builder()
