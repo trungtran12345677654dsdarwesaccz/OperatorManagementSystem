@@ -28,6 +28,7 @@ import java.util.Set;
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
 })
+@ToString(of = {"id", "username", "email"})
 public class Users  implements UserDetails { // Class name from your image
 
     @Id
@@ -96,6 +97,50 @@ public class Users  implements UserDetails { // Class name from your image
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
 
+
+    @Override
+    public boolean isAccountNonExpired() {
+        // Trả về true nếu tài khoản không hết hạn.
+        // Mặc định là true nếu bạn không có logic hết hạn tài khoản.
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        // Trả về true nếu tài khoản không bị khóa.
+        // Mặc định là true nếu bạn không có logic khóa tài khoản.
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        // Trả về true nếu thông tin xác thực (mật khẩu) không hết hạn.
+        // Mặc định là true nếu bạn không có logic hết hạn mật khẩu.
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        // Trả về true nếu tài khoản được kích hoạt.
+        // Dựa trên trường 'status' (enum UserStatus) bạn đã có.
+        return this.status == UserStatus.ACTIVE;
+    }
+
+    @Override
+    public String getPassword() {
+        // Trả về mật khẩu của người dùng.
+        // Đã có trường 'password' trong class Users của bạn.
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        // Trả về tên đăng nhập của người dùng.
+        // Trong trường hợp này, bạn có trường 'username' hoặc có thể dùng 'email'.
+        // Dựa trên cấu trúc của bạn, 'email' có vẻ là username duy nhất.
+        // Nếu bạn muốn dùng 'username' làm tên đăng nhập, hãy trả về 'this.username'.
+        return this.email; // Hoặc return this.username; tùy theo thiết kế của bạn
+    }
 
     @Override
     public boolean isAccountNonExpired() {

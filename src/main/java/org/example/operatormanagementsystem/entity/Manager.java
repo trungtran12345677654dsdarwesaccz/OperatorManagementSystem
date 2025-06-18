@@ -40,6 +40,10 @@ public class Manager {
     // Mối quan hệ mới: Manager có nhiều bản thống kê doanh số
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ManagerSaleSummary> salesSummaries;
+
+    // Mối quan hệ mới: Manager có nhiều bản thống kê doanh số
+    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ManagerSaleSummary> salesSummaries;
     // tap hop phan tu, cac phan tu khong trung nhau
     // List cac phan tu trung nhau
 }
