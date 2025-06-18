@@ -25,9 +25,10 @@ public class TransportUnitOnboardingServiceImpl implements TransportUnitOnboardi
     private final TransportUnitApprovalRepository approvalRepository;
     private final UserRepository userRepository;
 
-    // THAY THẾ BẰNG ID THỰC TẾ CỦA USER SYSTEM TỪ SQL INSERT SCRIPT
+    // THAY THẾ BẰNG ID THỰC TẾ CỦA USER SYSTEM TỪ SQL INSERT SCRIPT CỦA BẠN.
     // SAU KHI BẠN CHẠY SCRIPT VÀ LẤY ID TỪ PRINT STATEMENT.
-    private static final Integer SYSTEM_USER_ID = 5; // VÍ DỤ: Cần thay thế bằng ID thực tế
+    // Đảm bảo user với ID này tồn tại trong bảng Users và có vai trò phù hợp (ví dụ: SYSTEM_USER, ADMIN, v.v.).
+    private static final Integer SYSTEM_USER_ID = 5; // VÍ DỤ: Cần thay thế bằng ID thực tế của System User
 
     private TransportUnitResponse toResponse(TransportUnit entity) {
         return TransportUnitResponse.builder()
@@ -44,6 +45,7 @@ public class TransportUnitOnboardingServiceImpl implements TransportUnitOnboardi
     @Override
     @Transactional
     public TransportUnitResponse onboardNewTransportUnit(TransportUnitEmailRequest request) {
+        // Bước 1: Tạo TransportUnit mới
         TransportUnit newUnit = TransportUnit.builder()
                 .nameCompany(request.getNameCompany())
                 .namePersonContact(request.getNamePersonContact())
@@ -55,12 +57,18 @@ public class TransportUnitOnboardingServiceImpl implements TransportUnitOnboardi
                 .build();
         TransportUnit savedUnit = transportUnitRepository.save(newUnit);
 
+        // Bước 2: Lấy System User để gán vào requestedByUser
+        // Vì 'requestedByUser' trong TransportUnitApproval là NOT NULL, chúng ta cần một Users entity.
+        // Dựa trên yêu cầu của bạn, chúng ta sẽ sử dụng một System User cố định.
         Users systemUser = userRepository.findById(SYSTEM_USER_ID)
-                .orElseThrow(() -> new RuntimeException("System user not found with ID: " + SYSTEM_USER_ID + ". Please ensure SYSTEM_USER_ID is correct and this user exists in DB."));
+                .orElseThrow(() -> new RuntimeException("System user not found with ID: " + SYSTEM_USER_ID + ". " +
+                        "Please ensure SYSTEM_USER_ID is correct and this user exists in your database."));
 
+        // Bước 3: Tạo TransportUnitApproval
         TransportUnitApproval approval = TransportUnitApproval.builder()
                 .transportUnit(savedUnit)
-                .requestedByUser(systemUser)
+                .requestedByUser(systemUser) // Gán System User làm người yêu cầu (theo yêu cầu NOT NULL của DB)
+                .senderEmail(request.getSenderEmail()) // <-- THÊM DÒNG NÀY ĐỂ LƯU EMAIL GỐC CỦA NGƯỜI GỬI
                 .status(ApprovalStatus.PENDING)
                 .requestedAt(LocalDateTime.now())
                 .build();

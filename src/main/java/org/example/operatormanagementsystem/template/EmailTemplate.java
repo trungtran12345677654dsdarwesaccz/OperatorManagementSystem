@@ -33,4 +33,72 @@ public enum EmailTemplate {
     public String getBody(String code) {
         return String.format(body, code);
     }
+
+    public static String buildTransportUnitApprovedEmail(String userName, String transportUnitName, String managerNote) {
+        return "<!DOCTYPE html>"
+                + "<html>"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<title>Transport Unit Approved</title>"
+                // ... CSS tương tự như các email template khác ...
+                + "</head>"
+                + "<body>"
+                + "<div class=\"container\">"
+                + "<h1>Xin chào " + userName + ",</h1>"
+                + "<p>Yêu cầu đăng ký đơn vị vận chuyển <b>" + transportUnitName + "</b> của bạn đã được <strong>CHẤP THUẬN</strong>!</p>"
+                + "<p>Đơn vị vận chuyển của bạn hiện đã hoạt động trong hệ thống của chúng tôi.</p>"
+                + (managerNote != null && !managerNote.isEmpty() ? "<p><strong>Ghi chú từ quản lý:</strong> " + managerNote + "</p>" : "")
+                + "<p>Cảm ơn bạn đã hợp tác.</p>"
+                + "<div class=\"footer\">"
+                + "<p>&copy; 2025 Operator Management System. All rights reserved.</p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+    }
+
+    public static String buildTransportUnitRejectedEmail(String userName, String transportUnitName, String managerNote) {
+        return "<!DOCTYPE html>"
+                + "<html>"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<title>Transport Unit Rejected</title>"
+                // ... CSS tương tự như các email template khác ...
+                + "</head>"
+                + "<body>"
+                + "<div class=\"container\">"
+                + "<h1>Xin chào " + userName + ",</h1>"
+                + "<p>Yêu cầu đăng ký đơn vị vận chuyển <b>" + transportUnitName + "</b> của bạn đã bị <strong>TỪ CHỐI</strong>.</p>"
+                + "<p><strong>Lý do:</strong> " + (managerNote != null && !managerNote.isEmpty() ? managerNote : "Không có ghi chú cụ thể từ quản lý.") + "</p>"
+                + "<p>Vui lòng liên hệ với quản lý hoặc bộ phận hỗ trợ để biết thêm thông tin.</p>"
+                + "<div class=\"footer\">"
+                + "<p>&copy; 2025 Operator Management System. All rights reserved.</p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+    }
+
+    public static String buildGenericTransportUnitStatusUpdateEmail(String userName, String transportUnitName, String newStatus, String managerNote) {
+        return "<!DOCTYPE html>"
+                + "<html>"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<title>Transport Unit Status Update</title>"
+                // ... CSS tương tự như các email template khác ...
+                + "</head>"
+                + "<body>"
+                + "<div class=\"container\">"
+                + "<h1>Xin chào " + userName + ",</h1>"
+                + "<p>Trạng thái của đơn vị vận chuyển <b>" + transportUnitName + "</b> của bạn đã được cập nhật thành: <strong>" + newStatus + "</strong>.</p>"
+                + (managerNote != null && !managerNote.isEmpty() ? "<p><strong>Ghi chú từ quản lý:</strong> " + managerNote + "</p>" : "")
+                + "<p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>"
+                + "<div class=\"footer\">"
+                + "<p>&copy; 2025 Operator Management System. All rights reserved.</p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+    }
+
 }

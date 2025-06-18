@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "notification")
-@ToString(of = {"gmailId", "sentTo", "subject"})
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

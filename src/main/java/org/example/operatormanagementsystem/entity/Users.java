@@ -28,20 +28,18 @@ import java.util.Set;
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
 })
-@ToString(of = {"id", "username", "email"})
 public class Users  implements UserDetails { // Class name from your image
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Integer id;
+    private int id;
 
     @Column(name = "full_name", nullable = false, length = 50)
     private String fullName;
 
     @Column(name = "username", nullable = false, length = 100)
     private String username;
-
 
 
     @Column(name = "email", nullable = false, length = 100) // Uniqueness handled by @Table
@@ -98,22 +96,6 @@ public class Users  implements UserDetails { // Class name from your image
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
 
-    @Override
-    public String getPassword() {
-        // Trả về mật khẩu của người dùng.
-        // Đã có trường 'password' trong class Users của bạn.
-        return this.password;
-    }
-
-
-    @Override
-    public String getUsername() {
-        // Trả về tên đăng nhập của người dùng.
-        // Trong trường hợp này, bạn có trường 'username' hoặc có thể dùng 'email'.
-        // Dựa trên cấu trúc của bạn, 'email' có vẻ là username duy nhất.
-        // Nếu bạn muốn dùng 'username' làm tên đăng nhập, hãy trả về 'this.username'.
-        return this.email; // Hoặc return this.username; tùy theo thiết kế của bạn
-    }
 
     @Override
     public boolean isAccountNonExpired() {

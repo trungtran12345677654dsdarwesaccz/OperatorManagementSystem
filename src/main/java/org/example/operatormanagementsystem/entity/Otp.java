@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "otp")
-@ToString(of = {"id", "email", "otp", "expiredTime", "status"}) // Thêm 'status' vào toString
 public class Otp {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -25,4 +25,6 @@ public class TransportUnitEmailRequest {
 
     @Size(max = 255, message = "Note cannot exceed 255 characters")
     private String note;
+
+    private String senderEmail;
 }

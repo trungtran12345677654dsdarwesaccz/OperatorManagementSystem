@@ -13,7 +13,6 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "booking")
-@ToString(of = {"bookingId", "status", "deliveryDate"})
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -56,7 +56,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     }
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/register", "/api/auth/login", "/api/auth/me", "/api/auth/sendOTP", "/api/auth/verifyOTP", "/auth/verify-email-code",
-            "/api/user/forget-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
+            "/api/user/forgot-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
             "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp","/api/auth/sendOTP",
             "/api/auth/request-status-change", "/api/onboarding/transport-unit-via-email"
             // dg test
@@ -109,7 +109,13 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
+        corsConfiguration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",    // Vite dev server
+                "http://localhost:3000",    // React dev server
+                "http://127.0.0.1:5173",    // Alternative localhost
+                "http://127.0.0.1:3000"     // Alternative localhost
+        ));
+//        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
         corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
         corsConfiguration.setExposedHeaders(Arrays.asList("*"));

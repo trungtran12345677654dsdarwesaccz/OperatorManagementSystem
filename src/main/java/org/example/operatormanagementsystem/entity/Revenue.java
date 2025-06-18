@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "revenue")
-@ToString(of = {"revenueId", "amount"})
 public class Revenue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "transport_unit_approval")
-@ToString(of = {"approvalId", "status", "requestedAt"})
 public class TransportUnitApproval {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +43,9 @@ public class TransportUnitApproval {
 
     @Column(name = "manager_note", length = 500)
     private String managerNote;
+
+    @Column(name = "sender_email")
+    private String senderEmail;
 
     @PrePersist
     protected void onCreate() {
