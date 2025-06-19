@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/storage-units")
 @RequiredArgsConstructor
-@PermitAll
 @Slf4j
 @Tag(name = "Storage Unit Management", description = "API quản lý kho lưu trữ - Manage Storage Unit")
 public class StorageUnitController {
