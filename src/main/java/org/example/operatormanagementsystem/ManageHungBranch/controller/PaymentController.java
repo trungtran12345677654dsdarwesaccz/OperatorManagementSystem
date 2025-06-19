@@ -19,7 +19,7 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/payments")
-@PermitAll
+@PreAuthorize("hasRole('STAFF')")
 @RequiredArgsConstructor
 @Tag(name = "Payment Management", description = "APIs for managing customer receipts and payments")
 public class PaymentController {
