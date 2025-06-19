@@ -43,8 +43,6 @@ public class AuthenticationController {
         try {
             // authenticationService.login(request) bây giờ trả về String
             String message = authenticationService.login(request); // <-- Dòng này bây giờ đã đúng kiểu
-
-            // Trả về HTTP status 200 OK và thông báo String
             return ResponseEntity.ok(message);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
@@ -159,7 +157,7 @@ public class AuthenticationController {
 
     // Endpoint để lấy danh sách người dùng theo trạng thái
     @GetMapping("/manager/users-by-status/{status}")
-//    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<UserResponse>> getUsersByStatus(@PathVariable UserStatus status) {
         List<UserResponse> users = authenticationService.getUsersByStatus(status);
         if (users.isEmpty()) {
@@ -199,7 +197,7 @@ public class AuthenticationController {
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         try {
-            authenticationService.resetPassword(request.getToken(), request.getNewPassword());
+                authenticationService.resetPassword(request.getToken(), request.getNewPassword());
             return ResponseEntity.ok("Password has been reset successfully.");
         } catch (BadCredentialsException e) { // Dùng BadCredentialsException cho token không hợp lệ/hết hạn
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
