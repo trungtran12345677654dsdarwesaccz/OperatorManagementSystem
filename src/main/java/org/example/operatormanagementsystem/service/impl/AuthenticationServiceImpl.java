@@ -8,7 +8,6 @@ import org.example.operatormanagementsystem.config.SecurityConfig;
 import org.example.operatormanagementsystem.dto.request.LoginRequest;
 import org.example.operatormanagementsystem.dto.request.RegisterRequest;
 import org.example.operatormanagementsystem.dto.request.StatusChangeRequest;
-import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.dto.response.UserResponse;
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.UserGender;
@@ -28,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
