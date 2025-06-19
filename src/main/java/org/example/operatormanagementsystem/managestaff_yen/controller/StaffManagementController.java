@@ -15,6 +15,7 @@ import org.example.operatormanagementsystem.managestaff_yen.service.StaffManagem
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "http://localhost:5175")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/manager/{managerId}/staff")
