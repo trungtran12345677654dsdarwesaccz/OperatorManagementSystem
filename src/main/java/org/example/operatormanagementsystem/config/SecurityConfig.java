@@ -94,6 +94,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
+                        .requestMatchers("/api/promotions/**").hasRole("MANAGER")
 
                         // Bất kỳ request nào khác đều phải được xác thực
                         // Và sau khi xác thực, @PreAuthorize sẽ kiểm tra vai trò

@@ -9,7 +9,9 @@ import org.example.operatormanagementsystem.managestaff_yen.service.PromotionSer
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PromotionServiceImpl implements PromotionService {
@@ -70,5 +72,21 @@ public class PromotionServiceImpl implements PromotionService {
             response.setMessage("Promotion not found");
         }
         return response;
+    }
+
+    // ✅ New method to get all promotions
+    @Override
+    public List<PromotionResponse> getAllPromotions() {
+        return promotionRepository.findAll().stream()
+                .map(promotion -> {
+                    PromotionResponse response = new PromotionResponse();
+                    response.setId(promotion.getId());
+                    response.setName(promotion.getName());
+                    response.setStartDate(promotion.getStartDate());
+                    response.setEndDate(promotion.getEndDate());
+                    response.setStatus(promotion.getStatus());
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 }
