@@ -1,17 +1,19 @@
 package org.example.operatormanagementsystem.managestaff_yen.service.impl;
 
+import org.example.operatormanagementsystem.entity.Promotion;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.UpdatePromotionRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.CancelPromotionRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.PromotionResponse;
-import org.example.operatormanagementsystem.entity.Promotion;
 import org.example.operatormanagementsystem.managestaff_yen.repository.PromotionRepository;
 import org.example.operatormanagementsystem.managestaff_yen.service.PromotionService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 @Service
 public class PromotionServiceImpl implements PromotionService {
@@ -74,10 +76,17 @@ public class PromotionServiceImpl implements PromotionService {
         return response;
     }
 
-    // ✅ New method to get all promotions
+    // ✅ Refactor: hỗ trợ tìm kiếm theo keyword
     @Override
-    public List<PromotionResponse> getAllPromotions() {
-        return promotionRepository.findAll().stream()
+    public List<PromotionResponse> searchPromotions(String keyword) {
+        List<Promotion> promotions;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            promotions = promotionRepository.findByNameContainingIgnoreCase(keyword);
+        } else {
+            promotions = promotionRepository.findAll();
+        }
+
+        return promotions.stream()
                 .map(promotion -> {
                     PromotionResponse response = new PromotionResponse();
                     response.setId(promotion.getId());
@@ -88,5 +97,11 @@ public class PromotionServiceImpl implements PromotionService {
                     return response;
                 })
                 .collect(Collectors.toList());
+    }
+
+    // (Optional) nếu muốn giữ lại hàm này
+
+    public List<PromotionResponse> getAllPromotions() {
+        return searchPromotions(null);
     }
 }
