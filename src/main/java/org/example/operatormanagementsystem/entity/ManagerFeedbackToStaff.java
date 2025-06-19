@@ -20,7 +20,7 @@ public class ManagerFeedbackToStaff {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", columnDefinition = "int")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)

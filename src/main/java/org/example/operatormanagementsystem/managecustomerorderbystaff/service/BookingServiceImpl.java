@@ -1,7 +1,7 @@
 package org.example.operatormanagementsystem.managecustomerorderbystaff.service;
 
 import org.example.operatormanagementsystem.entity.Booking;
-import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.bookingrepository;
+import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,7 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
     // Tiêm BookingRepository để tương tác với cơ sở dữ liệu
     @Autowired
-    private bookingrepository bookingRepository;
+    private BookingRepository bookingRepository;
 
     // Lấy danh sách tất cả các booking từ cơ sở dữ liệu
     @Override

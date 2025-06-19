@@ -7,9 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-// Giao diện repository để quản lý entity Booking trong cơ sở dữ liệu
+
 @Repository
-public interface bookingrepository extends JpaRepository<Booking, Integer> {
+public interface BookingRepository extends JpaRepository<Booking, Integer> {
     // Tìm các booking theo trạng thái chứa chuỗi status
     List<Booking> findByStatusContaining(String status);
 

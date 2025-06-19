@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.transportunit.service.impl;
 
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.example.operatormanagementsystem.managestaff_yen.repository.ManagerRepository;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitApprovalProcessRequest;
 import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitApprovalResponse;
 import org.example.operatormanagementsystem.entity.Manager;
@@ -9,7 +10,6 @@ import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.entity.TransportUnitApproval;
 import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
-import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitApprovalRepository;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;

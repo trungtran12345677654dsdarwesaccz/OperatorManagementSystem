@@ -12,7 +12,9 @@ import org.springframework.context.annotation.ComponentScan;
 @EnableJpaRepositories(basePackages = {
         "org.example.operatormanagementsystem.repository",
         "org.example.operatormanagementsystem.managestaff_yen.repository",
-        "org.example.operatormanagementsystem.ManageHungBranch.repository"
+        "org.example.operatormanagementsystem.ManageHungBranch.repository",
+        "org.example.operatormanagementsystem.transportunit.repository",
+        "org.example.operatormanagementsystem.managecustomerorderbystaff.repository"
 })
 @EntityScan(basePackages = "org.example.operatormanagementsystem.entity")
 

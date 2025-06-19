@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
-import org.example.operatormanagementsystem.transportunit.repository.BookingRepository;
+import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitRequest;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitSearchRequest;
 import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitResponse;
