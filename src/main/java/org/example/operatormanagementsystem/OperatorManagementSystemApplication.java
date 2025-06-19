@@ -11,7 +11,8 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = {
         "org.example.operatormanagementsystem.repository",
-        "org.example.operatormanagementsystem.managestaff_yen.repository"
+        "org.example.operatormanagementsystem.managestaff_yen.repository",
+        "org.example.operatormanagementsystem.ManageHungBranch.repository"
 })
 @EntityScan(basePackages = "org.example.operatormanagementsystem.entity")
 
