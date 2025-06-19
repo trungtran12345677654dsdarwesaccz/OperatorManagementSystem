@@ -11,7 +11,7 @@ public enum EmailTemplate {
                     "%s" +
                     "</div>" +
                     "<div style=\"text-align: left; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;\">" +
-                    "<p style=\"color: #444; font-size: 14px;\">This code expires in <b>1 minutes</b>. Do not share this code with anyone.</p>" +
+                    "<p style=\"color: #444; font-size: 14px;\">This code expires in <b>5 minutes</b>. Do not share this code with anyone.</p>" +
                     "<p style=\"color: #555; font-size: 12px;\">If you did not request this, you can safely ignore this email.</p>" +
                     "<p style=\"font-size: 12px; color: #666;\">Protected by <b>Group6</b></p>" +
                     "</div>" +

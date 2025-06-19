@@ -172,7 +172,7 @@ public class EmailServiceImpl implements EmailService {
 
         AuthLoginResponse authLoginResponse = new AuthLoginResponse();
         authLoginResponse.setAccessToken(token);
-        authLoginResponse.setRole(String.valueOf(assignedRole));
+        authLoginResponse.setRole(assignedRole);
         return authLoginResponse;
     }
 
