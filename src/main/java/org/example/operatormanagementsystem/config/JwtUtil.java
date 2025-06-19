@@ -70,9 +70,9 @@ public class JwtUtil {
         } else {
             claims.put("role", "ROLE_USER"); // Mặc định nếu không có vai trò
         }
-        System.out.println("Generating token for user: " + user.getUsername());
-        claims.put("username", user.getUsername()); // <-- Thêm dòng này để lưu username vào token
-        System.out.println("Generated token claims: " + claims);
+        if (user.getManager() != null) {
+            claims.put("managerId", user.getManager().getManagerId());
+        }
         return createToken(claims, user.getEmail()); // Sử dụng email làm subject
     }
 

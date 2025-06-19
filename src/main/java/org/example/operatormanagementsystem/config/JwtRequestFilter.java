@@ -36,6 +36,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         path.equals("/api/auth/sendOTP") ||
                         path.equals("/api/auth/login/verify-otp") ||
                         path.equals("/api/auth/request-status-change") ||
+                        path.equals("/api/auth/login/verify-otp") ||
                         path.equals("/api/auth/register") ||
                         path.startsWith("/v3/api-docs") ||
                         path.startsWith("/swagger") ||
