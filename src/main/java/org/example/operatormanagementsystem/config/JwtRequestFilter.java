@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.util.List;
+
 
 import java.io.IOException;
 
@@ -68,22 +71,23 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // 3. Tiếp tục quy trình xác thực nếu token chưa bị blacklist
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-            // Phương thức validateToken() trong JwtUtil giờ đã bao gồm kiểm tra blacklist
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
             if (jwtUtil.validateToken(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                // ✅ Lấy role từ token và gán quyền
+                String role = jwtUtil.extractClaim(jwt, claims -> claims.get("role", String.class));
+                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {
-                // Nếu validateToken trả về false (do hết hạn, chữ ký sai, hoặc bất kỳ lý do nào khác ngoài blacklist)
-                // In ra lỗi và có thể gửi 401 Unauthorized nếu cần
-                System.out.println("DEBUG: Token validation failed for user: " + username + " for path: " + path);
-                // Bạn có thể chọn gửi lỗi 401 ở đây nếu muốn chặt chẽ hơn.
-                // Tuy nhiên, thường thì nếu không set Authentication, Spring Security
-                // sẽ tự động trả về 403 Forbidden hoặc 401 Unauthorized sau đó.
+                System.out.println("DEBUG: Invalid token for user: " + username + " at path: " + path);
             }
         }
+
 
         chain.doFilter(request, response);
     }

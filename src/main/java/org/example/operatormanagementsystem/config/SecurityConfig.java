@@ -93,6 +93,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password").permitAll()
+                        .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
 
                         // Bất kỳ request nào khác đều phải được xác thực
                         // Và sau khi xác thực, @PreAuthorize sẽ kiểm tra vai trò
@@ -106,9 +107,9 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",    // Vite dev server
+                "http://localhost:5175",    // Vite dev server
                 "http://localhost:3000",    // React dev server
-                "http://127.0.0.1:5173",    // Alternative localhost
+                "http://127.0.0.1:5175",    // Alternative localhost
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));
 //        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));

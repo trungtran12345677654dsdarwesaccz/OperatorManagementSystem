@@ -7,6 +7,7 @@ import org.example.operatormanagementsystem.managestaff_yen.service.PromotionSer
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "http://localhost:5175")
 @RestController
 @RequestMapping("/api/promotions")
 public class PromotionController {
