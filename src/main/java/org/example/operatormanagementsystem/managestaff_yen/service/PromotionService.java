@@ -11,6 +11,6 @@ public interface PromotionService {
     PromotionResponse updatePromotion(UpdatePromotionRequest request);
     PromotionResponse cancelPromotion(CancelPromotionRequest request);
 
-    // ✅ New method
-    List<PromotionResponse> getAllPromotions();
+    // ✅ Refactored to support keyword search
+    List<PromotionResponse> searchPromotions(String keyword);
 }
