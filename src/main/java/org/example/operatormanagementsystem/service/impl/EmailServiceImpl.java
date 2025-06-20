@@ -238,7 +238,7 @@ public class EmailServiceImpl implements EmailService {
     public void sendPasswordResetEmail(String recipientEmail, String resetToken) throws MessagingException {
         System.out.println("DEBUG: sendPasswordResetEmail - Attempting to send password reset email to: '" + recipientEmail + "'");
 
-        String resetLink = "http://localhost:8083/reset-password?token=" + resetToken; // <-- THAY THẾ BẰNG URL FRONTEND CỦA BẠN
+        String resetLink = "http://localhost:5173/reset-password?token=" + resetToken;
 
         String subject = "[OperatorManagementSystem] Yêu cầu đặt lại mật khẩu";
         String body = "Chào bạn,<br><br>"
