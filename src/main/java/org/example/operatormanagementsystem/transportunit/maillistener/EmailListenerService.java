@@ -21,9 +21,11 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Service
 public class EmailListenerService {
@@ -45,7 +47,7 @@ public class EmailListenerService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // KÍCH HOẠT HÀM NÀY CHẠY ĐỊNH KỲ
-//    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
+    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
     public void scheduleEmailCheck() {
         System.out.println("--- SCHEDULED TASK: Checking emails at " + System.currentTimeMillis() + " ---");
         checkEmailsAndOnboard();
@@ -223,88 +225,84 @@ public class EmailListenerService {
         return htmlString.replaceAll("<[^>]*>", "").replaceAll("&nbsp;", " ").trim();
     }
 
-    private TransportUnitEmailRequest parseEmailContent(String emailContent, String defaultSenderEmail) {
-        // ... (Giữ nguyên không thay đổi) ...
-        Pattern companyPattern = Pattern.compile("Tên Công ty Vận chuyển:\\s*\\[(.*?)\\]", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-        Pattern contactPersonPattern = Pattern.compile("Tên Người Đại diện Liên hệ:\\s*\\[(.*?)\\]", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-        Pattern phonePattern = Pattern.compile("Số Điện Thoại Liên hệ:\\s*\\[(.*?)\\]", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-        Pattern licensePlatePattern = Pattern.compile("Bằng Cấp Vận Chuyển \\(ví dụ ABC\\):\\s*\\[(.*?)\\]", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-        Pattern notePattern = Pattern.compile("Ghi Chú Thêm \\(nếu có\\):\\s*\\[(.*?)\\]", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-        Pattern emailInContentPattern = Pattern.compile("\\[([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6})\\s*\\]$", Pattern.DOTALL);
+    /* =======================================================================
+     *  Hàm parseEmailContent mới - linh hoạt & dễ bảo trì hơn
+     * ===================================================================== */
+    private TransportUnitEmailRequest parseEmailContent(String rawContent,
+                                                        String defaultSenderEmail) {
 
-        TransportUnitEmailRequest request = new TransportUnitEmailRequest();
+        /* 1. Chuẩn hoá văn bản */
+        String emailContent = rawContent
+                .replaceAll("[\\u00A0\\u200B]", " ")   // xoá nbsp, zero-width…
+                .replace("\r", "")                     // bỏ CR
+                .replaceAll("[ \\t]{2,}", " ")         // gộp space
+                .trim();
 
-        Matcher companyMatcher = companyPattern.matcher(emailContent);
-        if (companyMatcher.find()) {
-            request.setNameCompany(companyMatcher.group(1).trim());
-        } else {
-            System.err.println("WARN: Không tìm thấy 'Tên Công ty Vận chuyển'.");
-        }
+        final int FLAGS = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.DOTALL;
 
-        Matcher contactPersonMatcher = contactPersonPattern.matcher(emailContent);
-        if (contactPersonMatcher.find()) {
-            request.setNamePersonContact(contactPersonMatcher.group(1).trim());
-        } else {
-            System.err.println("WARN: Không tìm thấy 'Tên Người Đại diện Liên hệ'.");
-        }
+        /* 2. Regex – BẮT BUỘC phải có [...]  */
+        Pattern companyP = Pattern.compile(
+                "Tên\\s*Công\\s*ty\\s*Vận\\s*(?:Tải|chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
 
-        Matcher phoneMatcher = phonePattern.matcher(emailContent);
-        if (phoneMatcher.find()) {
-            request.setPhone(phoneMatcher.group(1).trim());
-        } else {
-            System.err.println("WARN: Không tìm thấy 'Số Điện Thoại Liên hệ'.");
-        }
+        Pattern contactP = Pattern.compile(
+                "Tên\\s*Người\\s*Đại\\s*diện\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
 
-        Matcher licensePlateMatcher = licensePlatePattern.matcher(emailContent);
-        if (licensePlateMatcher.find()) {
-            request.setLicensePlate(licensePlateMatcher.group(1).trim());
-        } else {
-            System.err.println("WARN: Không tìm thấy 'Bằng Cấp Vận Chuyển'.");
-        }
+        Pattern phoneP   = Pattern.compile(
+                "Số\\s*Điện\\s*Thoại\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
 
-        Matcher noteMatcher = notePattern.matcher(emailContent);
-        if (noteMatcher.find()) {
-            request.setNote(noteMatcher.group(1).trim());
-        } else {
-            request.setNote("");
-            System.err.println("WARN: Không tìm thấy 'Ghi Chú Thêm'. Gán rỗng.");
-        }
+        Pattern licenseP = Pattern.compile(
+                "(?:Biển|Bằng)\\s*(?:Cấp)?\\s*Vận\\s*(?:Tải|Chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
 
-        Matcher emailInContentMatcher = emailInContentPattern.matcher(emailContent);
-        if (emailInContentMatcher.find()) {
-            request.setSenderEmail(emailInContentMatcher.group(1).trim());
-            System.out.println("Parsed senderEmail from content: '" + request.getSenderEmail() + "'");
-        } else {
-            request.setSenderEmail(defaultSenderEmail);
-            System.out.println("Parsed senderEmail from header (default): '" + request.getSenderEmail() + "'");
-            if (request.getSenderEmail() == null || request.getSenderEmail().isEmpty() || "UNKNOWN".equals(request.getSenderEmail())) {
-                System.err.println("WARN: Không tìm thấy senderEmail hợp lệ cả trong nội dung lẫn header. Sử dụng email của tài khoản đang nghe: " + mailUsername);
-                request.setSenderEmail(mailUsername);
-            }
-        }
+        Pattern noteP    = Pattern.compile(
+                "Ghi\\s*Chú\\s*Thêm.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
 
-        System.out.println("Parsed - Company: '" + request.getNameCompany() + "'");
-        System.out.println("Parsed - Contact Person: '" + request.getNamePersonContact() + "'");
-        System.out.println("Parsed - Phone: '" + request.getPhone() + "'");
-        System.out.println("Parsed - License Plate: '" + request.getLicensePlate() + "'");
-        System.out.println("Parsed - Note: '" + request.getNote() + "'");
-        System.out.println("Parsed - Sender Email: '" + request.getSenderEmail() + "'");
+        /* email bất kỳ nằm trong ngoặc vuông/đơn */
+        Pattern emailIn  = Pattern.compile(
+                "[\\[(]([a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,6})[\\])]", FLAGS);
 
-        if (request.getNameCompany() == null || request.getNameCompany().isEmpty() ||
-                request.getNamePersonContact() == null || request.getNamePersonContact().isEmpty() ||
-                request.getPhone() == null || request.getPhone().isEmpty() ||
-                request.getLicensePlate() == null || request.getLicensePlate().isEmpty() ||
-                request.getSenderEmail() == null || request.getSenderEmail().isEmpty()) {
+        /* 3. Mapping vào DTO */
+        TransportUnitEmailRequest req = new TransportUnitEmailRequest();
+        req.setNameCompany      (find(emailContent, companyP));
+        req.setNamePersonContact(find(emailContent, contactP));
+        req.setPhone            (find(emailContent, phoneP));
+        req.setLicensePlate     (find(emailContent, licenseP));
+        req.setNote( Optional.ofNullable(find(emailContent, noteP)).orElse("") );
 
-            System.err.println("Lỗi parse: Dữ liệu email bị thiếu hoặc rỗng các trường BẮT BUỘC sau khi parse.");
+        String sender = find(emailContent, emailIn);
+        if (sender == null || sender.isBlank()) sender = defaultSenderEmail;
+        if (sender == null || sender.isBlank()) sender = mailUsername;      // fallback cuối
+        req.setSenderEmail(sender);
+
+        /* 4. Debug log */
+        System.out.printf("""
+        Parsed – Company : '%s'
+                 Contact : '%s'
+                 Phone   : '%s'
+                 Plate   : '%s'
+                 Note    : '%s'
+                 Email   : '%s'%n""",
+                req.getNameCompany(), req.getNamePersonContact(), req.getPhone(),
+                req.getLicensePlate(), req.getNote(), req.getSenderEmail());
+
+        /* 5. Kiểm tra field bắt buộc */
+        if (Stream.of(req.getNameCompany(), req.getNamePersonContact(),
+                        req.getPhone(), req.getLicensePlate(), req.getSenderEmail())
+                .anyMatch(s -> s == null || s.isBlank())) {
+
+            System.err.println("❌ Parse error – thiếu field bắt buộc, bỏ qua email.");
             return null;
         }
-
-        return request;
+        return req;
     }
 
+    /* Helper: trả về group(1) nếu match, null nếu không */
+    private static String find(String src, Pattern p) {
+        Matcher m = p.matcher(src);
+        return m.find() ? m.group(1).trim() : null;
+    }
+
+
     private void sendToOnboardingApi(TransportUnitEmailRequest request) {
-        // ... (Giữ nguyên không thay đổi) ...
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-API-KEY", onboardingApiKey);

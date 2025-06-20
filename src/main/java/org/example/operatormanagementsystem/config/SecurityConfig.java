@@ -37,6 +37,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
      * Cấu hình và cung cấp một bean PasswordEncoder.
      * Spring Security sẽ sử dụng bean này để mã hóa và kiểm tra mật khẩu.
      * BCryptPasswordEncoder là một lựa chọn phổ biến và an toàn.
+     *
      * @return Một instance của PasswordEncoder (BCryptPasswordEncoder).
      */
     @Bean// Đánh dấu phương thức này sẽ tạo ra một Spring Bean
@@ -51,12 +52,13 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         authProvider.setPasswordEncoder(passwordEncoder()); // Gọi phương thức @Bean để lấy instance
         return new ProviderManager(List.of(authProvider));
     }
+
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/register", "/api/auth/login", "/api/auth/me", "/api/auth/sendOTP", "/api/auth/verifyOTP", "/auth/verify-email-code",
-            "/api/user/forget-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
-            "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp","/api/auth/sendOTP",
-            "/api/auth/request-status-change","/api/auth/manager/update-status/{email}",
-            "/api/auth/manager/users-for-action",  "/api/auth/manager/user-details/{email}",
+            "/api/user/forget-password", "/api/user/reset-password", "/profiles/create/**", "/webhook/payment",
+            "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp", "/api/auth/sendOTP",
+            "/api/auth/request-status-change", "/api/auth/manager/update-status/{email}",
+            "/api/auth/manager/users-for-action", "/api/auth/manager/user-details/{email}",
             "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
             "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
             "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**"
@@ -86,7 +88,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 //                        .requestMatchers("/api/auth/manager/users-by-status/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login",
-                                        "/api/auth/forgot-password", // <-- ĐẢM BẢO DÒNG NÀY CÓ Ở ĐÂY
+                                        "/api/auth/forgot-password",
+                                        "/api/onboarding/**",// <-- ĐẢM BẢO DÒNG NÀY CÓ Ở ĐÂY
                                         "/api/auth/reset-password").permitAll()
 
                                 // thêm dòng này để đảm bảo
