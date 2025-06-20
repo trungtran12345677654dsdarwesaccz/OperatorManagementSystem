@@ -96,6 +96,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
 
+                        .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
+                        .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
                         // Bất kỳ request nào khác đều phải được xác thực
                         // Và sau khi xác thực, @PreAuthorize sẽ kiểm tra vai trò
                         .anyRequest().authenticated()
