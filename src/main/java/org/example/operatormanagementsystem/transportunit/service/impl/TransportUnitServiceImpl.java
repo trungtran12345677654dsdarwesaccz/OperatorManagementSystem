@@ -23,7 +23,6 @@ public class TransportUnitServiceImpl implements TransportUnitService {
 
     private final TransportUnitRepository repository;
 
-
     private TransportUnitResponse toResponse(TransportUnit entity) {
         return TransportUnitResponse.builder()
                 .transportId(entity.getTransportId())
@@ -33,7 +32,6 @@ public class TransportUnitServiceImpl implements TransportUnitService {
                 .licensePlate(entity.getLicensePlate())
                 .status(entity.getStatus())
                 .note(entity.getNote())
-                .createAt(entity.getCreatedAt())
                 .build();
     }
 

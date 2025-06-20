@@ -24,8 +24,8 @@ public class TransportUnitApprovalController {
     private final TransportUnitApprovalService approvalService;
     private final UserRepository userRepository;
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
+    @GetMapping("by-transport-unit/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER')")
     public ResponseEntity<TransportUnitApprovalResponse> getApprovalById(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(approvalService.getApprovalById(id));
@@ -65,7 +65,7 @@ public class TransportUnitApprovalController {
                 request = TransportUnitApprovalProcessRequest.builder()
                         .status(org.example.operatormanagementsystem.enumeration.ApprovalStatus.APPROVED)
                         .managerNote("Approved by manager.")
-                        .build();   
+                        .build();
             } else {
                 request.setStatus(org.example.operatormanagementsystem.enumeration.ApprovalStatus.APPROVED);
             }
@@ -108,21 +108,6 @@ public class TransportUnitApprovalController {
         } catch (RuntimeException e) {
             System.err.println("Error rejecting Transport Unit Approval: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-    }
-
-    @GetMapping("/by-transport-unit/{transportUnitId}")
-    @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
-    public ResponseEntity<TransportUnitApprovalResponse> getLatestApprovalByTransportUnitId(@PathVariable Integer transportUnitId) {
-        try {
-            TransportUnitApprovalResponse approval = approvalService.getLatestApprovalByTransportUnitId(transportUnitId);
-            if (approval == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-            return ResponseEntity.ok(approval);
-        } catch (RuntimeException e) {
-            System.err.println("Error getting approval by transportUnitId: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }

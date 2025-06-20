@@ -4,8 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 public class TransportUnitResponse {
@@ -16,5 +14,4 @@ public class TransportUnitResponse {
     private String licensePlate;
     private UserStatus status;
     private String note;
-    private LocalDateTime createAt;
 }

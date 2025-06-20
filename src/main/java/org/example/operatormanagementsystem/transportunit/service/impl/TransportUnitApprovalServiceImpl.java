@@ -3,13 +3,12 @@ package org.example.operatormanagementsystem.transportunit.service.impl;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitApprovalProcessRequest;
-import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitApprovalResponse;
 import org.example.operatormanagementsystem.entity.Manager;
 import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.entity.TransportUnitApproval;
-import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
+import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitApprovalResponse;
 import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitApprovalRepository;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
@@ -35,31 +34,41 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
     private final EmailService emailService; // Inject EmailService
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
-        String requestedByUserEmail = null;
-        if (approval.getRequestedByUser() != null) {
+
+        // 👉 ƯU TIÊN senderEmail – chỉ khi không có mới fallback sang requestedByUser
+        String requestedByUserEmail = approval.getSenderEmail();
+        if ((requestedByUserEmail == null || requestedByUserEmail.isBlank())
+                && approval.getRequestedByUser() != null) {
             requestedByUserEmail = approval.getRequestedByUser().getEmail();
-        } else {
-            // Nếu requestedByUser null, lấy từ senderEmail
-            requestedByUserEmail = approval.getSenderEmail();
         }
 
         String approvedByManagerEmail = null;
-        if (approval.getApprovedByManager() != null && approval.getApprovedByManager().getUsers() != null) {
+        if (approval.getApprovedByManager() != null
+                && approval.getApprovedByManager().getUsers() != null) {
             approvedByManagerEmail = approval.getApprovedByManager().getUsers().getEmail();
         }
 
         return TransportUnitApprovalResponse.builder()
                 .approvalId(approval.getApprovalId())
                 .transportUnitId(approval.getTransportUnit().getTransportId())
-                .requestedByUserId(approval.getRequestedByUser() != null ? approval.getRequestedByUser().getId() : null)
-                .senderEmail(approval.getSenderEmail()) // Sử dụng email đã xác định
-                .approvedByManagerId(approval.getApprovedByManager() != null ? approval.getApprovedByManager().getManagerId() : null)
+                .transportUnitName(approval.getTransportUnit().getNameCompany())
+                .requestedByUserId(
+                        approval.getRequestedByUser() != null
+                                ? approval.getRequestedByUser().getId()
+                                : null)
+                .senderEmail(requestedByUserEmail)      // ✅ luôn trả đúng
+                .approvedByManagerId(
+                        approval.getApprovedByManager() != null
+                                ? approval.getApprovedByManager().getManagerId()
+                                : null)
+                .approvedByManagerEmail(approvedByManagerEmail)
                 .status(approval.getStatus())
                 .requestedAt(approval.getRequestedAt())
                 .processedAt(approval.getProcessedAt())
                 .managerNote(approval.getManagerNote())
                 .build();
     }
+
 
     @Override
     @Transactional
@@ -135,14 +144,5 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
                 .filter(approval -> approval.getStatus().equals(ApprovalStatus.PENDING))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public TransportUnitApprovalResponse getLatestApprovalByTransportUnitId(Integer transportUnitId) {
-        // Lấy approval mới nhất theo transportUnitId
-        TransportUnitApproval approval = approvalRepository
-                .findTopByTransportUnit_TransportIdOrderByRequestedAtDesc(transportUnitId);
-        if (approval == null) return null;
-        return toResponse(approval);
     }
 }

@@ -15,5 +15,4 @@ public interface TransportUnitApprovalService {
     TransportUnitApprovalResponse getApprovalById(Integer approvalId);
 
     List<TransportUnitApprovalResponse> getAllPendingApprovals();
-    TransportUnitApprovalResponse getLatestApprovalByTransportUnitId(Integer transportUnitId);
 }
