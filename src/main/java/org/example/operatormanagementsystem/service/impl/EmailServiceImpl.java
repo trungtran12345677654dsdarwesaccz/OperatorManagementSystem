@@ -6,8 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.config.JwtUtil;
 import org.example.operatormanagementsystem.dto.request.VerifyOTPRequest;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
-import org.example.operatormanagementsystem.entity.Otp; // Import Otp entity
+import org.example.operatormanagementsystem.entity.Otp;
 import org.example.operatormanagementsystem.entity.Users;
+import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.repository.OTPVerificationRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
@@ -18,13 +19,18 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Random;
+
+import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -40,30 +46,22 @@ public class EmailServiceImpl implements EmailService {
     @Async
     @Override
     public void sendOTP(String recipient) throws MessagingException {
-        // --- Bắt đầu Debug Log ---
         System.out.println("DEBUG: sendOTP - Received recipient email (raw): '" + recipient + "'");
         System.out.println("DEBUG: sendOTP - Length of raw recipient email: " + recipient.length());
-        // --- Kết thúc Debug Log ---
 
-        // Làm sạch email: cắt khoảng trắng và chuyển về chữ thường
         String cleanRecipient = recipient.trim().toLowerCase();
 
-        // --- Bắt đầu Debug Log ---
         System.out.println("DEBUG: sendOTP - Cleaned recipient email: '" + cleanRecipient + "'");
         System.out.println("DEBUG: sendOTP - Length of cleaned recipient email: " + cleanRecipient.length());
-        // --- Kết thúc Debug Log ---
 
-        // Bước 1: Kiểm tra xem người dùng có tồn tại không
-        // Ném UsernameNotFoundException nếu người dùng không được tìm thấy.
         System.out.println("DEBUG: sendOTP - Attempting to find user by cleaned email: '" + cleanRecipient + "'");
-        Users user = userRepository.findByEmail(cleanRecipient) // SỬ DỤNG cleanRecipient
+        Users user = userRepository.findByEmail(cleanRecipient)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found for OTP generation: " + cleanRecipient));
         System.out.println("DEBUG: sendOTP - User FOUND! Email: '" + user.getEmail() + "', ID: " + user.getId() + ", Status: " + user.getStatus());
         System.out.println("DEBUG: sendOTP - Length of FOUND user email from DB: " + user.getEmail().length());
 
-        // Bước 2: Xóa OTP cũ nếu tồn tại
         System.out.println("DEBUG: sendOTP - Attempting to find existing OTP for: '" + cleanRecipient + "'");
-        Optional<Otp> otpVerification = otpVerificationRepository.findByEmail(cleanRecipient); // SỬ DỤNG cleanRecipient
+        Optional<Otp> otpVerification = otpVerificationRepository.findByEmail(cleanRecipient);
         if (otpVerification.isPresent()) {
             System.out.println("DEBUG: sendOTP - Existing OTP found for '" + cleanRecipient + "'. Deleting it.");
             otpVerificationRepository.delete(otpVerification.get());
@@ -71,37 +69,31 @@ public class EmailServiceImpl implements EmailService {
             System.out.println("DEBUG: sendOTP - No existing OTP found for '" + cleanRecipient + "'.");
         }
 
-        // Bước 3: Tạo OTP mới
         String otpCode = generateOTPEmail();
         System.out.println("DEBUG: sendOTP - Generated OTP code: " + otpCode + " for " + cleanRecipient);
 
         Otp verification = new Otp();
-        verification.setEmail(cleanRecipient); // SỬ DỤNG cleanRecipient
-        verification.setOtp(otpCode); // Đảm bảo trường này trong Otp entity là 'otpCode'
+        verification.setEmail(cleanRecipient);
+        verification.setOtp(otpCode);
         verification.setCreatedDate(LocalDateTime.now());
-        verification.setExpiredTime(LocalDateTime.now().plusMinutes(1));
+        verification.setExpiredTime(LocalDateTime.now().plusMinutes(5));
         verification.setStatus(Otp.OtpStatus.PENDING);
-        verification.setUsers(user); // Liên kết OTP với Users entity
+        verification.setUsers(user);
 
-        // Bước 4: Gửi email
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        // Đảm bảo EmailTemplate.VERIFICATION_CODE_EMAIL được định nghĩa và có getBody/getSubject
-        // Bạn cần chắc chắn class EmailTemplate tồn tại và có các phương thức này
         String html = EmailTemplate.VERIFICATION_CODE_EMAIL.getBody(otpCode);
 
-        helper.setTo(cleanRecipient); // SỬ DỤNG cleanRecipient
+        helper.setTo(cleanRecipient);
         helper.setSubject(EmailTemplate.VERIFICATION_CODE_EMAIL.getSubject());
         helper.setText(html, true);
-        helper.setFrom(email); // Sử dụng biến đã inject
+        helper.setFrom(email);
 
         javaMailSender.send(message);
         otpVerificationRepository.save(verification);
         System.out.println("DEBUG: sendOTP - OTP saved to DB and email send attempt completed for '" + cleanRecipient + "'");
     }
-
-
 
     @Override
     @Transactional
@@ -109,65 +101,85 @@ public class EmailServiceImpl implements EmailService {
         String userEmail = request.getEmail();
         String otpCode = request.getOtp();
 
-        // 1. Tìm OTP trong cơ sở dữ liệu
         Otp otpRecord = otpVerificationRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new BadCredentialsException("OTP not found for this email."));
 
-        // Kiểm tra trạng thái hiện tại của OTP (chỉ cho phép xác minh nếu đang PENDING)
         if (otpRecord.getStatus() != Otp.OtpStatus.PENDING) {
             throw new BadCredentialsException("OTP is not active or has been used/expired.");
         }
 
-        // 2. Kiểm tra OTP có hợp lệ và chưa hết hạn không
         if (!otpRecord.getOtp().equals(otpCode)) {
-            // Cập nhật trạng thái OTP thành USED hoặc EXPIRED nếu sai, tùy logic
-            otpRecord.setStatus(Otp.OtpStatus.USED); // Đánh dấu là đã sử dụng (sai)
+            otpRecord.setStatus(Otp.OtpStatus.USED);
             otpVerificationRepository.save(otpRecord);
             throw new BadCredentialsException("Invalid OTP.");
         }
         if (otpRecord.getExpiredTime().isBefore(LocalDateTime.now())) {
-            // Cập nhật trạng thái OTP thành EXPIRED
             otpRecord.setStatus(Otp.OtpStatus.EXPIRED);
             otpVerificationRepository.save(otpRecord);
             throw new BadCredentialsException("OTP has expired.");
         }
 
-        // 3. Nếu OTP hợp lệ và chưa hết hạn, cập nhật trạng thái OTP thành VERIFIED
         otpRecord.setStatus(Otp.OtpStatus.VERIFIED);
-        otpVerificationRepository.save(otpRecord); // Lưu lại trạng thái đã xác nhận
+        otpVerificationRepository.save(otpRecord);
 
-        // 4. Lấy thông tin người dùng
         Users user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found after OTP verification."));
 
-        // Cập nhật trạng thái người dùng thành ACTIVE nếu cần
         if (user.getStatus() != UserStatus.ACTIVE) {
             user.setStatus(UserStatus.ACTIVE);
-            userRepository.save(user); // Lưu thay đổi trạng thái người dùng
+            userRepository.save(user);
         }
 
-        // 5. Kiểm tra lại trạng thái tài khoản (đảm bảo đã ACTIVE cho bước đăng nhập)
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new BadCredentialsException("Account is not active. Please ensure your email is verified.");
         }
 
-        // 6. Tạo JWT token
-        String token = jwtUtil.generateToken(user);
-        String role = user.getAuthorities().stream()
-                .findFirst()
-                .map(Object::toString)
-                .orElse("USER");
+        String token;
+        UserRole assignedRole = null;
 
-        // 7. Trả về AuthLoginResponse
+        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
+
+        if (authorities != null && !authorities.isEmpty()) {
+            String roleStringFromAuthority = authorities.iterator().next().getAuthority();
+            if (roleStringFromAuthority.startsWith("ROLE_")) {
+                roleStringFromAuthority = roleStringFromAuthority.substring(5);
+            }
+
+            try {
+                UserRole potentialRole = UserRole.valueOf(roleStringFromAuthority.toUpperCase());
+
+                if (potentialRole == UserRole.MANAGER || potentialRole == UserRole.STAFF) {
+                    assignedRole = potentialRole;
+                } else {
+                    System.err.println("Attempted login with disallowed role: '" + potentialRole + "' for user " + user.getUsername());
+                    throw new InsufficientAuthenticationException("Access denied: Only MANAGER and STAFF roles are allowed.");
+                }
+            } catch (IllegalArgumentException e) {
+                System.err.println("Invalid role string found from user authorities: " + roleStringFromAuthority + ". For user: " + user.getUsername());
+                throw new InsufficientAuthenticationException("Access denied: Invalid user role.");
+            }
+        } else {
+            System.err.println("User " + user.getUsername() + " has no assigned authorities.");
+            throw new InsufficientAuthenticationException("Access denied: User has no assigned roles.");
+        }
+
+        if (assignedRole == null) {
+            System.err.println("Unexpected state: assignedRole is null after processing for user " + user.getUsername());
+            throw new InsufficientAuthenticationException("Access denied: Role could not be determined.");
+        }
+
+        token = jwtUtil.generateToken(user);
+
         AuthLoginResponse authLoginResponse = new AuthLoginResponse();
         authLoginResponse.setAccessToken(token);
-        authLoginResponse.setRole(role);
+        authLoginResponse.setRole(assignedRole);
         return authLoginResponse;
     }
 
     private String generateOTPEmail() {
         return String.format("%06d", new Random().nextInt(999999));
     }
+
     @Async
     @Override
     public void sendStatusChangeNotification(String recipientEmail, UserStatus newStatus) throws MessagingException {
@@ -219,20 +231,17 @@ public class EmailServiceImpl implements EmailService {
         helper.setTo(recipientEmail);
         helper.setSubject(subject);
         helper.setText(body, true);
-        helper.setFrom(email); // Sử dụng email người gửi đã được inject
+        helper.setFrom(email);
 
         System.out.println("DEBUG: sendStatusChangeNotification - Preparing to send email:");
         System.out.println("DEBUG: To: " + recipientEmail);
         System.out.println("DEBUG: From: " + email);
         System.out.println("DEBUG: Subject: " + subject);
-        // System.out.println("DEBUG: Body: " + body); // Không nên in toàn bộ body nếu nó quá dài hoặc chứa thông tin nhạy cảm
 
         javaMailSender.send(message);
         System.out.println("DEBUG: sendStatusChangeNotification - Email sent successfully to '" + recipientEmail + "' for status: " + newStatus.name());
     }
 
-
-    // Phương thức mới: Gửi email đặt lại mật khẩu
     @Async
     @Override
     public void sendPasswordResetEmail(String recipientEmail, String resetToken) throws MessagingException {
@@ -264,5 +273,99 @@ public class EmailServiceImpl implements EmailService {
 
         javaMailSender.send(message);
         System.out.println("DEBUG: sendPasswordResetEmail - Password reset email sent successfully to '" + recipientEmail + "'");
+    }
+
+    @Async
+    @Override
+    public void sendHtmlEmail(String recipientEmail, String subject, String htmlBody) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(recipientEmail);
+        helper.setSubject(subject);
+        helper.setText(htmlBody, true);
+        helper.setFrom(email);
+
+        System.out.println("DEBUG: sendHtmlEmail - Preparing to send email:");
+        System.out.println("DEBUG: To: " + recipientEmail);
+        System.out.println("DEBUG: From: " + email);
+        System.out.println("DEBUG: Subject: " + subject);
+
+        javaMailSender.send(message);
+        System.out.println("DEBUG: sendHtmlEmail - Email sent successfully to '" + recipientEmail + "' with subject: " + subject);
+    }
+
+
+    // CHỈNH SỬA PHƯƠNG THỨC NÀY ĐỂ TRUYỀN THAM SỐ VÀO EMAIL TEMPLATE ĐÚNG CÁCH
+//    @Async
+//    @Override
+//    public void sendTransportUnitApprovalNotification(String recipientEmail, String transportUnitName, String userName, ApprovalStatus status, String managerNote) throws MessagingException {
+//        System.out.println("DEBUG: sendTransportUnitApprovalNotification - Attempting to send notification to: '" + recipientEmail + "' for Transport Unit '" + transportUnitName + "' with status: " + status.name() + " (User: " + userName + ")");
+//
+//        String subject;
+//        String htmlBody;
+//
+//        // userName đã được truyền vào, sử dụng trực tiếp
+//        String displayUserName = (userName != null && !userName.trim().isEmpty()) ? userName : "Bạn";
+//
+//        switch (status) {
+//            case APPROVED:
+//                subject = "[OperatorManagementSystem] Đơn vị Vận chuyển của bạn đã được duyệt";
+//                // Gọi đúng phương thức static từ EmailTemplate
+//                htmlBody = EmailTemplate.buildTransportUnitApprovedEmail(displayUserName, transportUnitName, managerNote);
+//                break;
+//            case REJECTED:
+//                subject = "[OperatorManagementSystem] Đơn vị Vận chuyển của bạn đã bị từ chối";
+//                // Gọi đúng phương thức static từ EmailTemplate
+//                htmlBody = EmailTemplate.buildTransportUnitRejectedEmail(displayUserName, transportUnitName, managerNote);
+//                break;
+//            default:
+//                subject = "[OperatorManagementSystem] Cập nhật trạng thái đơn vị Vận chuyển";
+//                // Gọi đúng phương thức static từ EmailTemplate
+//                htmlBody = EmailTemplate.buildGenericTransportUnitStatusUpdateEmail(displayUserName, transportUnitName, status.name(), managerNote);
+//                break;
+//        }
+//
+//        sendHtmlEmail(recipientEmail, subject, htmlBody);
+//
+//        System.out.println("DEBUG: sendTransportUnitApprovalNotification - Email sent successfully to '" + recipientEmail + "' for Transport Unit '" + transportUnitName + "' with status: " + status.name());
+//    }
+    @Async
+    @Override
+    public void sendTransportUnitApprovalNotification(String recipientEmail, String userName, String transportUnitName, ApprovalStatus status, String managerNote) throws MessagingException {
+        System.out.println("DEBUG: sendTransportUnitApprovalNotification - Attempting to send notification to: '" + recipientEmail + "' for Transport Unit '" + transportUnitName + "' with status: " + status.name() + " (User: " + userName + ")");
+
+        String subject;
+        String htmlBody;
+
+        // userName đã được truyền vào, sử dụng trực tiếp
+        String displayUserName = (userName != null && !userName.trim().isEmpty()) ? userName : "Bạn";
+
+        switch (status) {
+            case APPROVED:
+                subject = "[OperatorManagementSystem] Đơn vị Vận chuyển của bạn đã được duyệt";
+                // Giữ nguyên logic này nếu bạn muốn sử dụng các static method build HTML
+                // htmlBody = EmailTemplate.buildTransportUnitApprovedEmail(displayUserName, transportUnitName, managerNote);
+                break;
+            case REJECTED:
+                subject = "[OperatorManagementSystem] Đơn vị Vận chuyển của bạn đã bị từ chối";
+                // htmlBody = EmailTemplate.buildTransportUnitRejectedEmail(displayUserName, transportUnitName, managerNote);
+                break;
+            default:
+                subject = "[OperatorManagementSystem] Cập nhật trạng thái đơn vị Vận chuyển";
+                // htmlBody = EmailTemplate.buildGenericTransportUnitStatusUpdateEmail(displayUserName, transportUnitName, status.name(), managerNote);
+                break;
+        }
+
+        // --- DÒNG THAY THẾ CHO MỤC ĐÍCH DEBUG VỚI PLAIN TEXT ---
+        htmlBody = "Chào " + displayUserName + ",\n\n" +
+                "Đơn vị vận chuyển " + transportUnitName + " của bạn đã được " + status.name() + ".\n" +
+                "Ghi chú: " + (managerNote != null && !managerNote.isEmpty() ? managerNote : "Không có ghi chú.") + "\n\n" +
+                "Trân trọng,\nHệ thống OperatorManagementSystem.";
+        // --- KẾT THÚC DÒNG THAY THẾ ---
+
+        sendHtmlEmail(recipientEmail, subject, htmlBody);
+
+        System.out.println("DEBUG: sendTransportUnitApprovalNotification - Email sent successfully to '" + recipientEmail + "' for Transport Unit '" + transportUnitName + "' with status: " + status.name());
     }
 }
