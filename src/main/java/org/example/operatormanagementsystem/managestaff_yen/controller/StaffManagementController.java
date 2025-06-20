@@ -43,7 +43,21 @@ public class StaffManagementController {
             return handleException("retrieving staff list", e);
         }
     }
+    // === Get Staff Details ===
+    @Operation(summary = "Get staff details", description = "Get detailed information of a specific staff member")
+    @GetMapping("/{operatorId}")
+    public ResponseEntity<ApiResponse<OperatorStaffResponse>> getStaffDetails(
+            @PathVariable Integer managerId,
+            @PathVariable Integer operatorId) {
 
+        try {
+            log.info("Getting details for staff {} by manager {}", operatorId, managerId);
+            var response = staffManagementService.getStaffDetails(managerId, operatorId);
+            return ResponseEntity.ok(ApiResponse.success("Staff details retrieved", response));
+        } catch (Exception e) {
+            return handleException("retrieving staff details", e);
+        }
+    }
     // === Search Staff ===
     @Operation(summary = "Search staff", description = "Search staff by name, email, or username")
     @GetMapping("/search")

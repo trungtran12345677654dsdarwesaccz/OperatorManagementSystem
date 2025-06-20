@@ -116,7 +116,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));
 //        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
-        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
         corsConfiguration.setExposedHeaders(Arrays.asList("*"));
         corsConfiguration.setAllowCredentials(true);
