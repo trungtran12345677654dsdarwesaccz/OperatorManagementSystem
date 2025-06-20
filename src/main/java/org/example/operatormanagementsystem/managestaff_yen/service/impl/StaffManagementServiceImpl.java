@@ -165,4 +165,11 @@ public class StaffManagementServiceImpl implements StaffManagementService {
                 .totalChatbotLogs(staff.getChatbotLogs() != null ? (long) staff.getChatbotLogs().size() : 0L)
                 .build();
     }
+    @Override
+    @Transactional(readOnly = true)
+    public OperatorStaffResponse getStaffDetails(Integer managerId, Integer operatorId) {
+        OperatorStaff staff = validateStaffBelongsToManager(managerId, operatorId);
+        return convertToStaffResponse(staff);
+    }
+
 }

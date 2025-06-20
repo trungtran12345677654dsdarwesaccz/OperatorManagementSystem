@@ -13,4 +13,5 @@ public interface StaffManagementService {
     void blockOrDeleteStaffAccount(Integer managerId, Integer operatorId, boolean permanentDelete);
     void feedbackToStaff(Integer managerId, Integer operatorId, ManagerFeedbackRequest request);
     StaffOverviewResponse getStaffOverview(Integer managerId);
+    OperatorStaffResponse getStaffDetails(Integer managerId, Integer operatorId); // <-- Sửa tại đây
 }
