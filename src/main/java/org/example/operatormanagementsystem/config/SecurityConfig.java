@@ -47,7 +47,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return new BCryptPasswordEncoder(); // Sử dụng BCryptPasswordEncoder
     }
 
-   @Bean
+    @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
@@ -58,13 +58,9 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/api/auth/register", "/api/auth/login", "/api/auth/me", "/api/auth/sendOTP", "/api/auth/verifyOTP", "/auth/verify-email-code",
             "/api/user/forgot-password","/api/user/reset-password","/profiles/create/**", "/webhook/payment",
             "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp","/api/auth/sendOTP",
-            "/api/auth/request-status-change", "/api/onboarding/transport-unit-via-email"
-            // dg test
-//            ,"/api/transport-units/",
-//            "/api/transport-units/search/",
-//            "/api/transport-units/search-advanced/",
-//            "/api/transport-units/{id}/",
-//            "/api/transport-units/{id}/bookings/"
+            "/api/auth/request-status-change","/api/auth/manager/update-status/{email}",
+            "/api/auth/manager/users-for-action",  "/api/auth/manager/user-details/{email}","/api/promotions/**"
+
 
     };
 
@@ -114,7 +110,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         corsConfiguration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",    // Vite dev server
                 "http://localhost:3000",    // React dev server
-                "http://127.0.0.1:5174",    // Alternative localhost
+                "http://127.0.0.1:5173",    // Alternative localhost
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));
 //        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
