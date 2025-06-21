@@ -10,11 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableJpaRepositories(basePackages = {
-    "org.example.operatormanagementsystem.repository",
-    "org.example.operatormanagementsystem.managercustomer.repository",
-        "org.example.operatormanagementsystem.transportunit.repository"
-})
+@EnableJpaRepositories
 @EntityScan(basePackages = "org.example.operatormanagementsystem.entity")
 public class OperatorManagementSystemApplication {
     public static void main(String[] args) {

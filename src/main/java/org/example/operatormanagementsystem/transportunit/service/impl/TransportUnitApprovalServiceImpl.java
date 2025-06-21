@@ -30,7 +30,6 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
     private final TransportUnitApprovalRepository approvalRepository;
     private final TransportUnitRepository transportUnitRepository;
     private final ManagerRepository managerRepository;
-    private final UserRepository userRepository;
     private final EmailService emailService; // Inject EmailService
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
