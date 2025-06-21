@@ -1,8 +1,8 @@
-// src/main/java/org/example/operatormanagementsystem/managecustomerorderbystaff/service/impl/BookingServiceImpl.java
 package org.example.operatormanagementsystem.managecustomerorderbystaff.service.impl;
 
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.entity.Customer; // Cần import Customer
+import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest; // Import BookingRequest DTO
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.CustomerRepository;
@@ -76,7 +76,6 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Cập nhật Customer nếu CustomerId được cung cấp trong request
-        // Giả định bookingUpdatesRequest.getCustomerId() là ID của entity Customer
         if (bookingUpdatesRequest.getCustomerId() != null) {
             Customer customer = customerRepository.findById(bookingUpdatesRequest.getCustomerId())
                     .orElseThrow(() -> new RuntimeException("Customer not found for update with ID: " + bookingUpdatesRequest.getCustomerId()));
@@ -90,6 +89,18 @@ public class BookingServiceImpl implements BookingService {
         //     existingBooking.setStorageUnit(storageUnit);
         // }
         // ... (tương tự cho TransportUnit và OperatorStaff nếu có)
+
+        // Thêm xử lý cho total và paymentStatus
+        if (bookingUpdatesRequest.getTotal() != null) {
+            existingBooking.setTotal(bookingUpdatesRequest.getTotal());
+        }
+        if (bookingUpdatesRequest.getPaymentStatus() != null) {
+            try {
+                existingBooking.setPaymentStatus(PaymentStatus.valueOf(bookingUpdatesRequest.getPaymentStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid payment status: " + bookingUpdatesRequest.getPaymentStatus());
+            }
+        }
 
         return bookingRepository.save(existingBooking);
     }

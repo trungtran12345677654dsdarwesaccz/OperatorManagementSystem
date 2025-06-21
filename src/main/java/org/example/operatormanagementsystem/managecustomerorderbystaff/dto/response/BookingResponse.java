@@ -14,7 +14,5 @@ public class BookingResponse {
     private Integer customerId;
     private String customerFullName;
     private Long total; // Thêm tổng giá trị đơn hàng (số nguyên VNĐ)
-    private String paymentStatus; // Thêm trạng thái thanh toán
-    private String deliveryProgress; // Thêm tiến độ giao hàng
-    private String errorMessage; // Để xử lý lỗi
+    private String paymentStatus;
 }

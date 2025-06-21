@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.managecustomerorderbystaff.dto.requ
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,4 +34,10 @@ public class BookingRequest {
 
     @NotNull(message = "Operator Staff ID cannot be null")
     private Integer operatorStaffId;
+
+    @PositiveOrZero(message = "Total must be zero or positive")
+    private Long total;
+
+    @NotBlank(message = "Payment status cannot be blank")
+    private String paymentStatus;
 }
