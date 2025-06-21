@@ -14,7 +14,7 @@ import org.example.operatormanagementsystem.transportunit.repository.TransportUn
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
 import org.example.operatormanagementsystem.transportunit.service.TransportUnitApprovalService;
-import org.example.operatormanagementsystem.service.EmailService; // Import EmailService
+import org.example.operatormanagementsystem.service.EmailService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +35,7 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
 
-        // 👉 ƯU TIÊN senderEmail – chỉ khi không có mới fallback sang requestedByUser
+
         String requestedByUserEmail = approval.getSenderEmail();
         if ((requestedByUserEmail == null || requestedByUserEmail.isBlank())
                 && approval.getRequestedByUser() != null) {

@@ -45,6 +45,11 @@ public class Booking {
     @Column(name = "delivery_date")
     private LocalDateTime deliveryDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "promotion_id")
+    private Promotion promotion;
+
+
     @Column(name = "note", length = 255)
     private String note;
 

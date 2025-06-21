@@ -8,6 +8,7 @@ import org.example.operatormanagementsystem.managestaff_yen.dto.request.*;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.*;
 import org.example.operatormanagementsystem.managestaff_yen.repository.*;
 import org.example.operatormanagementsystem.managestaff_yen.service.StaffManagementService;
+import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

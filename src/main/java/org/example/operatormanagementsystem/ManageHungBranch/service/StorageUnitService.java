@@ -6,7 +6,7 @@ import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
 import org.example.operatormanagementsystem.entity.Manager;
 import org.example.operatormanagementsystem.entity.StorageUnit;
 import org.example.operatormanagementsystem.ManageHungBranch.repository.StorageUnitRepository;
-import org.example.operatormanagementsystem.managestaff_yen.repository.ManagerRepository;
+import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

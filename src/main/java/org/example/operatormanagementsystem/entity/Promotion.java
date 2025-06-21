@@ -38,7 +38,7 @@ public class Promotion {
     private Manager manager; // Thay thế OperatorStaff bằng Manager
 
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Booking> bookings; // Các booking áp dụng khuyến mãi
+    private Set<Booking> bookings;
 
     @ManyToMany
     @JoinTable(

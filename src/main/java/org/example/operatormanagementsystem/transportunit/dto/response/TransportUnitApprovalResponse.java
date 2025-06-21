@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -16,7 +17,7 @@ public class TransportUnitApprovalResponse {
     private Integer transportUnitId;
     private String transportUnitName;
     private Integer requestedByUserId;
-    private String requestedByUserEmail;
+    private String senderEmail;
     private Integer approvedByManagerId;
     private String approvedByManagerEmail;
     private ApprovalStatus status;
