@@ -1,16 +1,18 @@
 package org.example.operatormanagementsystem.managecustomerorderbystaff.service.impl;
 
 import org.example.operatormanagementsystem.entity.Booking;
-import org.example.operatormanagementsystem.entity.Customer; // Cần import Customer
+import org.example.operatormanagementsystem.entity.Customer;
+import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.PaymentStatus;
-import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest; // Import BookingRequest DTO
+import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.CustomerRepository;
+import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.UsersRepository; // Import UsersRepository
 import org.example.operatormanagementsystem.managecustomerorderbystaff.service.BookingService;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDateTime; // Giữ lại nếu cần cho các logic khác
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +21,8 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final CustomerRepository customerRepository; // Giữ lại vì updateBooking có logic Customer
+    private final CustomerRepository customerRepository;
+    private final UsersRepository usersRepository; // Thêm UsersRepository
 
     @Override
     public long getTotalBookings() {
@@ -54,17 +57,11 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.findById(id);
     }
 
-    // @Override
-    // public Booking saveBooking(Booking booking) { // Đã bỏ chức năng tạo mới
-    //    // ...
-    // }
-
     @Override
-    public Booking updateBooking(Integer id, BookingRequest bookingUpdatesRequest) { // Nhận BookingRequest
+    public Booking updateBooking(Integer id, BookingRequest bookingUpdatesRequest) {
         Booking existingBooking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
 
-        // Cập nhật các trường nếu chúng được cung cấp trong request
         if (bookingUpdatesRequest.getStatus() != null) {
             existingBooking.setStatus(bookingUpdatesRequest.getStatus());
         }
@@ -75,22 +72,19 @@ public class BookingServiceImpl implements BookingService {
             existingBooking.setNote(bookingUpdatesRequest.getNote());
         }
 
-        // Cập nhật Customer nếu CustomerId được cung cấp trong request
         if (bookingUpdatesRequest.getCustomerId() != null) {
             Customer customer = customerRepository.findById(bookingUpdatesRequest.getCustomerId())
                     .orElseThrow(() -> new RuntimeException("Customer not found for update with ID: " + bookingUpdatesRequest.getCustomerId()));
             existingBooking.setCustomer(customer);
+            if (bookingUpdatesRequest.getCustomerFullName() != null && !bookingUpdatesRequest.getCustomerFullName().isEmpty()) {
+                Users user = customer.getUsers();
+                if (user != null) {
+                    user.setFullName(bookingUpdatesRequest.getCustomerFullName());
+                    usersRepository.save(user); // Sử dụng usersRepository đã inject
+                }
+            }
         }
-        // Thêm logic cập nhật cho StorageUnit, TransportUnit, OperatorStaff nếu cần
-        // Ví dụ:
-        // if (bookingUpdatesRequest.getStorageUnitId() != null) {
-        //     StorageUnit storageUnit = storageUnitRepository.findById(bookingUpdatesRequest.getStorageUnitId())
-        //             .orElseThrow(() -> new RuntimeException("Storage Unit not found with ID: " + bookingUpdatesRequest.getStorageUnitId()));
-        //     existingBooking.setStorageUnit(storageUnit);
-        // }
-        // ... (tương tự cho TransportUnit và OperatorStaff nếu có)
 
-        // Thêm xử lý cho total và paymentStatus
         if (bookingUpdatesRequest.getTotal() != null) {
             existingBooking.setTotal(bookingUpdatesRequest.getTotal());
         }
@@ -105,21 +99,23 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.save(existingBooking);
     }
 
-    // @Override
-    // public void deleteBooking(Integer id) { // Đã bỏ chức năng xóa
-    //     // ...
-    // }
-
     @Override
     public List<Booking> searchBookingsByCustomerName(String fullName) {
         return bookingRepository.findByCustomerUsersFullNameContainingIgnoreCase(fullName);
     }
 
     @Override
-    public void updatePaymentStatus(Integer id, String status) {
+    public Booking updatePaymentStatus(Integer id, String status) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
-        booking.setStatus(status);
-        bookingRepository.save(booking);
+        try {
+            booking.setPaymentStatus(PaymentStatus.valueOf(status.toUpperCase()));
+            System.out.println("Cập nhật paymentStatus thành: " + status + " cho booking ID: " + id);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid payment status: " + status);
+        }
+        Booking savedBooking = bookingRepository.save(booking);
+        System.out.println("Booking sau khi lưu: " + savedBooking.getPaymentStatus());
+        return savedBooking;
     }
 }
