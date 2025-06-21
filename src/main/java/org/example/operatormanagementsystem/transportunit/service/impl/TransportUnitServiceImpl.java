@@ -9,6 +9,10 @@ import org.example.operatormanagementsystem.transportunit.dto.request.TransportU
 import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitResponse;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
 import org.example.operatormanagementsystem.transportunit.service.TransportUnitService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +26,21 @@ import java.util.stream.Collectors;
 public class TransportUnitServiceImpl implements TransportUnitService {
 
     private final TransportUnitRepository repository;
+
+
+    /* --------- NEW ---------- */
+    @Override
+    public Page<TransportUnitResponse> getAllPaged(int page, int size,
+                                                   String sortBy,
+                                                   String dir) {
+        Sort sort = Sort.by(sortBy);
+        if ("desc".equalsIgnoreCase(dir)) sort = sort.descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return repository.findAll(pageable)          // Page<TransportUnit>
+                .map(this::toResponse);         // Page<TransportUnitResponse>
+    }
+
 
     private TransportUnitResponse toResponse(TransportUnit entity) {
         return TransportUnitResponse.builder()

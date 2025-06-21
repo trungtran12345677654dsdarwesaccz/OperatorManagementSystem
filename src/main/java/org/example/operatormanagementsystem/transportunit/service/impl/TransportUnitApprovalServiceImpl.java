@@ -35,7 +35,7 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
 
-        // 👉 ƯU TIÊN senderEmail – chỉ khi không có mới fallback sang requestedByUser
+
         String requestedByUserEmail = approval.getSenderEmail();
         if ((requestedByUserEmail == null || requestedByUserEmail.isBlank())
                 && approval.getRequestedByUser() != null) {

@@ -4,6 +4,7 @@ import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitRequest;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitSearchRequest;
 import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public interface TransportUnitService {
     TransportUnitResponse update(Integer id, TransportUnitRequest request);
     TransportUnitResponse getById(Integer id);
     List<TransportUnitResponse> getByStatus(UserStatus status);
+    Page<TransportUnitResponse> getAllPaged(int page, int size,
+                                            String sortBy, String dir);
 }
