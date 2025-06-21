@@ -15,6 +15,7 @@ import java.util.Set;
 @Builder
 @Entity
 @Table(name = "operator_staff")
+@ToString(of = {"operatorId"})
 public class OperatorStaff {
 
     @Id
@@ -39,6 +40,7 @@ public class OperatorStaff {
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ChatbotLog> chatbotLogs;
 
+    @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ManagerFeedbackToStaff> receivedFeedbacks;
 }
-
 

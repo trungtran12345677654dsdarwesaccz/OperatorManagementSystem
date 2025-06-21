@@ -2,7 +2,6 @@ package org.example.operatormanagementsystem.transportunit.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
-import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitRequest;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitSearchRequest;
 import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitResponse;
@@ -20,7 +19,6 @@ import java.util.List;
 public class TransportUnitController {
 
     private final TransportUnitService service;
-    private final BookingRepository bookingRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
@@ -76,15 +74,5 @@ public class TransportUnitController {
         return ResponseEntity.ok(response);
     }
 
-    // --- ĐÃ SỬA: Endpoint nhận trực tiếp bookingId từ Request Body ---
-    @PostMapping("/search-by-booking-id") // Đổi tên endpoint để rõ ràng hơn
-    @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
-    public ResponseEntity<List<TransportUnitResponse>> searchTransportUnitsByBookingId(
-            @RequestBody Integer bookingId) { // Nhận trực tiếp Integer bookingId
-        List<TransportUnitResponse> response = service.findTransportUnitsByBooking(bookingId); // Truyền trực tiếp
-        if (response.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(response);
-    }
+
 }

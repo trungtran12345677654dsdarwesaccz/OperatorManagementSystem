@@ -8,7 +8,6 @@ import org.example.operatormanagementsystem.config.SecurityConfig;
 import org.example.operatormanagementsystem.dto.request.LoginRequest;
 import org.example.operatormanagementsystem.dto.request.RegisterRequest;
 import org.example.operatormanagementsystem.dto.request.StatusChangeRequest;
-import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.dto.response.UserResponse;
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.UserGender;
@@ -28,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,56 +65,56 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return "OTP has been sent to your email. Please enter it to complete login.";
 
     }
-//securityConfig.passwordEncoder().encode(register.getPassword())
-@Override
-@Transactional
-public UserResponse register(RegisterRequest register) {
-    if (userRepository.existsByUsername(register.getUsername())) {
-        throw new RuntimeException("Username already exists.");
+    //securityConfig.passwordEncoder().encode(register.getPassword())
+    @Override
+    @Transactional
+    public UserResponse register(RegisterRequest register) {
+        if (userRepository.existsByUsername(register.getUsername())) {
+            throw new RuntimeException("Username already exists.");
+        }
+
+        if (userRepository.existsByEmail(register.getEmail())) {
+            throw new RuntimeException("    Email already exists.");
+        }
+        if (register.getPassword().length() > 72) {
+            throw new IllegalArgumentException("Password cannot be more than 72 characters.");
+        }
+
+        Users user = new Users();
+        user.setUsername(register.getUsername());
+        user.setEmail(register.getEmail());
+        user.setPassword(securityConfig.passwordEncoder().encode(register.getPassword()));
+        user.setPhone(register.getPhone());
+        user.setFullName(register.getFullName());
+        user.setAddress(register.getAddress());
+        user.setGender(UserGender.valueOf(register.getGender().toUpperCase()));
+        user.setStatus(UserStatus.PENDING_APPROVAL); // Mặc định là pending
+        user.setRole(UserRole.STAFF); // Giữ nguyên vai trò bạn đã thiết lập
+        user.getCreatedAt();
+        user.getCreatedDate();
+
+
+        userRepository.save(user);
+
+        // --- Bắt đầu phần thay đổi: Tự động gửi yêu cầu thay đổi trạng thái sau khi đăng ký ---
+        // Tạo một StatusChangeRequest giả định cho mục đích này
+        StatusChangeRequest statusChangeRequest = StatusChangeRequest.builder()
+                .email(user.getEmail()) // Sử dụng email của user vừa tạo
+                .build();
+        // Gọi phương thức requestStatusChange của chính service này
+        // Lưu ý: Kết quả của requestStatusChange (là String) sẽ được gắn vào errorMessage của UserResponse
+        String statusChangeMessage = this.requestStatusChange(statusChangeRequest); // Sử dụng 'this' để gọi phương thức của cùng class
+        System.out.println("DEBUG: Auto status change request initiated for new user: " + statusChangeMessage);
+        // --- Kết thúc phần thay đổi ---
+
+        UserResponse response = new UserResponse();
+        response.setUserName(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setFullName(user.getFullName());
+        response.setGender(user.getGender().toString());
+        response.setAddress(user.getAddress());
+        return response;
     }
-
-    if (userRepository.existsByEmail(register.getEmail())) {
-        throw new RuntimeException("    Email already exists.");
-    }
-    if (register.getPassword().length() > 72) {
-        throw new IllegalArgumentException("Password cannot be more than 72 characters.");
-    }
-
-    Users user = new Users();
-    user.setUsername(register.getUsername());
-    user.setEmail(register.getEmail());
-    user.setPassword(securityConfig.passwordEncoder().encode(register.getPassword()));
-    user.setPhone(register.getPhone());
-    user.setFullName(register.getFullName());
-    user.setAddress(register.getAddress());
-    user.setGender(UserGender.valueOf(register.getGender().toUpperCase()));
-    user.setStatus(UserStatus.PENDING_APPROVAL); // Mặc định là pending
-    user.setRole(UserRole.STAFF); // Giữ nguyên vai trò bạn đã thiết lập
-    user.getCreatedAt();
-    user.getCreatedDate();
-
-
-    userRepository.save(user);
-
-    // --- Bắt đầu phần thay đổi: Tự động gửi yêu cầu thay đổi trạng thái sau khi đăng ký ---
-    // Tạo một StatusChangeRequest giả định cho mục đích này
-    StatusChangeRequest statusChangeRequest = StatusChangeRequest.builder()
-            .email(user.getEmail()) // Sử dụng email của user vừa tạo
-            .build();
-    // Gọi phương thức requestStatusChange của chính service này
-    // Lưu ý: Kết quả của requestStatusChange (là String) sẽ được gắn vào errorMessage của UserResponse
-    String statusChangeMessage = this.requestStatusChange(statusChangeRequest); // Sử dụng 'this' để gọi phương thức của cùng class
-    System.out.println("DEBUG: Auto status change request initiated for new user: " + statusChangeMessage);
-    // --- Kết thúc phần thay đổi ---
-
-    UserResponse response = new UserResponse();
-    response.setUserName(user.getUsername());
-    response.setEmail(user.getEmail());
-    response.setFullName(user.getFullName());
-    response.setGender(user.getGender().toString());
-    response.setAddress(user.getAddress());
-    return response;
-}
 
     // Phương thức yêu cầu thay đổi trạng thái (VD: từ INACTIVE -> PENDING_APPROVAL)
     @Override

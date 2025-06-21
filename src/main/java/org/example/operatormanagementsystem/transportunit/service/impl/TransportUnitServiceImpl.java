@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
-import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitRequest;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitSearchRequest;
 import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitResponse;
@@ -23,7 +22,6 @@ import java.util.stream.Collectors;
 public class TransportUnitServiceImpl implements TransportUnitService {
 
     private final TransportUnitRepository repository;
-    private final BookingRepository bookingRepository;
 
     private TransportUnitResponse toResponse(TransportUnit entity) {
         return TransportUnitResponse.builder()
@@ -99,26 +97,7 @@ public class TransportUnitServiceImpl implements TransportUnitService {
                 .orElseThrow(() -> new RuntimeException("Not found"));
     }
 
-    @Override
-    public List<TransportUnitResponse> findTransportUnitsByBooking(Integer bookingId) { // Chỉ nhận Integer
-        // Nếu bookingId không được cung cấp, trả về danh sách rỗng
-        if (bookingId == null) {
-            return Collections.emptyList();
-        }
 
-        // Tìm kiếm Booking theo bookingId
-        Optional<Booking> bookingOptional = bookingRepository.findById(bookingId);
-
-        // Nếu Booking được tìm thấy và có TransportUnit liên quan, trả về TransportUnit đó
-        if (bookingOptional.isPresent()) {
-            Booking booking = bookingOptional.get();
-            if (booking.getTransportUnit() != null) {
-                return List.of(toResponse(booking.getTransportUnit()));
-            }
-        }
-        // Trường hợp không tìm thấy Booking hoặc TransportUnit của Booking là null
-        return Collections.emptyList();
-    }
 
     @Override
     public List<TransportUnitResponse> getByStatus(UserStatus status) {

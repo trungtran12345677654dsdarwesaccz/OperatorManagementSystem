@@ -24,8 +24,8 @@ public class TransportUnitApprovalController {
     private final TransportUnitApprovalService approvalService;
     private final UserRepository userRepository;
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
+    @GetMapping("by-transport-unit/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER')")
     public ResponseEntity<TransportUnitApprovalResponse> getApprovalById(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(approvalService.getApprovalById(id));

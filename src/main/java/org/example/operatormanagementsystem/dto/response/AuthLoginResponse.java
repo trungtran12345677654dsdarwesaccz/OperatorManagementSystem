@@ -14,4 +14,3 @@ public class AuthLoginResponse {
     @Enumerated
     private UserRole role;
 }
-

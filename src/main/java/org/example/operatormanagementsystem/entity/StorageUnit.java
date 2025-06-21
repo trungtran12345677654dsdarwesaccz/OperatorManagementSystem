@@ -1,5 +1,12 @@
 package org.example.operatormanagementsystem.entity;
 
+
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,6 +16,7 @@ import java.util.Set;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "storage_unit")
+@ToString(of = {"storageId", "name"})
 public class StorageUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

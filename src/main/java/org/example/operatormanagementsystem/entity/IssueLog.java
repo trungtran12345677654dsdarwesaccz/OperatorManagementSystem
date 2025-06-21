@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "issue_log")
+@ToString(of = {"issueId", "description", "status"})
 public class IssueLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

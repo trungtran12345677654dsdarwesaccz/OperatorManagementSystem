@@ -14,6 +14,5 @@ public interface TransportUnitService {
     List<TransportUnitResponse> searchAdvanced(TransportUnitSearchRequest request);
     TransportUnitResponse update(Integer id, TransportUnitRequest request);
     TransportUnitResponse getById(Integer id);
-    List<TransportUnitResponse> findTransportUnitsByBooking(Integer bookingId);
     List<TransportUnitResponse> getByStatus(UserStatus status);
 }

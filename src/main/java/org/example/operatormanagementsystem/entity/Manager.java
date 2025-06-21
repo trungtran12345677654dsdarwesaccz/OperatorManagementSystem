@@ -17,6 +17,7 @@ import java.util.Set;
 @Table(name = "manager", uniqueConstraints = {
         @UniqueConstraint(columnNames = "manager_id")
 })
+@ToString(of = {"managerId"})
 public class Manager {
 
     @Id // No @GeneratedValue because manager_id gets its value from Users.id
@@ -40,8 +41,5 @@ public class Manager {
     // Mối quan hệ mới: Manager có nhiều bản thống kê doanh số
     @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ManagerSaleSummary> salesSummaries;
-
-    @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Promotion> promotions;
 
 }

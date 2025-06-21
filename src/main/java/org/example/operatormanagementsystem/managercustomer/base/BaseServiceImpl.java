@@ -1,6 +1,5 @@
-package org.example.operatormanagementsystem.base;
+package org.example.operatormanagementsystem.managercustomer.base;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Optional;
 

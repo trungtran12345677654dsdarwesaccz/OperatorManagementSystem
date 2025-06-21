@@ -2,14 +2,14 @@ package org.example.operatormanagementsystem.transportunit.service.impl;
 
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
-import org.example.operatormanagementsystem.managestaff_yen.repository.ManagerRepository;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitApprovalProcessRequest;
-import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitApprovalResponse;
 import org.example.operatormanagementsystem.entity.Manager;
 import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.entity.TransportUnitApproval;
 import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
+import org.example.operatormanagementsystem.transportunit.dto.response.TransportUnitApprovalResponse;
+import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitApprovalRepository;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
@@ -34,16 +34,17 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
     private final EmailService emailService; // Inject EmailService
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
-        String requestedByUserEmail = null;
-        if (approval.getRequestedByUser() != null) {
+
+        // 👉 ƯU TIÊN senderEmail – chỉ khi không có mới fallback sang requestedByUser
+        String requestedByUserEmail = approval.getSenderEmail();
+        if ((requestedByUserEmail == null || requestedByUserEmail.isBlank())
+                && approval.getRequestedByUser() != null) {
             requestedByUserEmail = approval.getRequestedByUser().getEmail();
-        } else {
-            // Nếu requestedByUser null, lấy từ senderEmail
-            requestedByUserEmail = approval.getSenderEmail();
         }
 
         String approvedByManagerEmail = null;
-        if (approval.getApprovedByManager() != null && approval.getApprovedByManager().getUsers() != null) {
+        if (approval.getApprovedByManager() != null
+                && approval.getApprovedByManager().getUsers() != null) {
             approvedByManagerEmail = approval.getApprovedByManager().getUsers().getEmail();
         }
 
@@ -51,9 +52,15 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
                 .approvalId(approval.getApprovalId())
                 .transportUnitId(approval.getTransportUnit().getTransportId())
                 .transportUnitName(approval.getTransportUnit().getNameCompany())
-                .requestedByUserId(approval.getRequestedByUser() != null ? approval.getRequestedByUser().getId() : null)
-                .requestedByUserEmail(requestedByUserEmail) // Sử dụng email đã xác định
-                .approvedByManagerId(approval.getApprovedByManager() != null ? approval.getApprovedByManager().getManagerId() : null)
+                .requestedByUserId(
+                        approval.getRequestedByUser() != null
+                                ? approval.getRequestedByUser().getId()
+                                : null)
+                .senderEmail(requestedByUserEmail)      // ✅ luôn trả đúng
+                .approvedByManagerId(
+                        approval.getApprovedByManager() != null
+                                ? approval.getApprovedByManager().getManagerId()
+                                : null)
                 .approvedByManagerEmail(approvedByManagerEmail)
                 .status(approval.getStatus())
                 .requestedAt(approval.getRequestedAt())
@@ -61,6 +68,7 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
                 .managerNote(approval.getManagerNote())
                 .build();
     }
+
 
     @Override
     @Transactional

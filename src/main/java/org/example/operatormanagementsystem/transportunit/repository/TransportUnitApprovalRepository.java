@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface TransportUnitApprovalRepository extends JpaRepository<TransportUnitApproval, Integer> {
     Optional<TransportUnitApproval> findByTransportUnit_TransportIdAndStatus(Integer transportUnitId, ApprovalStatus status);
+    TransportUnitApproval findTopByTransportUnit_TransportIdOrderByRequestedAtDesc(Integer transportUnitId);
 }

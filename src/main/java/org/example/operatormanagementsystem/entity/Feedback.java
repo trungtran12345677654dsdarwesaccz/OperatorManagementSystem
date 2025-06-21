@@ -2,13 +2,13 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.operatormanagementsystem.enumeration.UserRole;
 
 import java.time.LocalDateTime;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
 @Table(name = "feedback")
+@ToString(of = {"feedbackId", "content"})
 public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,15 +37,6 @@ public class Feedback {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    @JoinColumn(name = "sender_user_id", nullable = false) // sender_user_id là cột FK trong bảng feedback
-    @Enumerated(EnumType.STRING)
-    private UserRole senderUser;
-
-
-    @JoinColumn(name = "receiver_user_id", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private UserRole receiverUser;
 
     @Column(name = "process_status")
     private LocalDateTime processStatus;
