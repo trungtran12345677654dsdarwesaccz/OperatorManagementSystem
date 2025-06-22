@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "ggmaps_log")
-@ToString(of = {"ggmapsId", "requestedAt"})
 public class GoogleMapLog {
 
     @Id

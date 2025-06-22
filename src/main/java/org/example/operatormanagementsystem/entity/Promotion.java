@@ -12,8 +12,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "promotions")
-@ToString(of = {"id", "name", "status"})
 public class Promotion {
 
     @Id

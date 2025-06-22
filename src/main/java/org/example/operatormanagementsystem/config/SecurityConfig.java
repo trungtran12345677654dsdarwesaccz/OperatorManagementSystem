@@ -94,10 +94,14 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
                                 "/api/auth/reset-password").permitAll()
-                        .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
+                        .requestMatchers("/api/v1/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
-                        .anyRequest().authenticated() // ✅ LUÔN ĐẶT CUỐI
+                        .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
+
+
+
+                        .anyRequest().authenticated()
                 )
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -123,9 +127,4 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return source;
     }
 
-    // --- THÊM BEAN NÀY VÀO ĐÂY ---
-    @Bean
-    public GrantedAuthorityDefaults grantedAuthorityDefaults() {
-        return new GrantedAuthorityDefaults(""); // Đặt tiền tố mặc định là chuỗi rỗng
-    }
 }

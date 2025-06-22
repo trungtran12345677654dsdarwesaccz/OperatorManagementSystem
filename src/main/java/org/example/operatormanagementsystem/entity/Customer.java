@@ -14,8 +14,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "customer")
-@ToString(of = {"customerId"})
 public class Customer {
 
     @Id

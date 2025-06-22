@@ -12,15 +12,18 @@ import java.util.List;
 
 @Repository
 public interface RevenueRepository extends JpaRepository<Revenue, Integer> {
+
     List<Revenue> findByDateBetween(LocalDate startDate, LocalDate endDate);
 
     List<Revenue> findByBeneficiaryId(Integer beneficiaryId);
 
     List<Revenue> findBySourceType(String sourceType);
 
-    @Query("SELECT r FROM Revenue r WHERE r.booking.id = :bookingId")
+    @Query("SELECT r FROM Revenue r WHERE r.booking.bookingId = :bookingId")
     List<Revenue> findByBookingId(@Param("bookingId") Integer bookingId);
 
-    @Query("SELECT SUM(r.amount) FROM Revenue r WHERE r.date BETWEEN :startDate AND :endDate")
-    BigDecimal getTotalRevenueBetweenDates(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(r.amount), 0) FROM Revenue r WHERE r.date BETWEEN :startDate AND :endDate")
+    BigDecimal getTotalRevenueBetweenDates(@Param("startDate") LocalDate startDate,
+                                           @Param("endDate") LocalDate endDate);
 }

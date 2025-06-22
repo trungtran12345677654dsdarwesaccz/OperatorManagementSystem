@@ -17,11 +17,10 @@ public interface UserRepository extends JpaRepository<Users, Integer> {
     Optional<Users> findByEmail(String email);
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
-    // Đã sửa: Phương thức này cần trả về List<Users> vì nó tìm kiếm nhiều người dùng theo trạng thái
-    List<Users> findByStatus(UserStatus status); // <-- Đã đổi từ Optional<Users> sang List<Users>
+
+    List<Users> findByStatus(UserStatus status);
     Optional<Users> findById(int id);
-    // Phương thức này là lý tưởng cho getUsersNeedingManagerAction, nhưng bạn muốn dùng findByStatus 2 lần.
-    // Dù sao, nó vẫn nên tồn tại trong repository nếu bạn muốn linh hoạt trong tương lai.
+
     List<Users> findByStatusIn(List<UserStatus> statuses);
 
 }

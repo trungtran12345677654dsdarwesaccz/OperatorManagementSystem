@@ -15,8 +15,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "booking")
-@ToString(of = {"bookingId", "status", "deliveryDate"})
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

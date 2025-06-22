@@ -17,7 +17,6 @@ import java.util.Set;
 @Table(name = "manager", uniqueConstraints = {
         @UniqueConstraint(columnNames = "manager_id")
 })
-@ToString(of = {"managerId"})
 public class Manager {
 
     @Id // No @GeneratedValue because manager_id gets its value from Users.id

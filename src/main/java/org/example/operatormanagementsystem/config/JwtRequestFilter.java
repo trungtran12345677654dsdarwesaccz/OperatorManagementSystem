@@ -39,7 +39,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         path.equals("/api/auth/sendOTP") ||
                         path.equals("/api/auth/login/verify-otp") ||
                         path.equals("/api/auth/request-status-change") ||
-                        path.equals("/api/auth/login/verify-otp") ||
                         path.equals("/api/auth/register") ||
                         path.startsWith("/v3/api-docs") ||
                         path.startsWith("/swagger") ||
@@ -75,7 +74,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (jwtUtil.validateToken(jwt, userDetails)) {
-                // ✅ Lấy role từ token và gán quyền
                 String role = jwtUtil.extractClaim(jwt, claims -> claims.get("role", String.class));
                 List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 

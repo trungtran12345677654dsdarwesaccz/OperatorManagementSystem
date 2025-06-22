@@ -16,8 +16,6 @@ import java.util.Set;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
-@Table(name = "storage_unit")
-@ToString(of = {"storageId", "name"})
 public class StorageUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

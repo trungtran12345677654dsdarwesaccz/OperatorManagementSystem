@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "transport_unit_approval")
 public class TransportUnitApproval {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

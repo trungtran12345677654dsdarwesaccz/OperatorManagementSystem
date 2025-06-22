@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
-@Table(name = "transport")
-@ToString(of = {"progressId", "status"})
 public class Transport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

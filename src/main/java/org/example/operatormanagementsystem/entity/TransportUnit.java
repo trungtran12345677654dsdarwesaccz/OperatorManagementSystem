@@ -15,7 +15,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "transport_unit")
 public class TransportUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

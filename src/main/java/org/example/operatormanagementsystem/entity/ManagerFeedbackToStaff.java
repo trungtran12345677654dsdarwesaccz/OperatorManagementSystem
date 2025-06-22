@@ -14,8 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "manager_feedback_to_staff")
-@ToString(exclude = {"manager", "operatorStaff"}) // Exclude linked entities to prevent infinite loops in toString()
+
 public class ManagerFeedbackToStaff {
 
     @Id
