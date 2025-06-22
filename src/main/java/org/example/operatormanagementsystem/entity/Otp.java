@@ -1,7 +1,10 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -21,11 +24,21 @@ public class Otp {
     @Column(length = 100, nullable = false) // Đảm bảo email không null
     private String email;
 
-    @Column(name = "created_date")
+    @CreationTimestamp
+    @Column(name = "created_date",
+            nullable = false,
+            updatable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdDate;
 
-    @Column(name = "updated_date")
+    @UpdateTimestamp                // ← thay vì chỉ @Column
+    @Column(name = "updated_date",
+            nullable = false,
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime updatedDate;
+
 
     @Column(name = "expired_time", nullable = false)
     private LocalDateTime expiredTime;

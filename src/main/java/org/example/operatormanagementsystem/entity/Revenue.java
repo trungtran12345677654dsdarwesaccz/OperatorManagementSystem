@@ -1,7 +1,9 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,7 +37,8 @@ public class Revenue {
     @Column(precision = 18, scale = 2)
     private BigDecimal amount;
 
-    @Column
+    @Column(name = "date")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDate date;
 
     @Column(length = 255)

@@ -49,7 +49,7 @@ public class EmailServiceImpl implements EmailService {
         System.out.println("DEBUG: sendOTP - Received recipient email (raw): '" + recipient + "'");
         System.out.println("DEBUG: sendOTP - Length of raw recipient email: " + recipient.length());
 
-        String cleanRecipient = recipient.trim().toLowerCase();
+        String cleanRecipient = recipient.trim();
 
         System.out.println("DEBUG: sendOTP - Cleaned recipient email: '" + cleanRecipient + "'");
         System.out.println("DEBUG: sendOTP - Length of cleaned recipient email: " + cleanRecipient.length());

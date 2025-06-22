@@ -91,7 +91,6 @@ public UserResponse register(RegisterRequest register) {
     user.setStatus(UserStatus.PENDING_APPROVAL); // Mặc định là pending
     user.setRole(UserRole.STAFF); // Giữ nguyên vai trò bạn đã thiết lập
     user.getCreatedAt();
-    user.getCreatedDate();
 
 
     userRepository.save(user);

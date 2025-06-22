@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
@@ -35,8 +36,8 @@ public class ManagerFeedbackToStaff {
     @Column(name = "rating") // Đánh giá (ví dụ: từ 1-5 hoặc 1-10)
     private Integer rating; // Có thể dùng Float/Double nếu muốn điểm lẻ
 
-    @CreatedDate
-    @Column(name = "created_at", updatable = false) // Thời gian phản hồi được tạo
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP") // Thời gian phản hồi được tạo
     private LocalDateTime createdAt;
 
 }
