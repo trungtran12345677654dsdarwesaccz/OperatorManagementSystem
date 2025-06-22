@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import org.example.operatormanagementsystem.enumeration.UserGender;
 import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -68,7 +69,9 @@ public class Users  implements UserDetails { // Class name from your image
     @Column(name = "password", nullable = false, length = 100) // Should be password_hash
     private String password;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdAt;
 
     @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -81,13 +84,10 @@ public class Users  implements UserDetails { // Class name from your image
     private OperatorStaff operatorStaff;
 
     @Column(name = "last_password_reset_date")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime lastPasswordResetDate; // Thời gian cuối cùng mật khẩu được đặt lại thành công
 
 
-    @CreatedDate
-    @Column(updatable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private LocalDateTime createdDate;
 
 
     @Override
@@ -98,22 +98,7 @@ public class Users  implements UserDetails { // Class name from your image
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
 
-    @Override
-    public String getPassword() {
-        // Trả về mật khẩu của người dùng.
-        // Đã có trường 'password' trong class Users của bạn.
-        return this.password;
-    }
 
-
-    @Override
-    public String getUsername() {
-        // Trả về tên đăng nhập của người dùng.
-        // Trong trường hợp này, bạn có trường 'username' hoặc có thể dùng 'email'.
-        // Dựa trên cấu trúc của bạn, 'email' có vẻ là username duy nhất.
-        // Nếu bạn muốn dùng 'username' làm tên đăng nhập, hãy trả về 'this.username'.
-        return this.email; // Hoặc return this.username; tùy theo thiết kế của bạn
-    }
 
     @Override
     public boolean isAccountNonExpired() {

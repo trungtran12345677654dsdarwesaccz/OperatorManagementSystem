@@ -35,6 +35,7 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
 
+
         String requestedByUserEmail = approval.getSenderEmail();
         if ((requestedByUserEmail == null || requestedByUserEmail.isBlank())
                 && approval.getRequestedByUser() != null) {

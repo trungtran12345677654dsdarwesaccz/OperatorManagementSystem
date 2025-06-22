@@ -1,7 +1,9 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.math.BigDecimal; // Sử dụng BigDecimal cho tiền tệ để tránh lỗi làm tròn
@@ -40,8 +42,9 @@ public class ManagerSaleSummary {
     @Column(name = "period_end_date", nullable = false) // Ngày kết thúc kỳ thống kê
     private LocalDate periodEndDate;
 
-    @CreatedDate
-    @Column(name = "generated_at", updatable = false) // Thời gian bản ghi thống kê được tạo
+    @CreationTimestamp
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    @Column(name = "generated_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime generatedAt;
 
     // Các trường khác có thể thêm vào tùy theo nhu cầu thống kê
