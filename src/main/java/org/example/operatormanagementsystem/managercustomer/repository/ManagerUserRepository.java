@@ -2,7 +2,7 @@ package org.example.operatormanagementsystem.managercustomer.repository;
 
 
 import org.example.operatormanagementsystem.entity.Users;
-import org.example.operatormanagementsystem.managercustomer.base.BaseRepository;
+import org.example.operatormanagementsystem.base.BaseRepository;
 
 import java.util.List;
 

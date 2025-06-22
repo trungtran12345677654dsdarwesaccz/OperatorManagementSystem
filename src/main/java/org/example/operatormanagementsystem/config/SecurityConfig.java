@@ -87,33 +87,19 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép các endpoint trong danh sách trắng (Swagger, API docs)
                         .requestMatchers(WHITELIST_ENDPOINTS).permitAll()
-                        // Cho phép các endpoint công khai đã xác định
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        // Cho phép các POST method công khai cụ thể
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
-                                "/api/onboarding/**",// <-- ĐẢM BẢO DÒNG NÀY CÓ Ở ĐÂY
+                                "/api/onboarding/**",
                                 "/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
-//                        .requestMatchers("/api/auth/manager/users-by-status/**").permitAll()
-                                
-                                        
-                                        
-
-                                // thêm dòng này để đảm bảo
-                                .anyRequest().authenticated()
-
-
-                        .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
-                        // Bất kỳ request nào khác đều phải được xác thực
-                        // Và sau khi xác thực, @PreAuthorize sẽ kiểm tra vai trò
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated() // ✅ LUÔN ĐẶT CUỐI
                 )
+
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

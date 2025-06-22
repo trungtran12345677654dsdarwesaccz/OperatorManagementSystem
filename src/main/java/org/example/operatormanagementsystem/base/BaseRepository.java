@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.managercustomer.base;
+package org.example.operatormanagementsystem.base;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;

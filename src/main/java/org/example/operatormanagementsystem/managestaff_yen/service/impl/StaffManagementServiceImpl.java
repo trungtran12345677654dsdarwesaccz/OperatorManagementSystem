@@ -112,7 +112,7 @@ public class StaffManagementServiceImpl implements StaffManagementService {
         ManagerFeedbackToStaff feedback = ManagerFeedbackToStaff.builder()
                 .manager(manager)
                 .operatorStaff(staff)
-                .content(request.getContent())
+                .feedbackContent(request.getContent())
                 .rating(request.getRating())
                 .createdAt(LocalDateTime.now())
                 .build();
