@@ -21,15 +21,17 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Service
 public class EmailListenerService {
 
     @Value("${mail.imap.host}")
-    private String imapHost;
+    private String imapHost;    
     @Value("${mail.imap.port}")
     private String imapPort;
     @Value("${mail.username}")
@@ -305,6 +307,84 @@ public class EmailListenerService {
 
     private void sendToOnboardingApi(TransportUnitEmailRequest request) {
         // ... (Giữ nguyên không thay đổi) ...
+    /* =======================================================================
+     *  Hàm parseEmailContent mới - linh hoạt & dễ bảo trì hơn
+     * ===================================================================== */
+    private TransportUnitEmailRequest parseEmailContent(String rawContent,
+                                                        String defaultSenderEmail) {
+
+        /* 1. Chuẩn hoá văn bản */
+        String emailContent = rawContent
+                .replaceAll("[\\u00A0\\u200B]", " ")   // xoá nbsp, zero-width…
+                .replace("\r", "")                     // bỏ CR
+                .replaceAll("[ \\t]{2,}", " ")         // gộp space
+                .trim();
+
+        final int FLAGS = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.DOTALL;
+
+        /* 2. Regex – BẮT BUỘC phải có [...]  */
+        Pattern companyP = Pattern.compile(
+                "Tên\\s*Công\\s*ty\\s*Vận\\s*(?:Tải|chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+
+        Pattern contactP = Pattern.compile(
+                "Tên\\s*Người\\s*Đại\\s*diện\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+
+        Pattern phoneP   = Pattern.compile(
+                "Số\\s*Điện\\s*Thoại\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+
+        Pattern licenseP = Pattern.compile(
+                "(?:Biển|Bằng)\\s*(?:Cấp)?\\s*Vận\\s*(?:Tải|Chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+
+        Pattern noteP    = Pattern.compile(
+                "Ghi\\s*Chú\\s*Thêm.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+
+        /* email bất kỳ nằm trong ngoặc vuông/đơn */
+        Pattern emailIn  = Pattern.compile(
+                "[\\[(]([a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,6})[\\])]", FLAGS);
+
+        /* 3. Mapping vào DTO */
+        TransportUnitEmailRequest req = new TransportUnitEmailRequest();
+        req.setNameCompany      (find(emailContent, companyP));
+        req.setNamePersonContact(find(emailContent, contactP));
+        req.setPhone            (find(emailContent, phoneP));
+        req.setLicensePlate     (find(emailContent, licenseP));
+        req.setNote( Optional.ofNullable(find(emailContent, noteP)).orElse("") );
+
+        String sender = find(emailContent, emailIn);
+        if (sender == null || sender.isBlank()) sender = defaultSenderEmail;
+        if (sender == null || sender.isBlank()) sender = mailUsername;      // fallback cuối
+        req.setSenderEmail(sender);
+
+        /* 4. Debug log */
+        System.out.printf("""
+        Parsed – Company : '%s'
+                 Contact : '%s'
+                 Phone   : '%s'
+                 Plate   : '%s'
+                 Note    : '%s'
+                 Email   : '%s'%n""",
+                req.getNameCompany(), req.getNamePersonContact(), req.getPhone(),
+                req.getLicensePlate(), req.getNote(), req.getSenderEmail());
+
+        /* 5. Kiểm tra field bắt buộc */
+        if (Stream.of(req.getNameCompany(), req.getNamePersonContact(),
+                        req.getPhone(), req.getLicensePlate(), req.getSenderEmail())
+                .anyMatch(s -> s == null || s.isBlank())) {
+
+            System.err.println("❌ Parse error – thiếu field bắt buộc, bỏ qua email.");
+            return null;
+        }
+        return req;
+    }
+
+    /* Helper: trả về group(1) nếu match, null nếu không */
+    private static String find(String src, Pattern p) {
+        Matcher m = p.matcher(src);
+        return m.find() ? m.group(1).trim() : null;
+    }
+
+
+    private void sendToOnboardingApi(TransportUnitEmailRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-API-KEY", onboardingApiKey);

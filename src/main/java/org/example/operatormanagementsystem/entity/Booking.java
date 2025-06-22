@@ -2,6 +2,9 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.operatormanagementsystem.enumeration.PaymentStatus;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -22,6 +25,7 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,10 +34,12 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transport_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private TransportUnit transportUnit;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "operator_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private OperatorStaff operatorStaff;
 
     @Column(name = "status", length = 30)
@@ -49,6 +55,12 @@ public class Booking {
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
 
+    @Column(name = "total", nullable = false)
+    private Long total;
+
+    @Column(name = "payment_status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
     @Column(name = "note", length = 255)
     private String note;

@@ -4,8 +4,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
+@Getter
+@Setter
 public class TransportUnitEmailRequest {
     @NotBlank(message = "Company name cannot be blank")
     @Size(max = 100, message = "Company name cannot exceed 100 characters")

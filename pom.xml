@@ -67,7 +67,7 @@
         <!-- Spring Web để dùng @Controller, @GetMapping -->
 
 
-<!--         Thymeleaf (nếu dùng HTML template) -->
+        <!--         Thymeleaf (nếu dùng HTML template) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -131,13 +131,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
-<!--        jakarta.mail-api: Cung cấp API (giao diện) để viết code gửi email.
-spring-boot-starter-mail: Giúp thực hiện và tự động cấu hình việc
-gửi email trong ứng dụng Spring Boot.-->
+        <!--        jakarta.mail-api: Cung cấp API (giao diện) để viết code gửi email.
+        spring-boot-starter-mail: Giúp thực hiện và tự động cấu hình việc
+        gửi email trong ứng dụng Spring Boot.-->
 
-<!--        jakarta.mail-api là lý thuyết (các hàm có thể gọi).
-spring-boot-starter-mail là thực hành (làm cho các hàm đó chạy được
-và tự động chuẩn bị môi trường cho bạn).-->
+        <!--        jakarta.mail-api là lý thuyết (các hàm có thể gọi).
+        spring-boot-starter-mail là thực hành (làm cho các hàm đó chạy được
+        và tự động chuẩn bị môi trường cho bạn).-->
 
 
 

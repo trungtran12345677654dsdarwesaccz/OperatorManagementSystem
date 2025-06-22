@@ -43,6 +43,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         path.equals("/api/auth/register") ||
                         path.startsWith("/v3/api-docs") ||
                         path.startsWith("/swagger") ||
+                        path.startsWith("/api/onboarding") ||
                         path.startsWith("/webjars")
         ) {
             chain.doFilter(request, response); // bỏ qua filter, chuyển tiếp request

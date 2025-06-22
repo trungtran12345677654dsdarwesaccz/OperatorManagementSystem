@@ -14,7 +14,7 @@ import org.example.operatormanagementsystem.transportunit.repository.TransportUn
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
 import org.example.operatormanagementsystem.transportunit.service.TransportUnitApprovalService;
-import org.example.operatormanagementsystem.service.EmailService;
+import org.example.operatormanagementsystem.service.EmailService; // Import EmailService
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +34,6 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
     private final EmailService emailService; // Inject EmailService
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
-
 
         String requestedByUserEmail = approval.getSenderEmail();
         if ((requestedByUserEmail == null || requestedByUserEmail.isBlank())
