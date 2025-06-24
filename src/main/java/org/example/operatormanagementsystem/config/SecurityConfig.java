@@ -98,6 +98,14 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
+                        .requestMatchers("/api/transport-unit-analytics/dashboard-stats").hasAnyRole("MANAGER")
+                        .requestMatchers("/api/transport-unit-analytics/historical-data").hasAnyRole("MANAGER")
+                        .requestMatchers("/api/transport-unit-analytics/weekly-activity").hasAnyRole("MANAGER")
+                        .requestMatchers("/api/transport-unit-analytics/manager-performance").hasAnyRole("MANAGER")
+                        .requestMatchers("/api/transport-unit-analytics/status-distribution").hasAnyRole("MANAGER")
+                        .requestMatchers("/api/transport-unit-analytics/approval-trends").hasAnyRole("MANAGER")
+                        .requestMatchers("/api/transport-unit-analytics/performance-metrics").hasRole("MANAGER")
+
 
 
 
