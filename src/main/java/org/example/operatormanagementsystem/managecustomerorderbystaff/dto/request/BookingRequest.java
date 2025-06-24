@@ -26,6 +26,8 @@ public class BookingRequest {
     @NotNull(message = "Customer ID cannot be null")
     private Integer customerId;
 
+    private String customerFullName;
+
     @NotNull(message = "Storage Unit ID cannot be null")
     private Integer storageUnitId;
 

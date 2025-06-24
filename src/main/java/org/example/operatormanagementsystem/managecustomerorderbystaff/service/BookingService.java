@@ -1,8 +1,7 @@
-// src/main/java/org/example/operatormanagementsystem/managecustomerorderbystaff/service/BookingService.java
 package org.example.operatormanagementsystem.managecustomerorderbystaff.service;
 
 import org.example.operatormanagementsystem.entity.Booking;
-import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest; // Import BookingRequest DTO
+import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,5 +17,5 @@ public interface BookingService {
     Booking updateBooking(Integer id, BookingRequest bookingUpdates); // Cập nhật để nhận DTO
     // void deleteBooking(Integer id); // Đã bỏ chức năng xóa
     List<Booking> searchBookingsByCustomerName(String fullName);
-    void updatePaymentStatus(Integer id, String status);
+    Booking updatePaymentStatus(Integer id, String status); // Thay đổi từ void thành Booking
 }

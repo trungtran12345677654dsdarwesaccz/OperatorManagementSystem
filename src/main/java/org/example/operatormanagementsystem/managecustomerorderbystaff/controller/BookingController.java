@@ -112,45 +112,41 @@ public class BookingController {
 
     @PutMapping("/{id}/payment")
     @PreAuthorize("hasRole('ROLE_STAFF')")
-    public ResponseEntity<String> updatePaymentStatus(@PathVariable Integer id, @RequestParam String status) {
+    public ResponseEntity<BookingResponse> updatePaymentStatus(@PathVariable Integer id, @RequestParam String status) {
         try {
             // Convert string to enum safely (case-insensitive)
             PaymentStatus paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
-            bookingService.updatePaymentStatus(id, paymentStatus.name());
-            return ResponseEntity.ok("Cập nhật trạng thái thanh toán thành công!");
+            Booking updatedBooking = bookingService.updatePaymentStatus(id, paymentStatus.name()); // Cập nhật và lấy Booking
+            return ResponseEntity.ok(convertToBookingResponse(updatedBooking));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Trạng thái thanh toán không hợp lệ. Chỉ chấp nhận: COMPLETED, INCOMPLETED.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new BookingResponse()); // Trả về lỗi nếu cần
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new BookingResponse()); // Trả về lỗi nếu không tìm thấy
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi cập nhật trạng thái thanh toán: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new BookingResponse()); // Trả về lỗi nếu có ngoại lệ
         }
     }
 
     private BookingResponse convertToBookingResponse(Booking booking) {
         if (booking == null) return null;
-
         BookingResponse response = new BookingResponse();
         response.setBookingId(booking.getBookingId());
         response.setStatus(booking.getStatus());
         response.setCreatedAt(booking.getCreatedAt());
         response.setDeliveryDate(booking.getDeliveryDate());
         response.setNote(booking.getNote());
-        response.setTotal(booking.getTotal()); // Thêm total
-        response.setPaymentStatus(booking.getPaymentStatus() != null ? booking.getPaymentStatus().name() : null); // Thêm paymentStatus
-
+        response.setTotal(booking.getTotal());
+        response.setPaymentStatus(booking.getPaymentStatus() != null ? booking.getPaymentStatus().name() : null);
         if (booking.getCustomer() != null) {
             var user = booking.getCustomer().getUsers();
-            if (user != null) {
-                response.setCustomerId(user.getId());
-                response.setCustomerFullName(user.getFullName());
-            } else {
-                response.setCustomerFullName("Không rõ người dùng");
-            }
+            response.setCustomerId(user != null ? user.getId() : null);
+            response.setCustomerFullName(user != null ? user.getFullName() : "Không rõ người dùng");
         } else {
             response.setCustomerFullName("Không có khách hàng");
         }
-
         return response;
     }
 }
