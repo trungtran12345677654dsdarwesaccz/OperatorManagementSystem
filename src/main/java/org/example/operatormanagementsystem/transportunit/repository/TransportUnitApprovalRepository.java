@@ -56,8 +56,8 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
 
     @Query(
             value = "SELECT " +
-                    "m.name AS managerName, " +
-                    "m.email AS managerEmail, " +
+                    "u.full_name AS managerName, " +
+                    "u.email AS managerEmail, " +
                     "COUNT(a.approval_id) AS totalProcessed, " +
                     "SUM(CASE WHEN a.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved, " +
                     "SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected, " +
@@ -66,14 +66,18 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
                     "ROUND(AVG(TIMESTAMPDIFF(SECOND, a.requested_at, a.processed_at)) / 3600, 2) AS avgProcessingTime " +
                     "FROM transport_unit_approval a " +
                     "JOIN manager m ON a.approved_by_manager_id = m.manager_id " +
+                    "JOIN users u ON m.manager_id = u.id " +
                     "WHERE a.processed_at IS NOT NULL AND a.requested_at BETWEEN :start AND :end " +
-                    "GROUP BY m.manager_id",
+                    "GROUP BY u.id",
             nativeQuery = true
     )
     List<ManagerPerformanceResponse> getManagerPerformanceBetween(
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
+
+
 
     @Query(
             value = "SELECT " +
@@ -89,6 +93,9 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
             nativeQuery = true
     )
     List<ApprovalTrendResponse> getApprovalTrendsSince(@Param("fromDate") LocalDate fromDate);
+
+
+
 
     @Query(
             value = "SELECT " +
