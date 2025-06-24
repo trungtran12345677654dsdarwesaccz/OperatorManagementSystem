@@ -1,6 +1,7 @@
 package org.example.operatormanagementsystem.managestaff_yen.repository;
 
 import org.example.operatormanagementsystem.entity.OperatorStaff;
+import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -42,4 +43,16 @@ public interface OperatorStaffRepository extends JpaRepository<OperatorStaff, In
 
     // Tìm staff theo ID và manager ID (để bảo mật)
     Optional<OperatorStaff> findByOperatorIdAndManagerManagerId(Integer operatorId, Integer managerId);
+
+    @Query("SELECT os FROM OperatorStaff os JOIN os.users u WHERE os.manager.managerId = :managerId " +
+            "AND (:searchTerm IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+            "OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+            "AND (:status IS NULL OR u.status = :status)")
+    List<OperatorStaff> searchStaffByManagerAndTermForExport(
+            @Param("managerId") Integer managerId,
+            @Param("searchTerm") String searchTerm,
+            @Param("status") UserStatus status);
+
+    List<OperatorStaff> findAllByManagerManagerId(Integer managerId);
 }

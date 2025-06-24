@@ -12,6 +12,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "promotions")
+@ToString(of = {"id", "name", "status"})
 public class Promotion {
 
     @Id
@@ -36,7 +38,7 @@ public class Promotion {
     private Manager manager; // Thay thế OperatorStaff bằng Manager
 
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Booking> bookings;
+    private Set<Booking> bookings; // Các booking áp dụng khuyến mãi
 
     @ManyToMany
     @JoinTable(

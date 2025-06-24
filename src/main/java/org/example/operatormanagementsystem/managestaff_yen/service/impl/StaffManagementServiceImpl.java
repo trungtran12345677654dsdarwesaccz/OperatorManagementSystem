@@ -7,13 +7,16 @@ import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.*;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.*;
 import org.example.operatormanagementsystem.managestaff_yen.repository.*;
+import org.example.operatormanagementsystem.managestaff_yen.service.ExcelExportService;
 import org.example.operatormanagementsystem.managestaff_yen.service.StaffManagementService;
 import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +30,7 @@ public class StaffManagementServiceImpl implements StaffManagementService {
     private final ManagerRepository managerRepository;
     private final UsersRepository usersRepository;
     private final ManagerFeedbackToStaffRepository managerFeedbackToStaffRepository;
+    private final ExcelExportService excelExportService; // Added dependency
 
     @Override
     @Transactional(readOnly = true)
@@ -137,6 +141,54 @@ public class StaffManagementServiceImpl implements StaffManagementService {
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public OperatorStaffResponse getStaffDetails(Integer managerId, Integer operatorId) {
+        OperatorStaff staff = validateStaffBelongsToManager(managerId, operatorId);
+        return convertToStaffResponse(staff);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportStaffToExcel(Integer managerId, ExportStaffRequest request) throws IOException {
+        validateManagerExists(managerId);
+
+        // Get all staff data (no pagination for export)
+        List<OperatorStaff> allStaff;
+
+        if (request.getSearchTerm() != null && !request.getSearchTerm().trim().isEmpty()) {
+            // Search with filter
+            allStaff = operatorStaffRepository.searchStaffByManagerAndTermForExport(
+                    managerId, request.getSearchTerm(), request.getStatusFilter());
+        } else {
+            // Get all with optional status filter
+            if (request.getStatusFilter() != null) {
+                allStaff = operatorStaffRepository.findByManagerManagerIdAndUsersStatus(
+                        managerId, request.getStatusFilter());
+            } else {
+                allStaff = operatorStaffRepository.findAllByManagerManagerId(managerId);
+            }
+        }
+
+        // Apply sorting
+        allStaff = applySorting(allStaff, request.getSortBy(), request.getSortDir());
+
+        // Convert to response DTOs
+        List<OperatorStaffResponse> staffResponses = allStaff.stream()
+                .map(this::convertToStaffResponse)
+                .collect(Collectors.toList());
+
+        // Get overview for statistics
+        StaffOverviewResponse overview = null;
+        if (request.getIncludeStatistics()) {
+            overview = getStaffOverview(managerId);
+        }
+
+        // Generate Excel
+        return excelExportService.exportStaffToExcel(
+                staffResponses, overview, managerId, request.getIncludeStatistics());
+    }
+
     // ===== Helpers =====
 
     private Manager validateManagerExists(Integer managerId) {
@@ -163,14 +215,39 @@ public class StaffManagementServiceImpl implements StaffManagementService {
                 .createdAt(user.getCreatedAt())
                 .totalBookings(staff.getBookings() != null ? (long) staff.getBookings().size() : 0L)
                 .totalFeedbacks(staff.getFeedbacks() != null ? (long) staff.getFeedbacks().size() : 0L)
-                .totalChatbotLogs(staff.getChatbotLogs() != null ? (long) staff.getChatbotLogs().size() : 0L)
-                .build();
-    }
-    @Override
-    @Transactional(readOnly = true)
-    public OperatorStaffResponse getStaffDetails(Integer managerId, Integer operatorId) {
-        OperatorStaff staff = validateStaffBelongsToManager(managerId, operatorId);
-        return convertToStaffResponse(staff);
+                .totalChatbotLogs(staff.getChatbotLogs()!= null ? (long) staff.getChatbotLogs().size() : 0L)
+                        .build();
     }
 
+    private List<OperatorStaff> applySorting(List<OperatorStaff> staffList, String sortBy, String sortDir) {
+        Comparator<OperatorStaff> comparator;
+        switch (sortBy) {
+            case "operatorId":
+                comparator = Comparator.comparing(OperatorStaff::getOperatorId);
+                break;
+            case "users.fullName":
+                comparator = Comparator.comparing(staff -> staff.getUsers().getFullName(), String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "users.username":
+                comparator = Comparator.comparing(staff -> staff.getUsers().getUsername(), String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "users.email":
+                comparator = Comparator.comparing(staff -> staff.getUsers().getEmail(), String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "users.createdAt":
+                comparator = Comparator.comparing(staff -> staff.getUsers().getCreatedAt(), Comparator.nullsLast(Comparator.naturalOrder()));
+                break;
+            default:
+                comparator = Comparator.comparing(staff -> staff.getUsers().getFullName(), String.CASE_INSENSITIVE_ORDER);
+                break;
+        }
+
+        if ("desc".equalsIgnoreCase(sortDir)) {
+            comparator = comparator.reversed();
+        }
+
+        return staffList.stream()
+                .sorted(comparator)
+                .collect(Collectors.toList());
+    }
 }

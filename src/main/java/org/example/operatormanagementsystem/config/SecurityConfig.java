@@ -94,7 +94,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
                                 "/api/auth/reset-password").permitAll()
-                        .requestMatchers("/api/v1/manager/**").hasAuthority("MANAGER")
+                        .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
@@ -112,9 +112,9 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",    // Vite dev server
+                "http://localhost:5174",    // Vite dev server
                 "http://localhost:3000",    // React dev server
-                "http://127.0.0.1:5173",    // Alternative localhost
+                "http://127.0.0.1:5174",    // Alternative localhost
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));
 //        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));

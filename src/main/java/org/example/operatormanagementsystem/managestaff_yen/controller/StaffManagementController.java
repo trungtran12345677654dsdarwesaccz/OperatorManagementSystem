@@ -1,21 +1,23 @@
 package org.example.operatormanagementsystem.managestaff_yen.controller;
 
-
 import io.swagger.v3.oas.annotations.*;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.ApiResponse;
-
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.operatormanagementsystem.managestaff_yen.dto.request.ExportStaffRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.ManagerFeedbackRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.UpdateStaffRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.*;
+import org.example.operatormanagementsystem.managestaff_yen.service.ExcelExportService;
 import org.example.operatormanagementsystem.managestaff_yen.service.StaffManagementService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:5173")
+import java.io.IOException;
+
+@CrossOrigin(origins = "http://localhost:5174")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/manager/{managerId}/staff")
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class StaffManagementController {
 
     private final StaffManagementService staffManagementService;
+    private final ExcelExportService excelExportService; // Added dependency
 
     // === View Staff List ===
     @Operation(summary = "View staff information", description = "Get paginated list of staff managed by the manager")
@@ -43,6 +46,7 @@ public class StaffManagementController {
             return handleException("retrieving staff list", e);
         }
     }
+
     // === Get Staff Details ===
     @Operation(summary = "Get staff details", description = "Get detailed information of a specific staff member")
     @GetMapping("/{operatorId}")
@@ -58,6 +62,7 @@ public class StaffManagementController {
             return handleException("retrieving staff details", e);
         }
     }
+
     // === Search Staff ===
     @Operation(summary = "Search staff", description = "Search staff by name, email, or username")
     @GetMapping("/search")
@@ -155,6 +160,39 @@ public class StaffManagementController {
             return ResponseEntity.ok(ApiResponse.success("Overview retrieved", response));
         } catch (Exception e) {
             return handleException("retrieving staff overview", e);
+        }
+    }
+
+    // === Export Staff to Excel ===
+    @Operation(summary = "Export staff to Excel", description = "Export staff list to Excel file")
+    @PostMapping("/export")
+    public ResponseEntity<byte[]> exportStaffToExcel(
+            @PathVariable Integer managerId,
+            @RequestBody(required = false) ExportStaffRequest request) {
+
+        try {
+            log.info("Exporting staff to Excel for manager {}", managerId);
+
+            if (request == null) {
+                request = ExportStaffRequest.builder().build();
+            }
+
+            byte[] excelData = staffManagementService.exportStaffToExcel(managerId, request);
+            String filename = excelExportService.generateFileName(managerId);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", filename);
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(excelData);
+
+        } catch (IOException e) {
+            log.error("Error exporting staff to Excel for manager {}", managerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(("Error exporting to Excel: " + e.getMessage()).getBytes());
         }
     }
 
