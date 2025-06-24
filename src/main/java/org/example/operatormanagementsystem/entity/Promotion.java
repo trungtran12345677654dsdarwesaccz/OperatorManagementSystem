@@ -12,8 +12,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "promotions")
-@ToString(of = {"id", "name", "status"})
 public class Promotion {
 
     @Id
@@ -23,6 +21,9 @@ public class Promotion {
 
     @Column(name = "name", length = 100)
     private String name;
+
+    @Column(name = "description", length = 100)
+    private String description;
 
     @Column(name = "start_date")
     private Date startDate;
@@ -38,7 +39,7 @@ public class Promotion {
     private Manager manager; // Thay thế OperatorStaff bằng Manager
 
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Booking> bookings; // Các booking áp dụng khuyến mãi
+    private Set<Booking> bookings;
 
     @ManyToMany
     @JoinTable(
