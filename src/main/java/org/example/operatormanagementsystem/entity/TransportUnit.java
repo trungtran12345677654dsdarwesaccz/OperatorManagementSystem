@@ -42,6 +42,9 @@ public class TransportUnit {
     @Column(length = 255)
     private String note;
 
+    @Column(name = "image", length = 500)
+    private String imageTransportUnit;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")

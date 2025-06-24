@@ -64,7 +64,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/api/auth/manager/users-for-action", "/api/auth/manager/user-details/{email}",
             "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
             "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
-            "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**"
+            "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**",
+            "/api/auth/customer/login"
     };
 
     private static final String[] GET_PUBLIC_ENDPOINTS = {
@@ -93,6 +94,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
+                                "/api/auth/customer/login",
                                 "/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
@@ -120,9 +122,11 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",    // Vite dev server
+                "http://localhost:5173",
+                "http://localhost:5174", // Vite dev server
                 "http://localhost:3000",    // React dev server
-                "http://127.0.0.1:5173",    // Alternative localhost
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174",// Alternative localhost
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));
 //        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));

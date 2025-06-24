@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders; // Import Decoders
 import io.jsonwebtoken.security.Keys;
 import org.example.operatormanagementsystem.entity.Users; // Giữ nguyên import Users entity nếu bạn cần generateToken(Users user)
+import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -65,18 +66,30 @@ public class JwtUtil {
     // Giúp dễ dàng lấy các thông tin như email, role từ entity Users
     public String generateToken(Users user) {
         Map<String, Object> claims = new HashMap<>();
-        if (user.getRole() != null) {
-            claims.put("role", user.getRole().name()); // Lưu vai trò dưới dạng String
-        } else {
-            claims.put("role", "ROLE_USER"); // Mặc định nếu không có vai trò
-        }
-        System.out.println("Generating token for user: " + user.getUsername());
-        claims.put("username", user.getUsername()); // <-- Thêm dòng này để lưu username vào token
-        claims.put("managerId", user.getManager().getManagerId());
-        System.out.println("Generated token claims: " + claims);
-        return createToken(claims, user.getEmail()); // Sử dụng email làm subject
-    }
 
+        // Role
+        if (user.getRole() != null) {
+            claims.put("role", user.getRole().name());
+        } else {
+            claims.put("role", "ROLE_USER");
+        }
+
+        // Username
+        claims.put("username", user.getUsername());
+
+        // Tùy chọn ID theo role
+        if (user.getRole() == UserRole.MANAGER && user.getManager() != null) {
+            claims.put("managerId", user.getManager().getManagerId());
+        } else if (user.getRole() == UserRole.CUSTOMER && user.getCustomer() != null) {
+            claims.put("customerId", user.getCustomer().getCustomerId());
+        } else if (user.getRole() == UserRole.STAFF && user.getOperatorStaff() != null) {
+            claims.put("staffId", user.getOperatorStaff().getOperatorId());
+        }
+
+        System.out.println("Generated token claims: " + claims);
+
+        return createToken(claims, user.getEmail());
+    }
 
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
