@@ -1,12 +1,13 @@
 package org.example.operatormanagementsystem.service;
 
+import org.example.operatormanagementsystem.dto.response.RevenueResponse;
 import org.example.operatormanagementsystem.entity.Revenue;
 import java.time.LocalDate;
 import java.util.List;
 import java.math.BigDecimal;
 
 public interface RevenueService {
-    List<Revenue> getAllRevenues();
+    List<RevenueResponse> getAllRevenues();
 
     Revenue getRevenueById(Integer id);
 
