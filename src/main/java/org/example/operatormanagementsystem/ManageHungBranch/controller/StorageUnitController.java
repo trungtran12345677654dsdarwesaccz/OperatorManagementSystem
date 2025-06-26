@@ -10,12 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.service.StorageUnitService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,172 +21,161 @@ import java.util.Optional;
 @RequestMapping("/api/storage-units")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('STAFF')")
 @Tag(name = "Storage Unit Management", description = "API quản lý kho lưu trữ - Manage Storage Unit")
 public class StorageUnitController {
 
-    @Autowired
-    private StorageUnitService storageUnitService;
+    private final StorageUnitService storageUnitService;
 
-    @Operation(summary = "Get Storage Units with Images",
-            description = "Lấy danh sách các kho lưu trữ có ảnh")
+    @Operation(summary = "View Storage Unit Information",
+            description = "Lấy danh sách tất cả các kho lưu trữ")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
-    @GetMapping("/with-images")
-    public ResponseEntity<List<StorageUnitDTO>> getStorageUnitsWithImage() {
-        log.info("GET /api/storage-units/with-images - Lấy storage units có ảnh");
+    @GetMapping
+    public ResponseEntity<List<StorageUnitDTO>> getAllStorageUnits() {
+        log.info("GET /api/storage-units - Lấy tất cả storage units");
         try {
-            List<StorageUnitDTO> storageUnits = storageUnitService.getStorageUnitsWithImage();
+            List<StorageUnitDTO> storageUnits = storageUnitService.getAllStorageUnits();
             return ResponseEntity.ok(storageUnits);
         } catch (Exception e) {
-            log.error("Lỗi khi lấy storage units có ảnh: ", e);
+            log.error("Lỗi khi lấy danh sách storage units: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @Operation(summary = "Get Storage Units without Images",
-            description = "Lấy danh sách các kho lưu trữ không có ảnh")
+    @Operation(summary = "View Storage Unit Information by ID",
+            description = "Lấy thông tin chi tiết của một kho lưu trữ theo ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
+            @ApiResponse(responseCode = "200", description = "Lấy thông tin thành công"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy storage unit"),
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
-    @GetMapping("/without-images")
-    public ResponseEntity<List<StorageUnitDTO>> getStorageUnitsWithoutImage() {
-        log.info("GET /api/storage-units/without-images - Lấy storage units không có ảnh");
+    @GetMapping("/{id}")
+    public ResponseEntity<StorageUnitDTO> getStorageUnitById(
+            @Parameter(description = "ID của storage unit") @PathVariable Integer id) {
+        log.info("GET /api/storage-units/{} - Lấy storage unit theo ID", id);
         try {
-            List<StorageUnitDTO> storageUnits = storageUnitService.getStorageUnitsWithoutImage();
-            return ResponseEntity.ok(storageUnits);
+            Optional<StorageUnitDTO> storageUnit = storageUnitService.getStorageUnitById(id);
+            return storageUnit.map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            log.error("Lỗi khi lấy storage units không có ảnh: ", e);
+            log.error("Lỗi khi lấy storage unit với ID {}: ", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @Operation(summary = "Advanced Search Storage Units",
-            description = "Tìm kiếm kho lưu trữ theo các điều kiện bao gồm cả điều kiện có/không có ảnh")
+    @Operation(summary = "Add Storage Unit",
+            description = "Thêm mới một kho lưu trữ")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Tạo storage unit thành công"),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ"),
+            @ApiResponse(responseCode = "500", description = "Lỗi server")
+    })
+    @PostMapping
+    public ResponseEntity<StorageUnitDTO> createStorageUnit(
+            @Parameter(description = "Thông tin storage unit cần tạo")
+            @Valid @RequestBody StorageUnitDTO storageUnitDTO) {
+        log.info("POST /api/storage-units - Tạo mới storage unit: {}", storageUnitDTO.getName());
+        try {
+            StorageUnitDTO createdStorageUnit = storageUnitService.createStorageUnit(storageUnitDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdStorageUnit);
+        } catch (RuntimeException e) {
+            log.error("Lỗi khi tạo storage unit: ", e);
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Lỗi server khi tạo storage unit: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Update Storage Unit Information",
+            description = "Cập nhật thông tin của một kho lưu trữ")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy storage unit"),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ"),
+            @ApiResponse(responseCode = "500", description = "Lỗi server")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<StorageUnitDTO> updateStorageUnit(
+            @Parameter(description = "ID của storage unit cần cập nhật") @PathVariable Integer id,
+            @Parameter(description = "Thông tin cập nhật")
+            @Valid @RequestBody StorageUnitDTO storageUnitDTO) {
+        log.info("PUT /api/storage-units/{} - Cập nhật storage unit", id);
+        try {
+            StorageUnitDTO updatedStorageUnit = storageUnitService.updateStorageUnit(id, storageUnitDTO);
+            return ResponseEntity.ok(updatedStorageUnit);
+        } catch (RuntimeException e) {
+            log.error("Lỗi khi cập nhật storage unit với ID {}: ", id, e);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Lỗi server khi cập nhật storage unit với ID {}: ", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Delete Storage Unit",
+            description = "Xóa một kho lưu trữ")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Xóa thành công"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy storage unit"),
+            @ApiResponse(responseCode = "500", description = "Lỗi server")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStorageUnit(
+            @Parameter(description = "ID của storage unit cần xóa") @PathVariable Integer id) {
+        log.info("DELETE /api/storage-units/{} - Xóa storage unit", id);
+        try {
+            storageUnitService.deleteStorageUnit(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            log.error("Lỗi khi xóa storage unit với ID {}: ", id, e);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Lỗi server khi xóa storage unit với ID {}: ", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Search Storage Units",
+            description = "Tìm kiếm kho lưu trữ theo các điều kiện")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tìm kiếm thành công"),
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
-    @GetMapping("/advanced-search")
-    public ResponseEntity<List<StorageUnitDTO>> advancedSearchStorageUnits(
+    @GetMapping("/search")
+    public ResponseEntity<List<StorageUnitDTO>> searchStorageUnits(
             @Parameter(description = "Tên kho (tìm kiếm gần đúng)") @RequestParam(required = false) String name,
             @Parameter(description = "Địa chỉ (tìm kiếm gần đúng)") @RequestParam(required = false) String address,
             @Parameter(description = "Trạng thái") @RequestParam(required = false) String status,
-            @Parameter(description = "ID của manager") @RequestParam(required = false) Integer managerId,
-            @Parameter(description = "Có ảnh hay không (true: có ảnh, false: không có ảnh)") @RequestParam(required = false) Boolean hasImage) {
-        log.info("GET /api/storage-units/advanced-search - Tìm kiếm nâng cao với điều kiện: name={}, address={}, status={}, managerId={}, hasImage={}",
-                name, address, status, managerId, hasImage);
+            @Parameter(description = "ID của manager") @RequestParam(required = false) Integer managerId) {
+        log.info("GET /api/storage-units/search - Tìm kiếm với điều kiện: name={}, address={}, status={}, managerId={}",
+                name, address, status, managerId);
         try {
-            List<StorageUnitDTO> storageUnits = storageUnitService.searchStorageUnits(name, address, status, managerId, hasImage);
+            List<StorageUnitDTO> storageUnits = storageUnitService.searchStorageUnits(name, address, status, managerId);
             return ResponseEntity.ok(storageUnits);
         } catch (Exception e) {
-            log.error("Lỗi khi tìm kiếm nâng cao storage units: ", e);
+            log.error("Lỗi khi tìm kiếm storage units: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @Operation(summary = "Update Storage Unit Image",
-            description = "Cập nhật ảnh cho kho lưu trữ")
+    @Operation(summary = "Choose Storage Units to store",
+            description = "Lấy danh sách kho lưu trữ theo manager ID để lựa chọn nơi lưu trữ")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Cập nhật ảnh thành công"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy storage unit"),
-            @ApiResponse(responseCode = "400", description = "URL ảnh không hợp lệ"),
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công"),
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
-    @PatchMapping("/{id}/image")
-    public ResponseEntity<StorageUnitDTO> updateStorageUnitImage(
-            @Parameter(description = "ID của storage unit") @PathVariable Integer id,
-            @Parameter(description = "URL ảnh mới") @RequestParam String imageUrl) {
-        log.info("PATCH /api/storage-units/{}/image - Cập nhật ảnh cho storage unit", id);
+    @GetMapping("/by-manager/{managerId}")
+    public ResponseEntity<List<StorageUnitDTO>> getStorageUnitsByManager(
+            @Parameter(description = "ID của manager") @PathVariable Integer managerId) {
+        log.info("GET /api/storage-units/by-manager/{} - Lấy storage units theo manager", managerId);
         try {
-            if (imageUrl == null || imageUrl.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            StorageUnitDTO updatedStorageUnit = storageUnitService.updateStorageUnitImage(id, imageUrl.trim());
-            return ResponseEntity.ok(updatedStorageUnit);
-        } catch (RuntimeException e) {
-            log.error("Lỗi khi cập nhật ảnh cho storage unit với ID {}: ", id, e);
-            return ResponseEntity.notFound().build();
+            List<StorageUnitDTO> storageUnits = storageUnitService.getStorageUnitsByManagerId(managerId);
+            return ResponseEntity.ok(storageUnits);
         } catch (Exception e) {
-            log.error("Lỗi server khi cập nhật ảnh cho storage unit với ID {}: ", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @Operation(summary = "Remove Storage Unit Image",
-            description = "Xóa ảnh của kho lưu trữ")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Xóa ảnh thành công"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy storage unit"),
-            @ApiResponse(responseCode = "500", description = "Lỗi server")
-    })
-    @DeleteMapping("/{id}/image")
-    public ResponseEntity<StorageUnitDTO> removeStorageUnitImage(
-            @Parameter(description = "ID của storage unit") @PathVariable Integer id) {
-        log.info("DELETE /api/storage-units/{}/image - Xóa ảnh của storage unit", id);
-        try {
-            StorageUnitDTO updatedStorageUnit = storageUnitService.removeStorageUnitImage(id);
-            return ResponseEntity.ok(updatedStorageUnit);
-        } catch (RuntimeException e) {
-            log.error("Lỗi khi xóa ảnh của storage unit với ID {}: ", id, e);
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Lỗi server khi xóa ảnh của storage unit với ID {}: ", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @Operation(summary = "Upload Storage Unit Image",
-            description = "Upload ảnh cho kho lưu trữ (multipart file)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Upload ảnh thành công"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy storage unit"),
-            @ApiResponse(responseCode = "400", description = "File không hợp lệ"),
-            @ApiResponse(responseCode = "500", description = "Lỗi server")
-    })
-    @PostMapping("/{id}/upload-image")
-    public ResponseEntity<StorageUnitDTO> uploadStorageUnitImage(
-            @Parameter(description = "ID của storage unit") @PathVariable Integer id,
-            @Parameter(description = "File ảnh cần upload") @RequestParam("file") MultipartFile file) {
-        log.info("POST /api/storage-units/{}/upload-image - Upload ảnh cho storage unit", id);
-        try {
-            // Kiểm tra file có hợp lệ không
-            if (file.isEmpty()) {
-                log.warn("File upload rỗng cho storage unit ID: {}", id);
-                return ResponseEntity.badRequest().build();
-            }
-
-            // Kiểm tra định dạng file (chỉ cho phép ảnh)
-            String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
-                log.warn("File không phải là ảnh cho storage unit ID: {}, contentType: {}", id, contentType);
-                return ResponseEntity.badRequest().build();
-            }
-
-            // Kiểm tra kích thước file (giới hạn 5MB)
-            if (file.getSize() > 5 * 1024 * 1024) {
-                log.warn("File quá lớn cho storage unit ID: {}, size: {} bytes", id, file.getSize());
-                return ResponseEntity.badRequest().build();
-            }
-
-            // TODO: Implement file upload logic here
-            // Ví dụ: lưu file vào thư mục uploads hoặc cloud storage
-            // String imageUrl = fileUploadService.uploadFile(file);
-
-            // Tạm thời sử dụng tên file làm URL (cần implement thực tế)
-            String imageUrl = "/uploads/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-
-            StorageUnitDTO updatedStorageUnit = storageUnitService.updateStorageUnitImage(id, imageUrl);
-            return ResponseEntity.ok(updatedStorageUnit);
-
-        } catch (RuntimeException e) {
-            log.error("Lỗi khi upload ảnh cho storage unit với ID {}: ", id, e);
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Lỗi server khi upload ảnh cho storage unit với ID {}: ", id, e);
+            log.error("Lỗi khi lấy storage units theo manager ID {}: ", managerId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

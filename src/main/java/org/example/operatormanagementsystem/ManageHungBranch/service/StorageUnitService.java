@@ -58,7 +58,6 @@ public class StorageUnitService {
                 .phone(storageUnitDTO.getPhone())
                 .status(storageUnitDTO.getStatus())
                 .note(storageUnitDTO.getNote())
-                .image(storageUnitDTO.getImage()) // Thêm trường image
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -99,9 +98,6 @@ public class StorageUnitService {
         }
         if (storageUnitDTO.getNote() != null) {
             existingStorageUnit.setNote(storageUnitDTO.getNote());
-        }
-        if (storageUnitDTO.getImage() != null) {
-            existingStorageUnit.setImage(storageUnitDTO.getImage());
         }
 
         // Cập nhật manager nếu có
@@ -145,20 +141,6 @@ public class StorageUnitService {
     }
 
     /**
-     * Tìm kiếm storage units với điều kiện có ảnh
-     */
-    @Transactional(readOnly = true)
-    public List<StorageUnitDTO> searchStorageUnits(String name, String address, String status, Integer managerId, Boolean hasImage) {
-        log.info("Tìm kiếm storage units với các điều kiện - Name: {}, Address: {}, Status: {}, ManagerId: {}, HasImage: {}",
-                name, address, status, managerId, hasImage);
-
-        List<StorageUnit> storageUnits = storageUnitRepository.searchStorageUnits(name, address, status, managerId, hasImage);
-        return storageUnits.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Lấy storage units theo manager ID
      */
     @Transactional(readOnly = true)
@@ -168,62 +150,6 @@ public class StorageUnitService {
         return storageUnits.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Lấy storage units có ảnh
-     */
-    @Transactional(readOnly = true)
-    public List<StorageUnitDTO> getStorageUnitsWithImage() {
-        log.info("Lấy storage units có ảnh");
-        List<StorageUnit> storageUnits = storageUnitRepository.findByImageIsNotNull();
-        return storageUnits.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Lấy storage units không có ảnh
-     */
-    @Transactional(readOnly = true)
-    public List<StorageUnitDTO> getStorageUnitsWithoutImage() {
-        log.info("Lấy storage units không có ảnh");
-        List<StorageUnit> storageUnits = storageUnitRepository.findByImageIsNull();
-        return storageUnits.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Cập nhật ảnh cho storage unit
-     */
-    public StorageUnitDTO updateStorageUnitImage(Integer id, String imageUrl) {
-        log.info("Cập nhật ảnh cho storage unit với ID: {}", id);
-
-        StorageUnit storageUnit = storageUnitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy storage unit với ID: " + id));
-
-        storageUnit.setImage(imageUrl);
-        StorageUnit updatedStorageUnit = storageUnitRepository.save(storageUnit);
-
-        log.info("Đã cập nhật ảnh cho storage unit với ID: {}", id);
-        return convertToDTO(updatedStorageUnit);
-    }
-
-    /**
-     * Xóa ảnh của storage unit
-     */
-    public StorageUnitDTO removeStorageUnitImage(Integer id) {
-        log.info("Xóa ảnh của storage unit với ID: {}", id);
-
-        StorageUnit storageUnit = storageUnitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy storage unit với ID: " + id));
-
-        storageUnit.setImage(null);
-        StorageUnit updatedStorageUnit = storageUnitRepository.save(storageUnit);
-
-        log.info("Đã xóa ảnh của storage unit với ID: {}", id);
-        return convertToDTO(updatedStorageUnit);
     }
 
     /**
@@ -237,7 +163,6 @@ public class StorageUnitService {
                 .phone(storageUnit.getPhone())
                 .status(storageUnit.getStatus())
                 .note(storageUnit.getNote())
-                .image(storageUnit.getImage()) // Thêm trường image
                 .createdAt(storageUnit.getCreatedAt())
                 .build();
 
