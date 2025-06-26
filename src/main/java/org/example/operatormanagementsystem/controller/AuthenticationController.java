@@ -203,4 +203,16 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred during password reset: " + e.getMessage());
         }
     }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(Authentication authentication) {
+        try {
+            if (authentication != null) {
+
+            }
+            return ResponseEntity.ok("Đăng xuất thành công.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi đăng xuất: " + e.getMessage());
+        }
+    }
 }
