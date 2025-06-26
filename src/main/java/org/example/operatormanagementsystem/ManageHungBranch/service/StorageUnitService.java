@@ -175,7 +175,6 @@ public class StorageUnitService {
                 dto.setManagerName("Manager " + storageUnit.getManager().getManagerId());
             }
         }
-
         return dto;
     }
 }

@@ -71,7 +71,6 @@ public class EmailServiceImpl implements EmailService {
     }
 
 
-git c
     @Override
     @Transactional
     public AuthLoginResponse verifyOtp(VerifyOTPRequest request) {
