@@ -75,7 +75,6 @@ public class AuthenticationController {
         try {
             emailService.sendOTP(request.getEmail());
 
-            // Trả về chuỗi thông báo thành công
             return ResponseEntity.ok("OTP has been sent to your email.");
         } catch (MessagingException e) {
             // Xử lý lỗi khi gửi email
