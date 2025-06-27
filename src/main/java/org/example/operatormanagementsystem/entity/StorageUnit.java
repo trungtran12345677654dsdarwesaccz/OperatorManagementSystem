@@ -42,7 +42,7 @@ public class StorageUnit {
     private String note;
 
     @Column(length = 255) // Thay đổi từ Double sang String và tăng độ dài
-    private String image; // URL hoặc path của ảnh
+    private String imageStorageUnit; // URL hoặc path của ảnh
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
