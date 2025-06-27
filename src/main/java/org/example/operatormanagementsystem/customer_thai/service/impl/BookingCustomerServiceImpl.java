@@ -128,6 +128,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .deliveryDate(booking.getDeliveryDate())
                 .note(booking.getNote())
                 .total(booking.getTotal())
+                .paymentStatus(booking.getPaymentStatus())
                 .build();
     }
 } 
