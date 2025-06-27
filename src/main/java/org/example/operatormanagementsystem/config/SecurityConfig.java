@@ -64,7 +64,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/api/auth/manager/users-for-action", "/api/auth/manager/user-details/{email}",
             "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
             "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
-            "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**"
+            "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**",
+            "/api/auth/customer/login"
     };
 
     private static final String[] GET_PUBLIC_ENDPOINTS = {

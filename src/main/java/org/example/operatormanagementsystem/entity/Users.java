@@ -66,6 +66,9 @@ public class Users  implements UserDetails { // Class name from your image
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
+    @Column(name = "img", length = 500)
+    private String img;
+
     @Column(name = "password", nullable = false, length = 100) // Should be password_hash
     private String password;
 

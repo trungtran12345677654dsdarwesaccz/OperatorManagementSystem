@@ -1,5 +1,7 @@
 package org.example.operatormanagementsystem.entity;
 
+
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Data;
