@@ -70,7 +70,7 @@ public class    BookingCustomerController {
                         .address(storage.getAddress())
                         .phone(storage.getPhone())
                         .status(storage.getStatus())
-                        .image(storage.getImageStorageUnit())
+                        .image(storage.getImage())
                         .build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(storageUnitInfos);

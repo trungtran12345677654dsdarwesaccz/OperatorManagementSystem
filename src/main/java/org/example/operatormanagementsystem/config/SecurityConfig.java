@@ -36,13 +36,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     // Constructor đã được @AllArgsConstructor tạo ra sẽ không cần PasswordEncoder nữa
     // nếu bạn định nghĩa nó là một @Bean trong cùng lớp này.
 
-    /**
-     * Cấu hình và cung cấp một bean PasswordEncoder.
-     * Spring Security sẽ sử dụng bean này để mã hóa và kiểm tra mật khẩu.
-     * BCryptPasswordEncoder là một lựa chọn phổ biến và an toàn.
-     *
-     * @return Một instance của PasswordEncoder (BCryptPasswordEncoder).
-     */
+
     @Bean// Đánh dấu phương thức này sẽ tạo ra một Spring Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // Sử dụng BCryptPasswordEncoder
@@ -138,4 +132,6 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return source;
     }
 
+//    NGHĨA LÀ CSRF TOKEN LÀ CÁI TRÁNH BỊ GỬI REQUEST TỪ 1 TRANG WEB KHÁC KÈM TOKEN ĐĂNG NHAAPH
+//    Ở WEB TỐT CÒN CORS LÀ CHI CHO PHEP NHUNG CAI TRNAG NAO DC GUI REQUEST CHO NHAU
 }
