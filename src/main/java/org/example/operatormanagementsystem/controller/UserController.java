@@ -5,6 +5,7 @@ import org.example.operatormanagementsystem.managercustomer.dto.request.UserUpda
 import org.example.operatormanagementsystem.managercustomer.dto.response.UserSearchResponse;
 import org.example.operatormanagementsystem.managercustomer.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@PreAuthorize("hasRole('STAFF')")
 public class UserController {
 
     @Autowired

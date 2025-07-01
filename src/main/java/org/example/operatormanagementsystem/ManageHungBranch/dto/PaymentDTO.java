@@ -18,8 +18,12 @@
         private String status;
         private String note;
 
+
+
+
         // Thêm các field để staff dễ theo dõi
         private Boolean isOverdue;
         private Integer daysPastDue;
         private String paymentMethod;
+
     }

@@ -101,7 +101,9 @@ public class Users  implements UserDetails { // Class name from your image
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
 
-
+    // Thêm mối quan hệ 1-1 với Position
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Position position;
 
     @Override
     public boolean isAccountNonExpired() {

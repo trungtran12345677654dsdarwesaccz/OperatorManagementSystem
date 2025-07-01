@@ -1,12 +1,14 @@
 package org.example.operatormanagementsystem.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.operatormanagementsystem.dto.response.RevenueResponse;
 import org.example.operatormanagementsystem.entity.Revenue;
 import org.example.operatormanagementsystem.service.RevenueService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -16,13 +18,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/revenues")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('STAFF')")
 public class RevenueController {
 
     private final RevenueService revenueService;
 
     @GetMapping
-    public List<Revenue> getAllRevenues() {
-        return revenueService.getAllRevenues();
+    public ResponseEntity<List<RevenueResponse>> getAllRevenues() {
+        List<RevenueResponse> revenues = revenueService.getAllRevenues();
+        return ResponseEntity.ok(revenues);
     }
 
     @GetMapping("/{id}")

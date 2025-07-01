@@ -47,7 +47,7 @@ public class EmailListenerService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // KÍCH HOẠT HÀM NÀY CHẠY ĐỊNH KỲ
-//    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
+    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
     public void scheduleEmailCheck() {
         System.out.println("--- SCHEDULED TASK: Checking emails at " + System.currentTimeMillis() + " ---");
         checkEmailsAndOnboard();
@@ -318,3 +318,17 @@ public class EmailListenerService {
         }
     }
 }
+//da co cai loc thong tin nhan va xac thuc 2 yeu to
+//loc thong tin khi nhan
+// chua co ma hoa, va chua co su dung ma hoa khi nhan email
+// xong sơm làm thêm cái chưa có cx đc
+// 1 SO cach de dam bao an toan ma hoa mail khi nhan , nma van co kha nang bi hack khi nguoi dung gui thong tin cua ho di trc khi den web antoan
+
+//1.Xac minh so huu email (gui email xac nhan voi link/token)
+//Tom tat lai: Day la bien phap de dam bao nguoi gui email thuc su so huu dia chi email do. Thay vi xu ly ngay, he thong se gui mot email xac nhan voi mot link duy nhat cho nguoi gui. Chi khi nguoi gui nhap vao link nay, yeu cau moi duoc xu ly tiep. Dieu nay giup chong lai viec gia mao nguoi gui va spam.
+//
+//2. Ap dung gioi han toc do (Rate Limiting) / chong spam cho luong xu ly email
+//Tom tat lai: Bien phap nay giup ngan chan ke tan cong gui qua nhieu email lien tuc den he thong, gay qua tai dich vu lang nghe email hoac API dich. Bang cach gioi han so luong email duoc xu ly tu mot dia chi trong mot khoang thoi gian nhat dinh, hoac gioi han so luong email xu ly moi lan chay, he thong se tro nen on dinh hon truoc cac cuoc tan cong DoS qua email.
+//
+//3. Bao mat API Key bang bien moi truong hoac Secret Manager
+//Tom tat lai: Day la cach bao ve cac khoa API quan trong. Thay vi luu truc tiep API key trong cac file cau hinh cua ung dung (ma co the bi lo neu file bi danh cap), ban nen luu no duoi dang bien moi truong tren server hoac su dung mot Dich vu Quan ly Bi mat (Secret Manager). Dieu nay giup ngan chan ke tan cong lay duoc API key va su dung no de truy cap trai phep cac API cua ban.

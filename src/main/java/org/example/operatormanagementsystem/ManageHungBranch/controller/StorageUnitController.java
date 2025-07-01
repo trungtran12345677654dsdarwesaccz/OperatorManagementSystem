@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
@@ -13,9 +15,14 @@ import org.example.operatormanagementsystem.ManageHungBranch.service.StorageUnit
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/storage-units")
@@ -25,6 +32,68 @@ import java.util.Optional;
 public class StorageUnitController {
 
     private final StorageUnitService storageUnitService;
+
+    private static final String UPLOAD_DIR = "uploads/";
+
+    @PostConstruct
+    public void init() throws IOException {
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+    }
+
+    @Operation(summary = "Upload Storage Unit Image",
+            description = "Tải lên ảnh cho kho lưu trữ và trả về URL")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tải ảnh thành công"),
+            @ApiResponse(responseCode = "400", description = "Không có file hoặc định dạng file không hợp lệ"),
+            @ApiResponse(responseCode = "500", description = "Lỗi server")
+    })
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadImage(
+            @Parameter(description = "File ảnh cần tải lên (.png, .jpg, .jpeg)")
+            @RequestParam("file") MultipartFile file) {
+        log.info("POST /api/storage-units/upload - Tải lên ảnh");
+        try {
+            if (file.isEmpty()) {
+                log.error("Không có file được tải lên");
+                return ResponseEntity.badRequest().body("Không có file được tải lên");
+            }
+
+            // Kiểm tra định dạng file
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || !(
+                    originalFilename.toLowerCase().endsWith(".png") ||
+                            originalFilename.toLowerCase().endsWith(".jpg") ||
+                            originalFilename.toLowerCase().endsWith(".jpeg"))) {
+                log.error("Định dạng file không hợp lệ: {}", originalFilename);
+                return ResponseEntity.badRequest().body("File phải có định dạng .png, .jpg hoặc .jpeg");
+            }
+
+            // Tạo tên file duy nhất
+            String fileName = UUID.randomUUID() + "_" + originalFilename;
+            Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName);
+            Files.write(filePath, file.getBytes());
+
+            // Tạo URL đầy đủ
+            String imageUrl = "http://localhost:8083/uploads/" + fileName;
+            log.info("Tải ảnh thành công: {}", imageUrl);
+            return ResponseEntity.ok(new ImageResponse(imageUrl));
+        } catch (IOException e) {
+            log.error("Lỗi khi tải ảnh: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi tải ảnh: " + e.getMessage());
+        }
+    }
+
+    @Data
+    static class ImageResponse {
+        private String imageUrl;
+
+        public ImageResponse(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+    }
 
     @Operation(summary = "View Storage Unit Information",
             description = "Lấy danh sách tất cả các kho lưu trữ")

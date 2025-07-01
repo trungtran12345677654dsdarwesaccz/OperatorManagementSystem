@@ -41,33 +41,18 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
     private String email;
     private final JwtUtil jwtUtil;
+    private final EmailAsyncSender emailAsyncSender;
 
-    @Transactional
-    @Async
     @Override
-    public void sendOTP(String recipient) throws MessagingException {
-        System.out.println("DEBUG: sendOTP - Received recipient email (raw): '" + recipient + "'");
-        System.out.println("DEBUG: sendOTP - Length of raw recipient email: " + recipient.length());
-
+    @Transactional
+    public void sendOTP(String recipient) {
         String cleanRecipient = recipient.trim();
 
-        System.out.println("DEBUG: sendOTP - Cleaned recipient email: '" + cleanRecipient + "'");
-        System.out.println("DEBUG: sendOTP - Length of cleaned recipient email: " + cleanRecipient.length());
-
-        System.out.println("DEBUG: sendOTP - Attempting to find user by cleaned email: '" + cleanRecipient + "'");
         Users user = userRepository.findByEmail(cleanRecipient)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found for OTP generation: " + cleanRecipient));
-        System.out.println("DEBUG: sendOTP - User FOUND! Email: '" + user.getEmail() + "', ID: " + user.getId() + ", Status: " + user.getStatus());
-        System.out.println("DEBUG: sendOTP - Length of FOUND user email from DB: " + user.getEmail().length());
 
-        System.out.println("DEBUG: sendOTP - Attempting to find existing OTP for: '" + cleanRecipient + "'");
-        Optional<Otp> otpVerification = otpVerificationRepository.findByEmail(cleanRecipient);
-        if (otpVerification.isPresent()) {
-            System.out.println("DEBUG: sendOTP - Existing OTP found for '" + cleanRecipient + "'. Deleting it.");
-            otpVerificationRepository.delete(otpVerification.get());
-        } else {
-            System.out.println("DEBUG: sendOTP - No existing OTP found for '" + cleanRecipient + "'.");
-        }
+        otpVerificationRepository.findByEmail(cleanRecipient)
+                .ifPresent(otpVerificationRepository::delete);
 
         String otpCode = generateOTPEmail();
         System.out.println("DEBUG: sendOTP - Generated OTP code: " + otpCode + " for " + cleanRecipient);
@@ -80,20 +65,11 @@ public class EmailServiceImpl implements EmailService {
         verification.setStatus(Otp.OtpStatus.PENDING);
         verification.setUsers(user);
 
-        MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-        String html = EmailTemplate.VERIFICATION_CODE_EMAIL.getBody(otpCode);
-
-        helper.setTo(cleanRecipient);
-        helper.setSubject(EmailTemplate.VERIFICATION_CODE_EMAIL.getSubject());
-        helper.setText(html, true);
-        helper.setFrom(email);
-
-        javaMailSender.send(message);
         otpVerificationRepository.save(verification);
-        System.out.println("DEBUG: sendOTP - OTP saved to DB and email send attempt completed for '" + cleanRecipient + "'");
+
+        emailAsyncSender.sendOTPAsync(cleanRecipient, otpCode);
     }
+
 
     @Override
     @Transactional
@@ -108,16 +84,18 @@ public class EmailServiceImpl implements EmailService {
             throw new BadCredentialsException("OTP is not active or has been used/expired.");
         }
 
-        if (!otpRecord.getOtp().equals(otpCode)) {
-            otpRecord.setStatus(Otp.OtpStatus.USED);
-            otpVerificationRepository.save(otpRecord);
-            throw new BadCredentialsException("Invalid OTP.");
-        }
         if (otpRecord.getExpiredTime().isBefore(LocalDateTime.now())) {
             otpRecord.setStatus(Otp.OtpStatus.EXPIRED);
             otpVerificationRepository.save(otpRecord);
             throw new BadCredentialsException("OTP has expired.");
         }
+
+        if (!otpRecord.getOtp().equals(otpCode)) {
+            otpRecord.setStatus(Otp.OtpStatus.USED);
+            otpVerificationRepository.save(otpRecord);
+            throw new BadCredentialsException("Invalid OTP.");
+        }
+
 
         otpRecord.setStatus(Otp.OtpStatus.VERIFIED);
         otpVerificationRepository.save(otpRecord);
