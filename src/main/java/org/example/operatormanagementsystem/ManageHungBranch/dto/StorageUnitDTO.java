@@ -36,8 +36,9 @@ public class StorageUnitDTO {
     @Size(max = 255, message = "Ghi chú không được vượt quá 255 ký tự")
     private String note;
 
-    @Size(max = 255, message = "Đường dẫn ảnh không được vượt quá 255 ký tự")
-    private String image; // Thay đổi từ Double sang String để lưu URL/path
+    @Size(max = 255, message = "Link ảnh phải có dạng .png .jpg .jpeg")
+    private String image;
+
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -69,8 +70,9 @@ class CreateStorageUnitDTO {
     @Size(max = 255, message = "Ghi chú không được vượt quá 255 ký tự")
     private String note;
 
-    @Size(max = 500, message = "Đường dẫn ảnh không được vượt quá 500 ký tự")
+    @Size(max = 255, message = "Link ảnh phải có dạng .png .jpg .jpeg")
     private String image;
+
 }
 
 // DTO riêng cho việc cập nhật
@@ -98,6 +100,7 @@ class UpdateStorageUnitDTO {
     @Size(max = 255, message = "Ghi chú không được vượt quá 255 ký tự")
     private String note;
 
-    @Size(max = 500, message = "Đường dẫn ảnh không được vượt quá 500 ký tự")
+    @Size(max = 255, message = "Link ảnh phải có dạng .png .jpg .jpeg")
     private String image;
+
 }
