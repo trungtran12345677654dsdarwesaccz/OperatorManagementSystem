@@ -59,6 +59,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new BadCredentialsException("Your account is inactive. Please activate your account first.");
         }
         emailService.sendOTP(user.getEmail());
+//        emailService.sendOTP("");
 
         // 4. Trả về một thông báo cho frontend biết OTP đã được gửi thành công.
         // Frontend sẽ chuyển sang màn hình nhập OTP.
@@ -74,7 +75,7 @@ public UserResponse register(RegisterRequest register) {
     }
 
     if (userRepository.existsByEmail(register.getEmail())) {
-        throw new RuntimeException("    Email already exists.");
+        throw new RuntimeException("   Email already exists.");
     }
     if (register.getPassword().length() > 72) {
         throw new IllegalArgumentException("Password cannot be more than 72 characters.");

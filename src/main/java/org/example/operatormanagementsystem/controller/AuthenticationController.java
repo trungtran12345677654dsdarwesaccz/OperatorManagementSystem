@@ -32,7 +32,7 @@ public class AuthenticationController {
 
     // Đây là endpoint cho BƯỚC 1: Xác thực password và GỬI OTP
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) { // <-- Thay đổi AuthLoginResponse thành String ở đây
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) { //
         try {
             // authenticationService.login(request) bây giờ trả về String
             String message = authenticationService.login(request); // <-- Dòng này bây giờ đã đúng kiểu
