@@ -6,12 +6,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.service.StorageUnitService;
+import org.example.operatormanagementsystem.config.CloudinaryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
 @RestController
 @RequestMapping("/api/storage-units")
 @RequiredArgsConstructor
@@ -32,6 +35,8 @@ import java.util.UUID;
 public class StorageUnitController {
 
     private final StorageUnitService storageUnitService;
+    private final CloudinaryService cloudinaryService;
+
 
     private static final String UPLOAD_DIR = "uploads/";
 
@@ -51,38 +56,17 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadImage(
-            @Parameter(description = "File ảnh cần tải lên (.png, .jpg, .jpeg)")
-            @RequestParam("file") MultipartFile file) {
-        log.info("POST /api/storage-units/upload - Tải lên ảnh");
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
-                log.error("Không có file được tải lên");
-                return ResponseEntity.badRequest().body("Không có file được tải lên");
+                return ResponseEntity.badRequest().body("No file uploaded");
             }
 
-            // Kiểm tra định dạng file
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null || !(
-                    originalFilename.toLowerCase().endsWith(".png") ||
-                            originalFilename.toLowerCase().endsWith(".jpg") ||
-                            originalFilename.toLowerCase().endsWith(".jpeg"))) {
-                log.error("Định dạng file không hợp lệ: {}", originalFilename);
-                return ResponseEntity.badRequest().body("File phải có định dạng .png, .jpg hoặc .jpeg");
-            }
-
-            // Tạo tên file duy nhất
-            String fileName = UUID.randomUUID() + "_" + originalFilename;
-            Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName);
-            Files.write(filePath, file.getBytes());
-
-            // Tạo URL đầy đủ
-            String imageUrl = "http://localhost:8083/uploads/" + fileName;
-            log.info("Tải ảnh thành công: {}", imageUrl);
+            String fileName = UUID.randomUUID().toString();
+            String imageUrl = cloudinaryService.uploadImage(file.getBytes(), fileName);
             return ResponseEntity.ok(new ImageResponse(imageUrl));
-        } catch (IOException e) {
-            log.error("Lỗi khi tải ảnh: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi tải ảnh: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed: " + e.getMessage());
         }
     }
 
@@ -173,6 +157,7 @@ public class StorageUnitController {
             @Valid @RequestBody StorageUnitDTO storageUnitDTO) {
         log.info("PUT /api/storage-units/{} - Cập nhật storage unit", id);
         try {
+            storageUnitDTO.setStorageId(id); // Đảm bảo ID được đặt
             StorageUnitDTO updatedStorageUnit = storageUnitService.updateStorageUnit(id, storageUnitDTO);
             return ResponseEntity.ok(updatedStorageUnit);
         } catch (RuntimeException e) {

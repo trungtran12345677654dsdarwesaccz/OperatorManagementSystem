@@ -100,6 +100,10 @@ public class StorageUnitService {
         if (storageUnitDTO.getNote() != null) {
             existingStorageUnit.setNote(storageUnitDTO.getNote());
         }
+        // Thêm kiểm tra và cập nhật image
+        if (storageUnitDTO.getImage() != null) {
+            existingStorageUnit.setImage(storageUnitDTO.getImage());
+        }
 
         // Cập nhật manager nếu có
         if (storageUnitDTO.getManagerId() != null) {
@@ -113,7 +117,6 @@ public class StorageUnitService {
 
         return convertToDTO(updatedStorageUnit);
     }
-
     /**
      * Xóa storage unit
      */
