@@ -13,15 +13,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/promotions")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5174")
 public class PromotionController {
 
     @Autowired
     private PromotionService promotionService;
 
     @GetMapping
-    public List<PromotionResponse> getAllPromotions(@RequestParam(value = "keyword", required = false) String keyword) {
-        return promotionService.searchPromotions(keyword);
+    public List<PromotionResponse> getAllPromotions(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "status", required = false) String status
+    ) {
+        return promotionService.searchPromotions(keyword, status);
     }
 
     @PostMapping("/update-dates")

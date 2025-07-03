@@ -6,6 +6,7 @@ public class AddPromotionRequest {
     private String name;
     private Date startDate;
     private Date endDate;
+    private String status; // <== Thêm
 
     // Getters and Setters
     public String getName() { return name; }
@@ -14,4 +15,6 @@ public class AddPromotionRequest {
     public void setStartDate(Date startDate) { this.startDate = startDate; }
     public Date getEndDate() { return endDate; }
     public void setEndDate(Date endDate) { this.endDate = endDate; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

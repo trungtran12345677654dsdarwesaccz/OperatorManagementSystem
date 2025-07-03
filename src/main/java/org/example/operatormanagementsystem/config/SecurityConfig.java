@@ -36,7 +36,13 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     // Constructor đã được @AllArgsConstructor tạo ra sẽ không cần PasswordEncoder nữa
     // nếu bạn định nghĩa nó là một @Bean trong cùng lớp này.
 
-
+    /**
+     * Cấu hình và cung cấp một bean PasswordEncoder.
+     * Spring Security sẽ sử dụng bean này để mã hóa và kiểm tra mật khẩu.
+     * BCryptPasswordEncoder là một lựa chọn phổ biến và an toàn.
+     *
+     * @return Một instance của PasswordEncoder (BCryptPasswordEncoder).
+     */
     @Bean// Đánh dấu phương thức này sẽ tạo ra một Spring Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // Sử dụng BCryptPasswordEncoder
@@ -95,6 +101,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
+                        .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_MANAGER")
+
                         .requestMatchers("/api/transport-unit-analytics/dashboard-stats").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/historical-data").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/weekly-activity").hasAnyRole("MANAGER")
