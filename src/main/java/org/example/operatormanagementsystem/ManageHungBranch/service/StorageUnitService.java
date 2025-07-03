@@ -3,12 +3,15 @@ package org.example.operatormanagementsystem.ManageHungBranch.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
+import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.entity.Manager;
 import org.example.operatormanagementsystem.entity.StorageUnit;
 import org.example.operatormanagementsystem.ManageHungBranch.repository.StorageUnitRepository;
 import org.example.operatormanagementsystem.transportunit.repository.ManagerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.stream.Collectors;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -169,6 +172,12 @@ public class StorageUnitService {
                 .note(storageUnit.getNote())
                 .createdAt(storageUnit.getCreatedAt())
                 .image(storageUnit.getImage())
+                .slotCount(storageUnit.getSlotCount())
+                .bookedSlots(
+                        storageUnit.getBookings().stream()
+                                .map(Booking::getSlotIndex)
+                                .collect(Collectors.toList())
+                )
                 .build();
 
         // Thêm thông tin manager nếu có

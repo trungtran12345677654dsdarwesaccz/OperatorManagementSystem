@@ -15,4 +15,6 @@ public class BookingResponse {
     private String customerFullName;
     private Long total; // Thêm tổng giá trị đơn hàng (số nguyên VNĐ)
     private String paymentStatus;
+    private Integer slotIndex;
+
 }
