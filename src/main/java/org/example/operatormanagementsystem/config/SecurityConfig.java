@@ -88,7 +88,9 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
-                                "/api/auth/reset-password").permitAll()
+                                "/api/auth/reset-password",
+                                "/api/auth/login/verify-otp").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
@@ -100,6 +102,10 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/transport-unit-analytics/status-distribution").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/approval-trends").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/performance-metrics").hasRole("MANAGER")
+                        .requestMatchers("/api/profile","/api/profile/**").hasAnyRole("MANAGER", "STAFF")
+                        .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
+                        .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
+                        .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
 
 
 
@@ -117,8 +123,10 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         corsConfiguration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:5174",// Vite dev server
+                "http://localhost:5175",
                 "http://localhost:3000",    // React dev server
                 "http://127.0.0.1:5173",
+                "http://127.0.0.1:5175",
                 "http://127.0.0.1:5174", // Alternative localhost
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));

@@ -1,8 +1,10 @@
 package org.example.operatormanagementsystem.controller;
 
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.example.operatormanagementsystem.config.JwtUtil;
 import org.example.operatormanagementsystem.dto.request.*;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.dto.response.UserResponse;
@@ -29,6 +31,7 @@ import java.util.List;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final EmailService emailService;
+    private final JwtUtil jwtUtil;
 
     // Đây là endpoint cho BƯỚC 1: Xác thực password và GỬI OTP
     @PostMapping("/login")
@@ -49,9 +52,12 @@ public class AuthenticationController {
     // Bạn vẫn cần endpoint riêng cho BƯỚC 2: Xác minh OTP và nhận token
     // (như đã thảo luận ở các câu trả lời trước đó)
     @PostMapping("/login/verify-otp")
-    public ResponseEntity<?> completeLoginWithOtp(@Valid @RequestBody VerifyOTPRequest request) {
+    public ResponseEntity<?> completeLoginWithOtp(@Valid @RequestBody VerifyOTPRequest request,  HttpServletRequest servletRequest) {
         try {
             // Gọi phương thức verifyOtp mới đã được sửa đổi trong EmailServiceImpl (Canvas)
+            request.setIp(servletRequest.getRemoteAddr());
+            request.setUserAgent(servletRequest.getHeader("User-Agent"));
+            request.setDeviceInfo(parseDeviceInfo(request.getUserAgent()));
             AuthLoginResponse authLoginResponse = emailService.verifyOtp(request);
             return ResponseEntity.ok(authLoginResponse);
 
@@ -203,6 +209,26 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred during password reset: " + e.getMessage());
         }
     }
+    @PostMapping("/change-password-request")
+    @PreAuthorize("hasAnyRole('MANAGER', 'STAFF')")
+    public ResponseEntity<String> requestChangePassword(HttpServletRequest request) {
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token is missing.");
+            }
+            String email = jwtUtil.extractUsername(token);
+            authenticationService.requestPasswordReset(email); // Gửi email như quên mật khẩu
+            return ResponseEntity.ok("A confirmation link has been sent to your email.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send email: " + e.getMessage());
+        }
+    }
+
+
+
+
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(Authentication authentication) {
         try {
@@ -215,4 +241,17 @@ public class AuthenticationController {
                     .body("Lỗi khi đăng xuất: " + e.getMessage());
         }
     }
+    private String parseDeviceInfo(String userAgent) {
+        if (userAgent == null) return "Unknown";
+
+        String agent = userAgent.toLowerCase();
+        if (agent.contains("windows")) return "Windows";
+        if (agent.contains("mac")) return "Mac";
+        if (agent.contains("android")) return "Android";
+        if (agent.contains("iphone")) return "iPhone";
+        if (agent.contains("linux")) return "Linux";
+
+        return "Other";
+    }
+
 }

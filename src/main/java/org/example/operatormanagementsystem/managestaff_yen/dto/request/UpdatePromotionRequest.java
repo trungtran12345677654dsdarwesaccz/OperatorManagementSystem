@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.managestaff_yen.dto.request;
 
 import java.util.Date;
 
+
 public class UpdatePromotionRequest {
     private Long id;
     private String name;
