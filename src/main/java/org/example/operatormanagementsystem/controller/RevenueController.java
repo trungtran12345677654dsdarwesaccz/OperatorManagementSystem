@@ -1,6 +1,7 @@
 package org.example.operatormanagementsystem.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.operatormanagementsystem.dto.response.RevenueResponse;
 import org.example.operatormanagementsystem.entity.Revenue;
 import org.example.operatormanagementsystem.service.RevenueService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,8 +24,9 @@ public class RevenueController {
     private final RevenueService revenueService;
 
     @GetMapping
-    public List<Revenue> getAllRevenues() {
-        return revenueService.getAllRevenues();
+    public ResponseEntity<List<RevenueResponse>> getAllRevenues() {
+        List<RevenueResponse> revenues = revenueService.getAllRevenues();
+        return ResponseEntity.ok(revenues);
     }
 
     @GetMapping("/{id}")

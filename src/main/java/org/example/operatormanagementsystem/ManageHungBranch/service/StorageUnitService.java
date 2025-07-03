@@ -59,6 +59,7 @@ public class StorageUnitService {
                 .status(storageUnitDTO.getStatus())
                 .note(storageUnitDTO.getNote())
                 .createdAt(LocalDateTime.now())
+                .image(storageUnitDTO.getImage())
                 .build();
 
         // Gán manager nếu có
@@ -164,6 +165,7 @@ public class StorageUnitService {
                 .status(storageUnit.getStatus())
                 .note(storageUnit.getNote())
                 .createdAt(storageUnit.getCreatedAt())
+                .image(storageUnit.getImage())
                 .build();
 
         // Thêm thông tin manager nếu có
@@ -175,7 +177,6 @@ public class StorageUnitService {
                 dto.setManagerName("Manager " + storageUnit.getManager().getManagerId());
             }
         }
-
         return dto;
     }
 }

@@ -3,7 +3,9 @@ package org.example.operatormanagementsystem.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.operatormanagementsystem.dto.response.RevenueResponse;
 import org.example.operatormanagementsystem.entity.Revenue;
+import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.repository.RevenueRepository;
 import org.example.operatormanagementsystem.service.RevenueService;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +24,13 @@ public class RevenueServiceImpl implements RevenueService {
     private final RevenueRepository revenueRepository;
 
     @Override
-    public List<Revenue> getAllRevenues() {
-        return revenueRepository.findAll();
+    public List<RevenueResponse> getAllRevenues() {
+        List<Revenue> revenues = revenueRepository.findAll();
+        return revenues.stream()
+                .map(this::convertToRevenueResponse)
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public Revenue getRevenueById(Integer id) {
@@ -123,4 +130,41 @@ public class RevenueServiceImpl implements RevenueService {
             throw new RuntimeException("Error generating Excel file: " + e.getMessage());
         }
     }
+    private RevenueResponse convertToRevenueResponse(Revenue revenue) {
+        RevenueResponse response = new RevenueResponse();
+        response.setRevenueId(revenue.getRevenueId());
+        response.setBeneficiaryType(revenue.getBeneficiaryType());
+        response.setBeneficiaryId(revenue.getBeneficiaryId());
+        response.setSourceType(revenue.getSourceType());
+        response.setSourceId(revenue.getSourceId());
+        response.setAmount(revenue.getAmount());
+        response.setDate(revenue.getDate());
+        response.setDescription(revenue.getDescription());
+
+        if (revenue.getBooking() != null) {
+            RevenueResponse.BookingBasicInfo bookingInfo = new RevenueResponse.BookingBasicInfo();
+            bookingInfo.setBookingId(revenue.getBooking().getBookingId());
+
+            if (revenue.getBooking().getCustomer() != null) {
+                RevenueResponse.CustomerBasicInfo customerInfo = new RevenueResponse.CustomerBasicInfo();
+                customerInfo.setCustomerId(revenue.getBooking().getCustomer().getCustomerId());
+
+                if (revenue.getBooking().getCustomer().getUsers() != null) {
+                    RevenueResponse.UserBasicInfo userInfo = new RevenueResponse.UserBasicInfo();
+                    Users user = revenue.getBooking().getCustomer().getUsers();
+                    userInfo.setId(user.getId());
+                    userInfo.setFullName(user.getFullName());
+                    userInfo.setEmail(user.getEmail());
+                    customerInfo.setUsers(userInfo);
+                }
+
+                bookingInfo.setCustomer(customerInfo);
+            }
+
+            response.setBooking(bookingInfo);
+        }
+
+        return response;
+    }
+
 }

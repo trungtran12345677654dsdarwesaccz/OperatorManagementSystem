@@ -60,10 +60,10 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    @Column(name = "pickup_location", nullable = true)
+    @Column(name = "pickup_location", nullable = false)
     private String pickupLocation;
 
-    @Column(name = "delivery_location", nullable = true)
+    @Column(name = "delivery_location", nullable = false)
     private String deliveryLocation;
 
     @Column(name = "note", length = 255)

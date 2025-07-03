@@ -36,13 +36,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     // Constructor đã được @AllArgsConstructor tạo ra sẽ không cần PasswordEncoder nữa
     // nếu bạn định nghĩa nó là một @Bean trong cùng lớp này.
 
-    /**
-     * Cấu hình và cung cấp một bean PasswordEncoder.
-     * Spring Security sẽ sử dụng bean này để mã hóa và kiểm tra mật khẩu.
-     * BCryptPasswordEncoder là một lựa chọn phổ biến và an toàn.
-     *
-     * @return Một instance của PasswordEncoder (BCryptPasswordEncoder).
-     */
+
     @Bean// Đánh dấu phương thức này sẽ tạo ra một Spring Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // Sử dụng BCryptPasswordEncoder
@@ -94,7 +88,6 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
-                                "/api/auth/customer/login",
                                 "/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
@@ -123,10 +116,10 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "http://localhost:5174", // Vite dev server
+                "http://localhost:5174",// Vite dev server
                 "http://localhost:3000",    // React dev server
                 "http://127.0.0.1:5173",
-                "http://127.0.0.1:5174",// Alternative localhost
+                "http://127.0.0.1:5174", // Alternative localhost
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));
 //        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
@@ -139,4 +132,6 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return source;
     }
 
+//    NGHĨA LÀ CSRF TOKEN LÀ CÁI TRÁNH BỊ GỬI REQUEST TỪ 1 TRANG WEB KHÁC KÈM TOKEN ĐĂNG NHAAPH
+//    Ở WEB TỐT CÒN CORS LÀ CHI CHO PHEP NHUNG CAI TRNAG NAO DC GUI REQUEST CHO NHAU
 }
