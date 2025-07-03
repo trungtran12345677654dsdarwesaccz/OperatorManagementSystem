@@ -15,6 +15,7 @@ import org.example.operatormanagementsystem.transportunit.repository.TransportUn
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.example.operatormanagementsystem.customer_thai.service.NotificationEventService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +35,8 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
     
     @Qualifier("promotionRepository_thai")
     private final PromotionRepository promotionRepository;
+
+    private final NotificationEventService notificationEventService;
 
     @Override
     @Transactional
@@ -73,6 +76,17 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .build();
 
         Booking savedBooking = bookingCustomerRepository.save(booking);
+        
+        // Sau khi tạo booking thành công, tạo notification
+        Customer customer = savedBooking.getCustomer();
+        
+        notificationEventService.createBookingStatusNotification(
+            customer, 
+            savedBooking.getBookingId().toString(), 
+            "N/A", 
+            savedBooking.getStatus()
+        );
+        
         return mapToBookingResponse(savedBooking);
     }
 
@@ -111,15 +125,33 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
             throw new RuntimeException("Could not find customer profile for the current user.");
         }
         Integer customerId = currentUser.getCustomer().getCustomerId();
-
+    
         Booking booking = bookingCustomerRepository.findByBookingIdAndCustomer_CustomerId(bookingId, customerId)
                 .orElseThrow(() -> new RuntimeException("Booking not found or you do not have permission to delete it."));
-
+    
         if (!"PENDING".equals(booking.getStatus())) {
             throw new RuntimeException("Cannot delete a booking that is not in PENDING status.");
         }
-
+    
+        // Lưu thông tin customer và booking ID trước khi xóa
+        Customer customer = booking.getCustomer();
+        String bookingIdStr = booking.getBookingId().toString();
+    
+        // Xóa booking
         bookingCustomerRepository.delete(booking);
+    
+        // Tạo notification sau khi xóa booking thành công
+        try {
+            System.out.println("Creating notification for booking: " + bookingIdStr);
+            notificationEventService.createBookingDeletedNotification(
+                customer, 
+                bookingIdStr
+            );
+            System.out.println("Notification created successfully");
+        } catch (Exception e) {
+            System.err.println("Error creating notification: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private BookingCustomerResponse mapToBookingResponse(Booking booking) {

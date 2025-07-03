@@ -7,6 +7,7 @@ import org.example.operatormanagementsystem.customer_thai.dto.response.FeedbackR
 import org.example.operatormanagementsystem.customer_thai.repository.BookingCustomerRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.CustomerFeedbackRepository;
 import org.example.operatormanagementsystem.customer_thai.service.CustomerFeedbackService;
+import org.example.operatormanagementsystem.customer_thai.service.NotificationEventService;
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.entity.Customer;
 import org.example.operatormanagementsystem.entity.Feedback;
@@ -26,6 +27,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
     private final CustomerFeedbackRepository feedbackRepository;
     private final BookingCustomerRepository bookingRepository;
     private final UserRepository userRepository;
+    private final NotificationEventService notificationEventService;
 
     @Override
     public FeedbackResponse createFeedback(CreateFeedbackRequest request, Integer customerId) {
@@ -56,6 +58,22 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                 .build();
 
         Feedback savedFeedback = feedbackRepository.save(feedback);
+
+        // Tạo notification sau khi tạo feedback thành công
+        try {
+            Customer customer = savedFeedback.getCustomer();
+            String feedbackIdStr = savedFeedback.getFeedbackId().toString();
+            String feedbackType = savedFeedback.getType().toString();
+            
+            notificationEventService.createFeedbackNotification(
+                customer, 
+                feedbackIdStr, 
+                feedbackType
+            );
+        } catch (Exception e) {
+            System.err.println("Error creating feedback notification: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         return mapToResponse(savedFeedback);
     }
