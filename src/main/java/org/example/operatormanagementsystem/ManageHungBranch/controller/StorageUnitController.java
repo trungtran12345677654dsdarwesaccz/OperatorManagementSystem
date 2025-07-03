@@ -7,13 +7,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.service.StorageUnitService;
-import org.example.operatormanagementsystem.config.CloudinaryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -157,7 +157,6 @@ public class StorageUnitController {
             @Valid @RequestBody StorageUnitDTO storageUnitDTO) {
         log.info("PUT /api/storage-units/{} - Cập nhật storage unit", id);
         try {
-            storageUnitDTO.setStorageId(id); // Đảm bảo ID được đặt
             StorageUnitDTO updatedStorageUnit = storageUnitService.updateStorageUnit(id, storageUnitDTO);
             return ResponseEntity.ok(updatedStorageUnit);
         } catch (RuntimeException e) {
