@@ -5,11 +5,12 @@ import org.example.operatormanagementsystem.customer_thai.dto.request.CreateBook
 import org.example.operatormanagementsystem.customer_thai.dto.response.BookingCustomerResponse;
 import org.example.operatormanagementsystem.customer_thai.repository.BookingCustomerRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.OperatorStaffRepository;
+import org.example.operatormanagementsystem.enumeration.PaymentStatus;
+import org.example.operatormanagementsystem.customer_thai.repository.PromotionRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.StorageUnitRepository;
 import org.example.operatormanagementsystem.customer_thai.service.BookingCustomerService;
 import org.example.operatormanagementsystem.customer_thai.service.CustomerInfoService;
 import org.example.operatormanagementsystem.entity.*;
-import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,9 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
     private final TransportUnitRepository transportUnitRepository;
     @Qualifier("operatorStaffRepository_thai")
     private final OperatorStaffRepository operatorStaffRepository;
+    
+    @Qualifier("promotionRepository_thai")
+    private final PromotionRepository promotionRepository;
 
     @Override
     @Transactional
@@ -46,6 +50,13 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         OperatorStaff operatorStaff = operatorStaffRepository.findById(request.getOperatorId())
                 .orElseThrow(() -> new RuntimeException("Operator staff not found"));
 
+        // Tìm promotion nếu có
+        Promotion promotion = null;
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            promotion = promotionRepository.findByName(request.getName())
+                    .orElse(null);
+        }
+
         Booking booking = Booking.builder()
                 .customer(currentUser.getCustomer())
                 .storageUnit(storageUnit)
@@ -58,6 +69,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .deliveryDate(request.getDeliveryDate())
                 .note(request.getNote())
                 .total(request.getTotal())
+                .promotion(promotion)
                 .build();
 
         Booking savedBooking = bookingCustomerRepository.save(booking);
@@ -103,7 +115,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         Booking booking = bookingCustomerRepository.findByBookingIdAndCustomer_CustomerId(bookingId, customerId)
                 .orElseThrow(() -> new RuntimeException("Booking not found or you do not have permission to delete it."));
 
-        if (!"PENDING".equalsIgnoreCase(booking.getStatus())) {
+        if (!"PENDING".equals(booking.getStatus())) {
             throw new RuntimeException("Cannot delete a booking that is not in PENDING status.");
         }
 
@@ -129,6 +141,9 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .note(booking.getNote())
                 .total(booking.getTotal())
                 .paymentStatus(booking.getPaymentStatus())
+                .promotionId(booking.getPromotion() != null ? booking.getPromotion().getId() : null)
+                .promotionName(booking.getPromotion() != null ? booking.getPromotion().getName() : null)
+                .promotionDescription(booking.getPromotion() != null ? booking.getPromotion().getDescription() : null)
                 .build();
     }
 } 
