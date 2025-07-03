@@ -52,7 +52,8 @@ public class AuthenticationController {
     // Bạn vẫn cần endpoint riêng cho BƯỚC 2: Xác minh OTP và nhận token
     // (như đã thảo luận ở các câu trả lời trước đó)
     @PostMapping("/login/verify-otp")
-    public ResponseEntity<?> completeLoginWithOtp(@Valid @RequestBody VerifyOTPRequest request) {
+    public ResponseEntity<?> completeLoginWithOtp(@Valid @RequestBody VerifyOTPRequest request,
+                                                  HttpServletRequest servletRequest) {
         try {
             // Gọi phương thức verifyOtp mới đã được sửa đổi trong EmailServiceImpl (Canvas)
             request.setIp(servletRequest.getRemoteAddr());
