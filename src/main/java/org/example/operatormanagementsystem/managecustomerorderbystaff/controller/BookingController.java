@@ -2,6 +2,8 @@ package org.example.operatormanagementsystem.managecustomerorderbystaff.controll
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.response.BookingDetailResponse;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.response.SlotsInfoResponse;
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.response.BookingResponse;
@@ -149,4 +151,41 @@ public class BookingController {
         }
         return response;
     }
+
+    // 1) Lấy slotCount + danh sách ô đã full cho kho
+    @GetMapping("/storage/{storageId}/slots")
+    @PreAuthorize("hasRole('ROLE_STAFF')")
+    public ResponseEntity<SlotsInfoResponse> getSlotsInfo(@PathVariable Integer storageId) {
+        return ResponseEntity.ok(bookingService.getSlotsInfo(storageId));
+    }
+
+    // 2) Lấy chi tiết booking cho một ô cụ thể
+    @GetMapping("/storage/{storageId}/slots/{slotIndex}")
+    @PreAuthorize("hasRole('ROLE_STAFF')")
+    public ResponseEntity<BookingDetailResponse> getBookingDetail(
+            @PathVariable Integer storageId,
+            @PathVariable Integer slotIndex) {
+        return bookingService.getBookingDetail(storageId, slotIndex)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ROLE_STAFF')")
+    public ResponseEntity<BookingDetailResponse> createBooking(
+            @Valid @RequestBody BookingRequest req) {
+        BookingDetailResponse dto = bookingService.createBooking(req);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_STAFF')")
+    public ResponseEntity<Void> deleteBooking(@PathVariable Integer id) {
+            bookingService.deleteBooking(id);
+            return ResponseEntity.noContent().build();
+        }
+
+
+
+
 }

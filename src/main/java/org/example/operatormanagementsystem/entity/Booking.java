@@ -69,6 +69,9 @@ public class Booking {
     @Column(name = "note", length = 255)
     private String note;
 
+    @Column(name="slot_index", nullable=false)
+    private Integer slotIndex;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Debt> debts;
 
