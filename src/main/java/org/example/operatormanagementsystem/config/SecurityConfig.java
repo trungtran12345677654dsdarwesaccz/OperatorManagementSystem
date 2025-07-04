@@ -91,6 +91,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
+                        .requestMatchers("/api/user/**").hasRole("STAFF")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/dashboard-stats").hasAnyRole("MANAGER")
