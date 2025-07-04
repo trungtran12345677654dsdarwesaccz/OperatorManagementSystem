@@ -12,12 +12,9 @@ public interface PromotionService {
     PromotionResponse updatePromotion(UpdatePromotionRequest request);
     PromotionResponse cancelPromotion(CancelPromotionRequest request);
 
-    List<PromotionResponse> searchPromotions(String keyword, String status);
-    default List<PromotionResponse> searchPromotions(String keyword) {
-        return searchPromotions(keyword, null);
-    }
+    List<PromotionResponse> searchPromotions(String keyword);
 
     PromotionResponse addPromotion(AddPromotionRequest request);
+
     PromotionResponse updateDescription(UpdatePromotionRequest request);
-    List<PromotionResponse> getAllPromotions();
 }

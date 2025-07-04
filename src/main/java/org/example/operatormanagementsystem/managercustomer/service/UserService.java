@@ -4,7 +4,9 @@ import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.base.BaseService;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserCreateRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserUpdateRequest;
+import org.example.operatormanagementsystem.dto.request.UserFilterRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.response.UserSearchResponse;
+import org.example.operatormanagementsystem.dto.response.PageResponse;
 
 import java.util.List;
 
@@ -19,4 +21,7 @@ public interface UserService extends BaseService<Users, Integer> {
     UserSearchResponse findUserResponseById(int id);
     UserSearchResponse createUser(UserCreateRequest request);
     UserSearchResponse updateUser(Integer id, UserUpdateRequest request);
+
+    // New pagination method
+    PageResponse<UserSearchResponse> getUsersWithFilters(UserFilterRequest filterRequest);
 }

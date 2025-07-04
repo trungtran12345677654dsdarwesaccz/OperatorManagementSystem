@@ -30,9 +30,4 @@ public class BookingCustomerResponse {
     private LocalDateTime deliveryDate;
     private String note;
     private Long total;
-    
-    // Thông tin promotion
-    private Long promotionId;
-    private String promotionName;
-    private String promotionDescription;
 } 

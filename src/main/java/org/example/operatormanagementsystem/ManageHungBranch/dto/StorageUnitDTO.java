@@ -6,7 +6,6 @@ import lombok.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -40,8 +39,6 @@ public class StorageUnitDTO {
     @Size(max = 255, message = "Link ảnh phải có dạng .png .jpg .jpeg")
     private String image;
 
-    private Integer slotCount;
-    private List<Integer> bookedSlots;   // chỉ số các ô đã full
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -75,9 +72,6 @@ class CreateStorageUnitDTO {
 
     @Size(max = 500, message = "Đường dẫn ảnh không được vượt quá 500 ký tự")
     private String image;
-
-    private Integer slotCount;
-    private List<Integer> bookedSlots;
 }
 
 // DTO riêng cho việc cập nhật
@@ -107,8 +101,5 @@ class UpdateStorageUnitDTO {
 
     @Size(max = 255, message = "Link ảnh phải có dạng .png .jpg .jpeg")
     private String image;
-
-    private Integer slotCount;
-    private List<Integer> bookedSlots;
 
 }

@@ -5,9 +5,15 @@ import org.example.operatormanagementsystem.base.BaseServiceImpl;
 import org.example.operatormanagementsystem.managercustomer.repository.ManagerUserRepository;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserCreateRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserUpdateRequest;
+import org.example.operatormanagementsystem.dto.request.UserFilterRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.response.UserSearchResponse;
+import org.example.operatormanagementsystem.dto.response.PageResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
@@ -162,5 +168,74 @@ public class UserServiceImpl extends BaseServiceImpl<Users, Integer> implements 
                 .status(user.getStatus() != null ? user.getStatus().name() : null)
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    public PageResponse<UserSearchResponse> getUsersWithFilters(UserFilterRequest filterRequest) {
+        // Create pageable with sorting
+        Sort sort = Sort.by(
+            filterRequest.getSortDirection().equalsIgnoreCase("desc") ? 
+            Sort.Direction.DESC : Sort.Direction.ASC, 
+            filterRequest.getSortBy()
+        );
+        
+        Pageable pageable = PageRequest.of(
+            filterRequest.getPage(), 
+            filterRequest.getSize(), 
+            sort
+        );
+
+        // Convert string filters to enums
+        UserRole role = null;
+        UserGender gender = null;
+        UserStatus status = null;
+
+        if (filterRequest.getRole() != null && !filterRequest.getRole().isEmpty()) {
+            try {
+                role = UserRole.valueOf(filterRequest.getRole().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Invalid role, will be ignored
+            }
+        }
+
+        if (filterRequest.getGender() != null && !filterRequest.getGender().isEmpty()) {
+            try {
+                gender = UserGender.valueOf(filterRequest.getGender().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Invalid gender, will be ignored
+            }
+        }
+
+        if (filterRequest.getStatus() != null && !filterRequest.getStatus().isEmpty()) {
+            try {
+                status = UserStatus.valueOf(filterRequest.getStatus().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Invalid status, will be ignored
+            }
+        }
+
+        // Get filtered and paginated data
+        Page<Users> userPage = managerUserRepository.findByFilters(
+            filterRequest.getFullName(),
+            filterRequest.getEmail(),
+            filterRequest.getPhone(),
+            filterRequest.getAddress(),
+            role,
+            gender,
+            status,
+            pageable
+        );
+
+        // Convert to response DTOs
+        List<UserSearchResponse> userResponses = userPage.getContent().stream()
+            .map(this::convertToUserSearchResponse)
+            .collect(Collectors.toList());
+
+        return new PageResponse<>(
+            userResponses,
+            filterRequest.getPage(),
+            filterRequest.getSize(),
+            userPage.getTotalElements()
+        );
     }
 }

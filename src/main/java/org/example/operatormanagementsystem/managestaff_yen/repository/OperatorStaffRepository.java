@@ -1,7 +1,6 @@
 package org.example.operatormanagementsystem.managestaff_yen.repository;
 
 import org.example.operatormanagementsystem.entity.OperatorStaff;
-import org.example.operatormanagementsystem.enumeration.UserGender;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,81 +15,44 @@ import java.util.Optional;
 @Repository
 public interface OperatorStaffRepository extends JpaRepository<OperatorStaff, Integer> {
 
+    // Tìm tất cả staff thuộc về một manager
     List<OperatorStaff> findByManagerManagerId(Integer managerId);
 
+    // Tìm staff theo manager với phân trang
     Page<OperatorStaff> findByManagerManagerId(Integer managerId, Pageable pageable);
 
-    @Query("""
-        SELECT os FROM OperatorStaff os JOIN os.users u 
-        WHERE os.manager.managerId = :managerId 
-        AND (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) 
-             OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) 
-             OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
-    """)
-    Page<OperatorStaff> searchStaffByManagerAndTerm(
-            @Param("managerId") Integer managerId,
-            @Param("searchTerm") String searchTerm,
-            Pageable pageable
-    );
+    // Tìm kiếm staff theo tên trong team của manager
+    @Query("SELECT os FROM OperatorStaff os JOIN os.users u WHERE os.manager.managerId = :managerId " +
+            "AND (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+            "OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<OperatorStaff> searchStaffByManagerAndTerm(@Param("managerId") Integer managerId,
+                                                    @Param("searchTerm") String searchTerm,
+                                                    Pageable pageable);
 
+    // Đếm số lượng staff của một manager
     long countByManagerManagerId(Integer managerId);
 
-    @Query("""
-        SELECT os FROM OperatorStaff os JOIN os.users u 
-        WHERE os.manager.managerId = :managerId AND u.status = :status
-    """)
-    List<OperatorStaff> findByManagerManagerIdAndUsersStatus(
-            @Param("managerId") Integer managerId,
-            @Param("status") UserStatus status
-    );
+    // Tìm staff theo status và manager
+    @Query("SELECT os FROM OperatorStaff os JOIN os.users u WHERE os.manager.managerId = :managerId AND u.status = :status")
+    List<OperatorStaff> findByManagerManagerIdAndUsersStatus(@Param("managerId") Integer managerId,
+                                                             @Param("status") org.example.operatormanagementsystem.enumeration.UserStatus status);
 
+    // Kiểm tra xem staff có thuộc về manager không
     boolean existsByOperatorIdAndManagerManagerId(Integer operatorId, Integer managerId);
 
+    // Tìm staff theo ID và manager ID (để bảo mật)
     Optional<OperatorStaff> findByOperatorIdAndManagerManagerId(Integer operatorId, Integer managerId);
 
-    @Query("""
-        SELECT os FROM OperatorStaff os JOIN os.users u 
-        WHERE os.manager.managerId = :managerId 
-        AND (:searchTerm IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) 
-             OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) 
-             OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
-        AND (:status IS NULL OR u.status = :status)
-    """)
+    @Query("SELECT os FROM OperatorStaff os JOIN os.users u WHERE os.manager.managerId = :managerId " +
+            "AND (:searchTerm IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+            "OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+            "AND (:status IS NULL OR u.status = :status)")
     List<OperatorStaff> searchStaffByManagerAndTermForExport(
             @Param("managerId") Integer managerId,
             @Param("searchTerm") String searchTerm,
-            @Param("status") UserStatus status
-    );
+            @Param("status") UserStatus status);
 
     List<OperatorStaff> findAllByManagerManagerId(Integer managerId);
-
-    @Query("""
-        SELECT os FROM OperatorStaff os
-        WHERE os.manager.managerId = :managerId
-        AND (:searchTerm IS NULL OR LOWER(os.users.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-             OR LOWER(os.users.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-             OR LOWER(os.users.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
-        AND (:status IS NULL OR os.users.status = :status)
-        AND (:gender IS NULL OR os.users.gender = :gender)
-    """)
-    Page<OperatorStaff> searchStaffWithFilters(
-            @Param("managerId") Integer managerId,
-            @Param("searchTerm") String searchTerm,
-            @Param("status") UserStatus status,
-            @Param("gender") UserGender gender,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT os FROM OperatorStaff os 
-        WHERE os.manager.managerId = :managerId 
-        ORDER BY SIZE(os.bookings) DESC
-    """)
-    List<OperatorStaff> findTop5ByManagerOrderByBookingCountDesc(@Param("managerId") Integer managerId);
-
-//    @Query("""
-//        SELECT COUNT(os) FROM OperatorStaff os
-//        WHERE os.manager.managerId = :managerId AND os.isOnline = true
-//    """)
-//    long countByManagerAndOnlineTrue(@Param("managerId") Integer managerId);
 }

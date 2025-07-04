@@ -1,7 +1,5 @@
 package org.example.operatormanagementsystem.managecustomerorderbystaff.service;
 
-import org.example.operatormanagementsystem.ManageHungBranch.dto.response.BookingDetailResponse;
-import org.example.operatormanagementsystem.ManageHungBranch.dto.response.SlotsInfoResponse;
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest;
 
@@ -20,10 +18,4 @@ public interface BookingService {
     // void deleteBooking(Integer id); // Đã bỏ chức năng xóa
     List<Booking> searchBookingsByCustomerName(String fullName);
     Booking updatePaymentStatus(Integer id, String status); // Thay đổi từ void thành Booking
-    SlotsInfoResponse getSlotsInfo(Integer storageId);
-    void deleteBooking(Integer id);
-    Optional<BookingDetailResponse> getBookingDetail(Integer storageId, Integer slotIndex);
-    BookingDetailResponse createBooking(BookingRequest req);
-
-
 }

@@ -42,9 +42,4 @@ public class BookingRequest {
 
     @NotBlank(message = "Payment status cannot be blank")
     private String paymentStatus;
-
-    @NotNull(message = "Slot index cannot be null")
-    @PositiveOrZero(message = "Slot index must be zero or positive")
-    private Integer slotIndex;
-
 }

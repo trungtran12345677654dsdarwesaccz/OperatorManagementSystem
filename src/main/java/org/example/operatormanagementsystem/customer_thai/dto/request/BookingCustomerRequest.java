@@ -20,5 +20,4 @@ public class    BookingCustomerRequest {
     private String imageStorageUnit;
     private String imageTransportUnit;
     private Long total;
-    private String promotionName;
 } 

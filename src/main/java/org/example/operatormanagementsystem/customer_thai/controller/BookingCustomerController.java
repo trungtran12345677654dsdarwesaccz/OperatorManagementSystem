@@ -3,9 +3,7 @@ package org.example.operatormanagementsystem.customer_thai.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.customer_thai.dto.request.CreateBookingRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.response.BookingCustomerResponse;
-import org.example.operatormanagementsystem.customer_thai.dto.response.PromotionBookingResponse;
 import org.example.operatormanagementsystem.customer_thai.service.BookingCustomerService;
-import org.example.operatormanagementsystem.customer_thai.service.PromotionService;
 import org.example.operatormanagementsystem.entity.OperatorStaff;
 import org.example.operatormanagementsystem.entity.StorageUnit;
 import org.example.operatormanagementsystem.entity.TransportUnit;
@@ -36,9 +34,6 @@ public class    BookingCustomerController {
     
     @Qualifier("operatorStaffRepository_thai")
     private final OperatorStaffRepository operatorStaffRepository;
-    
-    @Qualifier("promotionService_thai")
-    private final PromotionService promotionService;
 
     @PostMapping("/bookings")
     public ResponseEntity<BookingCustomerResponse> createBooking(@RequestBody CreateBookingRequest request) {
@@ -116,12 +111,6 @@ public class    BookingCustomerController {
                         .build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(operatorStaffInfos);
-    }
-
-    @GetMapping("/promotions")
-    public ResponseEntity<List<PromotionBookingResponse>> getAvailablePromotions() {
-        List<PromotionBookingResponse> promotions = promotionService.getActivePromotions();
-        return ResponseEntity.ok(promotions);
     }
 
     // DTO classes for the new endpoints

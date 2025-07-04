@@ -47,9 +47,6 @@ public class PromotionServiceImpl implements PromotionService {
         if (promotionOpt.isPresent()) {
             Promotion promotion = promotionOpt.get();
             promotion.setName(request.getName());
-            if (request.getStatus() != null) {
-                promotion.setStatus(request.getStatus());
-            }
             promotionRepository.save(promotion);
             response.setId(promotion.getId());
             response.setStatus("success");
@@ -79,30 +76,40 @@ public class PromotionServiceImpl implements PromotionService {
         return response;
     }
 
+    // ✅ Refactor: hỗ trợ tìm kiếm theo keyword
     @Override
-    public List<PromotionResponse> searchPromotions(String keyword, String status) {
-        List<Promotion> promotions = promotionRepository.searchByKeywordAndStatus(keyword, status);
-        return promotions.stream().map(p -> {
-            PromotionResponse res = new PromotionResponse();
-            res.setId(p.getId());
-            res.setName(p.getName());
-            res.setStartDate(p.getStartDate());
-            res.setEndDate(p.getEndDate());
-            res.setStatus(p.getStatus());
-            return res;
-        }).collect(Collectors.toList());
+    public List<PromotionResponse> searchPromotions(String keyword) {
+        List<Promotion> promotions;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            promotions = promotionRepository.findByNameContainingIgnoreCase(keyword);
+        } else {
+            promotions = promotionRepository.findAll();
+        }
+
+        return promotions.stream()
+                .map(promotion -> {
+                    PromotionResponse response = new PromotionResponse();
+                    response.setId(promotion.getId());
+                    response.setName(promotion.getName());
+                    response.setStartDate(promotion.getStartDate());
+                    response.setEndDate(promotion.getEndDate());
+                    response.setStatus(promotion.getStatus());
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
+    // ✅ Thêm mới khuyến mãi
     @Override
     public PromotionResponse addPromotion(AddPromotionRequest request) {
+        PromotionResponse response = new PromotionResponse();
         Promotion promotion = new Promotion();
         promotion.setName(request.getName());
         promotion.setStartDate(request.getStartDate());
         promotion.setEndDate(request.getEndDate());
-        promotion.setStatus(request.getStatus() != null ? request.getStatus() : "active");
+        promotion.setStatus("active"); // Mặc định trạng thái là active
         promotion = promotionRepository.save(promotion);
 
-        PromotionResponse response = new PromotionResponse();
         response.setId(promotion.getId());
         response.setName(promotion.getName());
         response.setStartDate(promotion.getStartDate());
@@ -112,13 +119,14 @@ public class PromotionServiceImpl implements PromotionService {
         return response;
     }
 
+    // ✅ Cập nhật mô tả khuyến mãi
     @Override
     public PromotionResponse updateDescription(UpdatePromotionRequest request) {
         PromotionResponse response = new PromotionResponse();
         Optional<Promotion> promotionOpt = promotionRepository.findById(request.getId());
         if (promotionOpt.isPresent()) {
             Promotion promotion = promotionOpt.get();
-            promotion.setDescription(request.getDescription());
+            promotion.setDescription(request.getDescription()); // Giả sử có trường description
             promotionRepository.save(promotion);
             response.setId(promotion.getId());
             response.setStatus("success");
@@ -130,8 +138,8 @@ public class PromotionServiceImpl implements PromotionService {
         return response;
     }
 
-    @Override
+    // (Optional) nếu muốn giữ lại hàm này
     public List<PromotionResponse> getAllPromotions() {
-        return searchPromotions(null, null);
+        return searchPromotions(null);
     }
 }
