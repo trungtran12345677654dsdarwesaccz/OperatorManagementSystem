@@ -30,7 +30,4 @@ public class CreateBookingRequest {
 
     @NotNull(message = "Total is required")
     private Long total;
-    
-    // Trường promotion name (optional)
-    private String name;
 } 

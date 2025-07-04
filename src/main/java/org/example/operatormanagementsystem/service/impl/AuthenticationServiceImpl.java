@@ -1,7 +1,6 @@
 package org.example.operatormanagementsystem.service.impl;
 
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.example.operatormanagementsystem.config.JwtUtil;
@@ -10,22 +9,14 @@ import org.example.operatormanagementsystem.dto.request.LoginRequest;
 import org.example.operatormanagementsystem.dto.request.RegisterRequest;
 import org.example.operatormanagementsystem.dto.request.StatusChangeRequest;
 import org.example.operatormanagementsystem.dto.response.UserResponse;
-import org.example.operatormanagementsystem.dto.response.UserSessionResponse;
-import org.example.operatormanagementsystem.entity.LoginHistory;
-import org.example.operatormanagementsystem.entity.UserSession;
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.UserGender;
 import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
-import org.example.operatormanagementsystem.repository.LoginHistoryRepository;
 import org.example.operatormanagementsystem.repository.RoleRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
-import org.example.operatormanagementsystem.repository.UserSessionRepository;
 import org.example.operatormanagementsystem.service.AuthenticationService;
 import org.example.operatormanagementsystem.service.EmailService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,7 +24,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,43 +39,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final RoleRepository roleRepository;
     private final EmailService emailService;
     private final JwtUtil jwtUtil;
-    private final LoginHistoryRepository loginHistoryRepository;
-    private final UserSessionRepository userSessionRepository;
-
-    @Override
-    public List<LoginHistory> getLoginHistory(HttpServletRequest request) {
-        String token = jwtUtil.resolveToken(request);
-        String email = jwtUtil.extractUsername(token);
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với email: " + email));
-        return loginHistoryRepository.findByUserOrderByLoginTimeDesc(user);
-    }
-
-    @Override
-    public List<UserSessionResponse> getActiveSessions(HttpServletRequest request) {
-        String token = jwtUtil.resolveToken(request);
-        String email = jwtUtil.extractUsername(token);
-
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với email: " + email));
-
-        List<UserSession> sessions = userSessionRepository.findByUserAndActiveTrue(user);
-
-        return sessions.stream().map(session -> {
-            UserSessionResponse dto = new UserSessionResponse();
-            dto.setId(session.getId());
-            dto.setIpAddress(session.getIpAddress());
-            dto.setDeviceInfo(session.getDeviceInfo());
-            dto.setUserAgent(session.getUserAgent());
-            dto.setCreatedAt(session.getCreatedAt());
-            dto.setLastAccessedAt(session.getLastAccessedAt());
-            dto.setEmail(user.getEmail());
-            dto.setRole(user.getRole().name());
-            return dto;
-        }).collect(Collectors.toList());
-    }
-
-
 
     @Override
 // 2. Thêm throws MessagingException vào chữ ký của phương thức login
@@ -106,7 +59,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new BadCredentialsException("Your account is inactive. Please activate your account first.");
         }
         emailService.sendOTP(user.getEmail());
-//        emailService.sendOTP("");
 
         // 4. Trả về một thông báo cho frontend biết OTP đã được gửi thành công.
         // Frontend sẽ chuyển sang màn hình nhập OTP.
@@ -122,7 +74,7 @@ public UserResponse register(RegisterRequest register) {
     }
 
     if (userRepository.existsByEmail(register.getEmail())) {
-        throw new RuntimeException("   Email already exists.");
+        throw new RuntimeException("    Email already exists.");
     }
     if (register.getPassword().length() > 72) {
         throw new IllegalArgumentException("Password cannot be more than 72 characters.");
@@ -311,9 +263,6 @@ public UserResponse register(RegisterRequest register) {
                 .collect(Collectors.toList());
     }
 
-
-
-
     @Override
     @Transactional
     public void requestPasswordReset(String email) throws MessagingException {
@@ -364,8 +313,6 @@ public UserResponse register(RegisterRequest register) {
 
 
 }
-
-
 /*
     String token = jwtUtil.generateToken(userDetails);
     String role = userDetails.getAuthorities().stream()

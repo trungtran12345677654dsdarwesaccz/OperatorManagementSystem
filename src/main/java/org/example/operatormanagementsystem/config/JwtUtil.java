@@ -21,8 +21,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.Set; // Import Set
 import java.util.concurrent.ConcurrentHashMap;
-import jakarta.servlet.http.HttpServletRequest;
-
 
 @Component
 public class JwtUtil {
@@ -51,6 +49,18 @@ public class JwtUtil {
         return blacklistedTokens.contains(token);
     }
 
+
+//    // Phương thức generateToken nhận UserDetails
+//    public String generateToken(UserDetails userDetails) {
+//        Map<String, Object> claims = new HashMap<>();
+//        String role = userDetails.getAuthorities().stream()
+//                .findFirst()
+//                .map(Object::toString)
+//                .orElse("USER"); // Mặc định là USER nếu không có vai trò
+//        claims.put("role", role);
+//
+//        return createToken(claims, userDetails.getUsername());
+//    }
 
     // Phương thức generateToken nhận Users entity (Nếu bạn có dùng)
     // Giúp dễ dàng lấy các thông tin như email, role từ entity Users
@@ -81,14 +91,6 @@ public class JwtUtil {
         return createToken(claims, user.getEmail());
     }
 
-    public String extractTokenFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // Bỏ "Bearer " để lấy phần token thực sự
-        }
-        return null;
-    }
-
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
@@ -105,15 +107,6 @@ public class JwtUtil {
         // Kiểm tra username khớp và token chưa hết hạn
         return (username != null && username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
-    public boolean validateToken(String token) {
-        try {
-            String username = extractUsername(token);
-            return (username != null && !isTokenExpired(token));
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
 
 
 
@@ -199,11 +192,5 @@ public class JwtUtil {
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-    public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7); // Bỏ phần "Bearer "
-        }
-        return null;
-    }
+
 }

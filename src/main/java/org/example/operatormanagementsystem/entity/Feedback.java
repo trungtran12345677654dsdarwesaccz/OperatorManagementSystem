@@ -2,7 +2,6 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.operatormanagementsystem.enumeration.TypeFeedback;
 
 import java.time.LocalDateTime;
 
@@ -42,10 +41,6 @@ public class Feedback {
 
     @Column(name = "order_id")
     private Integer orderId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type")
-    private TypeFeedback type;
 
     @PrePersist
     protected void onCreate() {

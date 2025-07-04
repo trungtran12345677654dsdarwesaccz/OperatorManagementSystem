@@ -1,5 +1,7 @@
 package org.example.operatormanagementsystem.service;
 
+import org.example.operatormanagementsystem.dto.request.RevenueFilterRequest;
+import org.example.operatormanagementsystem.dto.response.PageResponse;
 import org.example.operatormanagementsystem.dto.response.RevenueResponse;
 import org.example.operatormanagementsystem.entity.Revenue;
 import java.time.LocalDate;
@@ -28,4 +30,10 @@ public interface RevenueService {
     BigDecimal getTotalRevenueBetweenDates(LocalDate startDate, LocalDate endDate);
 
     byte[] exportToExcel(LocalDate startDate, LocalDate endDate);
+
+    // New method for exporting with filters
+    byte[] exportToExcelWithFilters(LocalDate startDate, LocalDate endDate, String beneficiaryType, String sourceType, Integer beneficiaryId, Integer sourceId);
+
+    // New methods for filtering and pagination
+    PageResponse<RevenueResponse> getRevenuesWithFilters(RevenueFilterRequest filterRequest);
 }

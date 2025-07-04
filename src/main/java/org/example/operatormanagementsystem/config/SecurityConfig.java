@@ -36,13 +36,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     // Constructor đã được @AllArgsConstructor tạo ra sẽ không cần PasswordEncoder nữa
     // nếu bạn định nghĩa nó là một @Bean trong cùng lớp này.
 
-    /**
-     * Cấu hình và cung cấp một bean PasswordEncoder.
-     * Spring Security sẽ sử dụng bean này để mã hóa và kiểm tra mật khẩu.
-     * BCryptPasswordEncoder là một lựa chọn phổ biến và an toàn.
-     *
-     * @return Một instance của PasswordEncoder (BCryptPasswordEncoder).
-     */
+
     @Bean// Đánh dấu phương thức này sẽ tạo ra một Spring Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // Sử dụng BCryptPasswordEncoder
@@ -62,7 +56,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp", "/api/auth/sendOTP",
             "/api/auth/request-status-change", "/api/auth/manager/update-status/{email}",
             "/api/auth/manager/users-for-action", "/api/auth/manager/user-details/{email}",
-            "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
+            "/api/revenues", "/api/revenues/**", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
             "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
             "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**",
             "/api/auth/customer/login"
@@ -94,15 +88,11 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
-                                "/api/auth/reset-password",
-                                "/api/auth/login/verify-otp").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                "/api/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
-                        .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_MANAGER")
-
                         .requestMatchers("/api/transport-unit-analytics/dashboard-stats").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/historical-data").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/weekly-activity").hasAnyRole("MANAGER")
@@ -110,10 +100,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/transport-unit-analytics/status-distribution").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/approval-trends").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/performance-metrics").hasRole("MANAGER")
-                        .requestMatchers("/api/profile","/api/profile/**").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
+                        // .requestMatchers("/api/revenues/**").hasAnyAuthority("STAFF", "MANAGER") // Temporarily disabled for testing
 
 
 
@@ -131,10 +118,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         corsConfiguration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:5174",// Vite dev server
-                "http://localhost:5175",
                 "http://localhost:3000",    // React dev server
                 "http://127.0.0.1:5173",
-                "http://127.0.0.1:5175",
                 "http://127.0.0.1:5174", // Alternative localhost
                 "http://127.0.0.1:3000"     // Alternative localhost
         ));

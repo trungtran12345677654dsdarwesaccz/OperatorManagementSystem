@@ -1,5 +1,6 @@
 package org.example.operatormanagementsystem.managestaff_yen.repository;
 
+
 import org.example.operatormanagementsystem.entity.ManagerFeedbackToStaff;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,11 +26,8 @@ public interface ManagerFeedbackToStaffRepository extends JpaRepository<ManagerF
             Integer managerId, Integer operatorId, Pageable pageable);
 
     // Tìm feedback trong khoảng thời gian
-    @Query("""
-        SELECT mf FROM ManagerFeedbackToStaff mf 
-        WHERE mf.manager.managerId = :managerId 
-        AND mf.createdAt BETWEEN :startDate AND :endDate
-    """)
+    @Query("SELECT mf FROM ManagerFeedbackToStaff mf WHERE mf.manager.managerId = :managerId " +
+            "AND mf.createdAt BETWEEN :startDate AND :endDate")
     List<ManagerFeedbackToStaff> findByManagerAndDateRange(
             @Param("managerId") Integer managerId,
             @Param("startDate") LocalDateTime startDate,
@@ -40,11 +38,4 @@ public interface ManagerFeedbackToStaffRepository extends JpaRepository<ManagerF
 
     // Đếm số feedback nhận được của staff
     long countByOperatorStaffOperatorId(Integer operatorId);
-
-    // ✅ Tính điểm trung bình của operator, sử dụng COALESCE để tránh null
-    @Query("""
-        SELECT COALESCE(AVG(mf.rating), 0.0) FROM ManagerFeedbackToStaff mf 
-        WHERE mf.operatorStaff.operatorId = :operatorId
-    """)
-    Double getAverageRatingForOperator(@Param("operatorId") Integer operatorId);
 }

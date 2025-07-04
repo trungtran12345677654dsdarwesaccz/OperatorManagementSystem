@@ -2,14 +2,12 @@ package org.example.operatormanagementsystem.managestaff_yen.dto.request;
 
 import java.util.Date;
 
-
 public class UpdatePromotionRequest {
     private Long id;
     private String name;
     private String description;
     private Date startDate;
     private Date endDate;
-    private String status; // <== Thêm
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -22,6 +20,4 @@ public class UpdatePromotionRequest {
     public void setStartDate(Date startDate) { this.startDate = startDate; }
     public Date getEndDate() { return endDate; }
     public void setEndDate(Date endDate) { this.endDate = endDate; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 }

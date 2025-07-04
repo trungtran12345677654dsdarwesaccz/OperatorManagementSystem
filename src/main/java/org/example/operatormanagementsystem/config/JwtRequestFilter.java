@@ -76,19 +76,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             if (jwtUtil.validateToken(jwt, userDetails)) {
                 String role = jwtUtil.extractClaim(jwt, claims -> claims.get("role", String.class));
-                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                System.out.println("🔐 JWT Filter set authentication:");
-                System.out.println("User: " + username);
-                System.out.println("Role: " + role);
-                System.out.println("Authorities: " + authorities);
-                System.out.println("URI: " + path);
-                System.out.println("Authentication: " + SecurityContextHolder.getContext().getAuthentication());
             } else {
                 System.out.println("DEBUG: Invalid token for user: " + username + " at path: " + path);
             }
