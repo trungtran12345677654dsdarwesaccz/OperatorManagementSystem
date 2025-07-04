@@ -33,4 +33,12 @@ public class Customer {
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Feedback> feedbacks;
+
+    @Column(name = "status", nullable = true)
+    private String status; // Thêm thuộc tính status
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = true, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt; // Thêm thuộc tính createdAt
 }
