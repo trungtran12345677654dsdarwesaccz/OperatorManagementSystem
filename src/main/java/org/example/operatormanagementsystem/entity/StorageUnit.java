@@ -12,6 +12,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -43,6 +44,9 @@ public class StorageUnit {
 
     @Column(length = 255) // Thay đổi từ Double sang String và tăng độ dài
     private String image; // URL hoặc path của ảnh
+
+    @Column(name="slot_count", nullable=false)
+    private Integer slotCount;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

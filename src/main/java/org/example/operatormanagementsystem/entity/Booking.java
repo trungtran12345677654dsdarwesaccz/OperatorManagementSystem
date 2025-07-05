@@ -60,14 +60,17 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    @Column(name = "pickup_location", nullable = true)
+    @Column(name = "pickup_location", nullable = false)
     private String pickupLocation;
 
-    @Column(name = "delivery_location", nullable = true)
+    @Column(name = "delivery_location", nullable = false)
     private String deliveryLocation;
 
     @Column(name = "note", length = 255)
     private String note;
+
+    @Column(name="slot_index", nullable=false)
+    private Integer slotIndex;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Debt> debts;

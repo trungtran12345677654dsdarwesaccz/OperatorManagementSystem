@@ -4,16 +4,17 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.config.JwtUtil;
+import org.example.operatormanagementsystem.dto.request.LoginRequest;
 import org.example.operatormanagementsystem.dto.request.VerifyOTPRequest;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
-import org.example.operatormanagementsystem.entity.Otp;
-import org.example.operatormanagementsystem.entity.Users;
+import org.example.operatormanagementsystem.entity.*;
 import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
-import org.example.operatormanagementsystem.repository.OTPVerificationRepository;
-import org.example.operatormanagementsystem.repository.UserRepository;
+import org.example.operatormanagementsystem.repository.*;
 import org.example.operatormanagementsystem.service.EmailService;
+import org.example.operatormanagementsystem.service.UserActivityLogService;
 import org.example.operatormanagementsystem.template.EmailTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -25,8 +26,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -42,7 +45,10 @@ public class EmailServiceImpl implements EmailService {
     private String email;
     private final JwtUtil jwtUtil;
     private final EmailAsyncSender emailAsyncSender;
-
+    private final LoginHistoryRepository loginHistoryRepository;
+    private final UserSessionRepository userSessionRepository;
+    private final UserActivityLogService userActivityLogService;
+private final UserUsageStatRepository usageStatRepository;
     @Override
     @Transactional
     public void sendOTP(String recipient) {
@@ -144,8 +150,33 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Unexpected state: assignedRole is null after processing for user " + user.getUsername());
             throw new InsufficientAuthenticationException("Access denied: Role could not be determined.");
         }
+        List<UserSession> oldSessions = userSessionRepository.findByUserAndActiveTrue(user);
+        for (UserSession old : oldSessions) {
+            old.setActive(false);
+        }
+        userSessionRepository.saveAll(oldSessions);
 
         token = jwtUtil.generateToken(user);
+        saveUserSession(user, token, request);
+        saveLoginHistory(user, request);
+        userActivityLogService.log(
+                user,
+                "LOGIN",
+                "Đăng nhập"
+        );
+        UserUsageStat stat = usageStatRepository.findByUser(user)
+                .orElseGet(() -> {
+                    UserUsageStat s = new UserUsageStat();
+                    s.setUser(user);
+                    s.setCurrentDate(LocalDate.now());
+                    return s;
+                });
+
+        stat.setLoginCount(stat.getLoginCount() + 1);
+        stat.setLastLoginAt(LocalDateTime.now());
+        usageStatRepository.save(stat);
+
+
 
         AuthLoginResponse authLoginResponse = new AuthLoginResponse();
         authLoginResponse.setAccessToken(token);
@@ -153,6 +184,29 @@ public class EmailServiceImpl implements EmailService {
         return authLoginResponse;
     }
 
+    private void saveUserSession(Users user, String token, VerifyOTPRequest request) {
+        UserSession session = UserSession.builder()
+                .token(token)
+                .user(user)
+                .ipAddress(request.getIp())
+                .userAgent(request.getUserAgent()) // truyền từ client
+                .deviceInfo(request.getDeviceInfo()) // gợi ý: dùng user-agent-parser
+                .createdAt(LocalDateTime.now())
+                .lastAccessedAt(LocalDateTime.now())
+                .active(true)
+                .build();
+        userSessionRepository.save(session);
+    }
+
+    private void saveLoginHistory(Users user, VerifyOTPRequest request) {
+        LoginHistory history = LoginHistory.builder()
+                .user(user)
+                .ipAddress(request.getIp())
+                .userAgent(request.getUserAgent())
+                .loginTime(LocalDateTime.now())
+                .build();
+        loginHistoryRepository.save(history);
+    }
     private String generateOTPEmail() {
         return String.format("%06d", new Random().nextInt(999999));
     }

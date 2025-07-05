@@ -1,6 +1,5 @@
 package org.example.operatormanagementsystem.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +17,6 @@ public class RevenueResponse {
     private String sourceType;
     private Integer sourceId;
     private BigDecimal amount;
-    private String formattedAmount; // VND formatted amount
     private LocalDate date;
     private String description;
     private BookingBasicInfo booking;

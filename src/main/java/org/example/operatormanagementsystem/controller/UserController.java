@@ -2,12 +2,9 @@ package org.example.operatormanagementsystem.controller;
 
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserCreateRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserUpdateRequest;
-import org.example.operatormanagementsystem.dto.request.UserFilterRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.response.UserSearchResponse;
-import org.example.operatormanagementsystem.dto.response.PageResponse;
 import org.example.operatormanagementsystem.managercustomer.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@PreAuthorize("hasRole('STAFF')")
 public class UserController {
 
     @Autowired
@@ -36,13 +34,6 @@ public class UserController {
             return userService.findAllUsersResponse();
         }
         return userService.advancedSearchResponse(fullname, email, phone, address);
-    }
-
-    // Lấy danh sách user với phân trang và filter
-    @GetMapping("/filtered")
-    public ResponseEntity<PageResponse<UserSearchResponse>> getUsersWithFilters(UserFilterRequest filterRequest) {
-        PageResponse<UserSearchResponse> response = userService.getUsersWithFilters(filterRequest);
-        return ResponseEntity.ok(response);
     }
 
     // Lấy customer theo ID
