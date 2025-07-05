@@ -5,6 +5,8 @@ import org.example.operatormanagementsystem.customer_thai.dto.request.CreateBook
 import org.example.operatormanagementsystem.customer_thai.dto.response.BookingCustomerResponse;
 import org.example.operatormanagementsystem.customer_thai.repository.BookingCustomerRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.OperatorStaffRepository;
+import org.example.operatormanagementsystem.enumeration.PaymentStatus;
+import org.example.operatormanagementsystem.customer_thai.repository.PromotionRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.StorageUnitRepository;
 import org.example.operatormanagementsystem.customer_thai.service.BookingCustomerService;
 import org.example.operatormanagementsystem.customer_thai.service.CustomerInfoService;
@@ -14,6 +16,7 @@ import org.example.operatormanagementsystem.transportunit.repository.TransportUn
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.example.operatormanagementsystem.customer_thai.service.NotificationEventService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +34,8 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
     @Qualifier("operatorStaffRepository_thai")
     private final OperatorStaffRepository operatorStaffRepository;
 
+    private final NotificationEventService notificationEventService;
+
     @Override
     @Transactional
     public BookingCustomerResponse createBooking(CreateBookingRequest request) {
@@ -46,6 +51,13 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         OperatorStaff operatorStaff = operatorStaffRepository.findById(request.getOperatorId())
                 .orElseThrow(() -> new RuntimeException("Operator staff not found"));
 
+        // Tìm promotion nếu có
+        Promotion promotion = null;
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            promotion = promotionRepository.findByName(request.getName())
+                    .orElse(null);
+        }
+
         Booking booking = Booking.builder()
                 .customer(currentUser.getCustomer())
                 .storageUnit(storageUnit)
@@ -58,9 +70,21 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .deliveryDate(request.getDeliveryDate())
                 .note(request.getNote())
                 .total(request.getTotal())
+                .promotion(promotion)
                 .build();
 
         Booking savedBooking = bookingCustomerRepository.save(booking);
+
+        // Sau khi tạo booking thành công, tạo notification
+        Customer customer = savedBooking.getCustomer();
+
+        notificationEventService.createBookingStatusNotification(
+            customer,
+            savedBooking.getBookingId().toString(),
+            "N/A",
+            savedBooking.getStatus()
+        );
+
         return mapToBookingResponse(savedBooking);
     }
 
@@ -103,11 +127,29 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         Booking booking = bookingCustomerRepository.findByBookingIdAndCustomer_CustomerId(bookingId, customerId)
                 .orElseThrow(() -> new RuntimeException("Booking not found or you do not have permission to delete it."));
 
-        if (!"PENDING".equalsIgnoreCase(booking.getStatus())) {
+        if (!"PENDING".equals(booking.getStatus())) {
             throw new RuntimeException("Cannot delete a booking that is not in PENDING status.");
         }
 
+        // Lưu thông tin customer và booking ID trước khi xóa
+        Customer customer = booking.getCustomer();
+        String bookingIdStr = booking.getBookingId().toString();
+
+        // Xóa booking
         bookingCustomerRepository.delete(booking);
+
+        // Tạo notification sau khi xóa booking thành công
+        try {
+            System.out.println("Creating notification for booking: " + bookingIdStr);
+            notificationEventService.createBookingDeletedNotification(
+                customer,
+                bookingIdStr
+            );
+            System.out.println("Notification created successfully");
+        } catch (Exception e) {
+            System.err.println("Error creating notification: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private BookingCustomerResponse mapToBookingResponse(Booking booking) {
@@ -128,6 +170,10 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .deliveryDate(booking.getDeliveryDate())
                 .note(booking.getNote())
                 .total(booking.getTotal())
+                .paymentStatus(booking.getPaymentStatus())
+                .promotionId(booking.getPromotion() != null ? booking.getPromotion().getId() : null)
+                .promotionName(booking.getPromotion() != null ? booking.getPromotion().getName() : null)
+                .promotionDescription(booking.getPromotion() != null ? booking.getPromotion().getDescription() : null)
                 .build();
     }
 } 
