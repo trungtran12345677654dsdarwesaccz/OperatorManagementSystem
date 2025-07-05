@@ -6,11 +6,12 @@ import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.response.BookingResponse;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.service.BookingService;
+import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.example.operatormanagementsystem.enumeration.PaymentStatus;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -83,7 +84,21 @@ public class BookingController {
     @PreAuthorize("hasRole('ROLE_STAFF')")
     public ResponseEntity<BookingResponse> updateBooking(@PathVariable Integer id, @Valid @RequestBody BookingRequest bookingRequest) {
         try {
-            Booking updated = bookingService.updateBooking(id, bookingRequest);
+            // Chuyển trạng thái tiếng Việt sang tiếng Anh trước khi cập nhật
+            String englishStatus = toEnglishStatus(bookingRequest.getStatus());
+            BookingRequest modifiedRequest = new BookingRequest();
+            modifiedRequest.setStatus(englishStatus);
+            modifiedRequest.setDeliveryDate(bookingRequest.getDeliveryDate());
+            modifiedRequest.setNote(bookingRequest.getNote());
+            modifiedRequest.setCustomerId(bookingRequest.getCustomerId());
+            modifiedRequest.setCustomerFullName(bookingRequest.getCustomerFullName());
+            modifiedRequest.setStorageUnitId(bookingRequest.getStorageUnitId());
+            modifiedRequest.setTransportUnitId(bookingRequest.getTransportUnitId());
+            modifiedRequest.setOperatorStaffId(bookingRequest.getOperatorStaffId());
+            modifiedRequest.setTotal(bookingRequest.getTotal());
+            modifiedRequest.setPaymentStatus(bookingRequest.getPaymentStatus());
+
+            Booking updated = bookingService.updateBooking(id, modifiedRequest);
             return ResponseEntity.ok(convertToBookingResponse(updated));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -130,11 +145,40 @@ public class BookingController {
         }
     }
 
+    private String toEnglishStatus(String status) {
+        if (status == null) return null;
+        if ("Đang xử lý".equalsIgnoreCase(status) || "đang xử lý".equalsIgnoreCase(status)) {
+            return "PENDING";
+        } else if ("Đang giao".equalsIgnoreCase(status) || "đang giao".equalsIgnoreCase(status)) {
+            return "SHIPPING";
+        } else if ("Hoàn thành".equalsIgnoreCase(status) || "hoàn thành".equalsIgnoreCase(status)) {
+            return "COMPLETED";
+        } else if ("Hủy".equalsIgnoreCase(status) || "hủy".equalsIgnoreCase(status)) {
+            return "CANCELED";
+        }
+        return status.toUpperCase(); // Nếu không khớp, giữ nguyên giá trị (giả sử là tiếng Anh)
+    }
+
+    private String toVietnameseStatus(String status) {
+        if (status == null) return null;
+        if ("PENDING".equalsIgnoreCase(status)) {
+            return "Đang xử lý";
+        } else if ("SHIPPING".equalsIgnoreCase(status)) {
+            return "Đang giao";
+        } else if ("COMPLETED".equalsIgnoreCase(status)) {
+            return "Hoàn thành";
+        } else if ("CANCELED".equalsIgnoreCase(status)) {
+            return "Hủy";
+        }
+        return status; // Nếu không khớp, giữ nguyên giá trị
+    }
+
     private BookingResponse convertToBookingResponse(Booking booking) {
         if (booking == null) return null;
         BookingResponse response = new BookingResponse();
         response.setBookingId(booking.getBookingId());
-        response.setStatus(booking.getStatus());
+        // Chuyển trạng thái sang tiếng Việt
+        response.setStatus(toVietnameseStatus(booking.getStatus()));
         response.setCreatedAt(booking.getCreatedAt());
         response.setDeliveryDate(booking.getDeliveryDate());
         response.setNote(booking.getNote());
