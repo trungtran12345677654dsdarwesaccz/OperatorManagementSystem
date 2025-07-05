@@ -64,7 +64,6 @@ public class EmailServiceImpl implements EmailService {
         verification.setExpiredTime(LocalDateTime.now().plusMinutes(5));
         verification.setStatus(Otp.OtpStatus.PENDING);
         verification.setUsers(user);
-
         otpVerificationRepository.save(verification);
 
         emailAsyncSender.sendOTPAsync(cleanRecipient, otpCode);
