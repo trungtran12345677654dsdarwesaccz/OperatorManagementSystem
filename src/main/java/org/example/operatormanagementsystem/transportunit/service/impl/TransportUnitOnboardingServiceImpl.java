@@ -1,4 +1,5 @@
 package org.example.operatormanagementsystem.transportunit.service.impl;
+import org.example.operatormanagementsystem.enumeration.TransportAvailabilityStatus;
 
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.entity.TransportUnit;
@@ -37,43 +38,56 @@ public class TransportUnitOnboardingServiceImpl implements TransportUnitOnboardi
                 .namePersonContact(entity.getNamePersonContact())
                 .phone(entity.getPhone())
                 .licensePlate(entity.getLicensePlate())
+                .numberOfVehicles(entity.getNumberOfVehicles())
+                .capacityPerVehicle(entity.getCapacityPerVehicle())
+                .availabilityStatus(entity.getAvailabilityStatus())
+                .certificateBackUrl(entity.getCertificateBackUrl())
+                .certificateFrontUrl(entity.getCertificateFrontUrl())
                 .status(entity.getStatus())
                 .note(entity.getNote())
+
                 .build();
     }
 
-    @Override
     @Transactional
     public TransportUnitResponse onboardNewTransportUnit(TransportUnitEmailRequest request) {
-        // Bước 1: Tạo TransportUnit mới
+        // 1. Lưu transport unit trước
         TransportUnit newUnit = TransportUnit.builder()
                 .nameCompany(request.getNameCompany())
                 .namePersonContact(request.getNamePersonContact())
                 .phone(request.getPhone())
                 .licensePlate(request.getLicensePlate())
+                .numberOfVehicles(request.getNumberOfVehicles())
+                .capacityPerVehicle(request.getCapacityPerVehicle())
+                .availabilityStatus(request.getAvailabilityStatus() != null
+                        ? request.getAvailabilityStatus()
+                        : TransportAvailabilityStatus.AVAILABLE)
+                .certificateFrontUrl(request.getCertificateFrontUrl())
+                .certificateBackUrl(request.getCertificateBackUrl())
                 .status(UserStatus.PENDING_APPROVAL)
                 .note(request.getNote())
-                .createdAt(LocalDateTime.now())
                 .build();
-        TransportUnit savedUnit = transportUnitRepository.save(newUnit);
 
-        // Bước 2: Lấy System User để gán vào requestedByUser
-        // Vì 'requestedByUser' trong TransportUnitApproval là NOT NULL, chúng ta cần một Users entity.
-        // Dựa trên yêu cầu của bạn, chúng ta sẽ sử dụng một System User cố định.
+        // BẮT BUỘC phải flush để lấy ID ngay
+        TransportUnit savedUnit = transportUnitRepository.saveAndFlush(newUnit);
+        System.out.println(" Transport ID: " + savedUnit.getTransportId());
+
+        // 2. Gán vào approval
         Users systemUser = userRepository.findById(SYSTEM_USER_ID)
-                .orElseThrow(() -> new RuntimeException("System user not found with ID: " + SYSTEM_USER_ID + ". " +
-                        "Please ensure SYSTEM_USER_ID is correct and this user exists in your database."));
+                .orElseThrow(() -> new RuntimeException("System user not found"));
 
-        // Bước 3: Tạo TransportUnitApproval
-        TransportUnitApproval approval = TransportUnitApproval.builder()
-                .transportUnit(savedUnit)
-                .requestedByUser(systemUser) // Gán System User làm người yêu cầu (theo yêu cầu NOT NULL của DB)
-                .senderEmail(request.getSenderEmail()) // <-- THÊM DÒNG NÀY ĐỂ LƯU EMAIL GỐC CỦA NGƯỜI GỬI
-                .status(ApprovalStatus.PENDING)
-                .requestedAt(LocalDateTime.now())
-                .build();
+        TransportUnitApproval approval = new TransportUnitApproval();
+        approval.setTransportUnit(savedUnit); // Không set approvalId bằng tay!
+        approval.setRequestedByUser(systemUser);
+        approval.setSenderEmail(request.getSenderEmail());
+        approval.setStatus(ApprovalStatus.PENDING);
+        approval.setRequestedAt(LocalDateTime.now());
+
         approvalRepository.save(approval);
 
         return toResponse(savedUnit);
     }
+
+
+
 }

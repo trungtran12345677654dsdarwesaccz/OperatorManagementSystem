@@ -49,6 +49,11 @@ public class TransportUnitServiceImpl implements TransportUnitService {
                 .namePersonContact(entity.getNamePersonContact())
                 .phone(entity.getPhone())
                 .licensePlate(entity.getLicensePlate())
+                .numberOfVehicles(entity.getNumberOfVehicles())
+                .capacityPerVehicle(entity.getCapacityPerVehicle())
+                .availabilityStatus(entity.getAvailabilityStatus())
+                .certificateFrontUrl(entity.getCertificateFrontUrl())
+                .certificateBackUrl(entity.getCertificateBackUrl())
                 .status(entity.getStatus())
                 .note(entity.getNote())
                 .build();
@@ -82,6 +87,18 @@ public class TransportUnitServiceImpl implements TransportUnitService {
                     boolean match = true;
                     if (req.getTransportId() != null) match &= t.getTransportId().equals(req.getTransportId());
                     if (req.getStatus() != null) match &= t.getStatus() == req.getStatus();
+                    if (req.getNumberOfVehicles() != null)
+                        match &= t.getNumberOfVehicles().equals(req.getNumberOfVehicles());
+
+                    if (req.getMinCapacityPerVehicle() != null)
+                        match &= t.getCapacityPerVehicle() >= req.getMinCapacityPerVehicle();
+
+                    if (req.getMaxCapacityPerVehicle() != null)
+                        match &= t.getCapacityPerVehicle() <= req.getMaxCapacityPerVehicle();
+
+                    if (req.getAvailabilityStatus() != null)
+                        match &= t.getAvailabilityStatus() == req.getAvailabilityStatus();
+
                     if (StringUtils.hasText(req.getKeyword())) {
                         String kw = req.getKeyword().toLowerCase();
                         match &= (
@@ -99,15 +116,26 @@ public class TransportUnitServiceImpl implements TransportUnitService {
 
     @Override
     public TransportUnitResponse update(Integer id, TransportUnitRequest req) {
-        TransportUnit unit = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+        TransportUnit unit = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+
+        if (unit.getStatus() != UserStatus.ACTIVE) {
+            throw new IllegalStateException("Only ACTIVE transport units can be updated.");
+        }
+
+        // Cập nhật tất cả các trường từ TransportUnitRequest
         unit.setNameCompany(req.getNameCompany());
         unit.setNamePersonContact(req.getNamePersonContact());
         unit.setPhone(req.getPhone());
         unit.setLicensePlate(req.getLicensePlate());
         unit.setStatus(req.getStatus());
         unit.setNote(req.getNote());
+        unit.setNumberOfVehicles(req.getNumberOfVehicles());
+        unit.setCapacityPerVehicle(req.getCapacityPerVehicle());
+        unit.setAvailabilityStatus(req.getAvailabilityStatus()); // <-- Trường mới thêm
         return toResponse(repository.save(unit));
     }
+
 
     @Override
     public TransportUnitResponse getById(Integer id) {

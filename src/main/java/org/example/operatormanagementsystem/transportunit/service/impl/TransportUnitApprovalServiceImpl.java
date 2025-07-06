@@ -35,7 +35,6 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
 
     private TransportUnitApprovalResponse toResponse(TransportUnitApproval approval) {
 
-
         String requestedByUserEmail = approval.getSenderEmail();
         if ((requestedByUserEmail == null || requestedByUserEmail.isBlank())
                 && approval.getRequestedByUser() != null) {
@@ -48,15 +47,22 @@ public class TransportUnitApprovalServiceImpl implements TransportUnitApprovalSe
             approvedByManagerEmail = approval.getApprovedByManager().getUsers().getEmail();
         }
 
+        TransportUnit unit = approval.getTransportUnit();
+
         return TransportUnitApprovalResponse.builder()
-                .approvalId(approval.getApprovalId())
-                .transportUnitId(approval.getTransportUnit().getTransportId())
-                .transportUnitName(approval.getTransportUnit().getNameCompany())
+                .approvalId(approval.getApprovalId()) // hoặc rename nếu bạn dùng @MapsId
+                .transportUnitId(unit != null ? unit.getTransportId() : null)
+                .transportUnitName(unit != null ? unit.getNameCompany() : null)
+                .numberOfVehicles(unit != null ? unit.getNumberOfVehicles() : null)
+                .capacityPerVehicle(unit != null ? unit.getCapacityPerVehicle() : null)
+                .availabilityStatus(unit != null ? unit.getAvailabilityStatus() : null)
+                .certificateFrontUrl(unit != null ? unit.getCertificateFrontUrl() : null)
+                .certificateBackUrl(unit != null ? unit.getCertificateBackUrl() : null)
                 .requestedByUserId(
                         approval.getRequestedByUser() != null
                                 ? approval.getRequestedByUser().getId()
                                 : null)
-                .senderEmail(requestedByUserEmail)      // ✅ luôn trả đúng
+                .senderEmail(requestedByUserEmail)
                 .approvedByManagerId(
                         approval.getApprovedByManager() != null
                                 ? approval.getApprovedByManager().getManagerId()

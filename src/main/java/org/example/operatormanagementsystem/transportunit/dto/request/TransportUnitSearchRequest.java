@@ -1,6 +1,7 @@
 package org.example.operatormanagementsystem.transportunit.dto.request;
 
 import lombok.Data;
+import org.example.operatormanagementsystem.enumeration.TransportAvailabilityStatus;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,8 @@ public class TransportUnitSearchRequest {
     private Integer transportId;            // exact match
     private UserStatus status;              // status of transport unit
 
-    // From Booking
-    private Integer bookingId;
+    private Integer numberOfVehicles;
+    private Double minCapacityPerVehicle;
+    private Double maxCapacityPerVehicle;
+    private TransportAvailabilityStatus availabilityStatus;
 }

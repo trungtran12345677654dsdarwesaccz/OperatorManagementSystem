@@ -40,7 +40,7 @@ public class TransportUnitController {
     }
 
 
-    @GetMapping("/search")
+    @GetMapping("/search")  
     @PreAuthorize("hasAnyRole('MANAGER')")
     public ResponseEntity<List<TransportUnitResponse>> search(@RequestParam String keyword) {
         return ResponseEntity.ok(service.search(keyword));

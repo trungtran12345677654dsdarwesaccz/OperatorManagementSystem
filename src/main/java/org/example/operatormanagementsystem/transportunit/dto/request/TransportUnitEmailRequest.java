@@ -1,11 +1,10 @@
 package org.example.operatormanagementsystem.transportunit.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.operatormanagementsystem.enumeration.TransportAvailabilityStatus;
 
 @Data
 @Getter
@@ -26,6 +25,21 @@ public class TransportUnitEmailRequest {
     @NotBlank(message = "License plate cannot be blank")
     @Size(max = 20, message = "License plate cannot exceed 20 characters")
     private String licensePlate;
+
+    @Min(value = 1, message = "Number of vehicles must be at least 1")
+    @Max(value = 999, message = "Number of vehicles cannot exceed 999")
+    private Integer numberOfVehicles;
+
+    @DecimalMin(value = "0.1", inclusive = true, message = "Capacity per vehicle must be at least 0.1 m³")
+    @DecimalMax(value = "100.0", inclusive = true, message = "Capacity per vehicle cannot exceed 100.0 m³")
+    @Digits(integer = 3, fraction = 2, message = "Capacity must be a decimal with up to 2 digits after the decimal point")
+    private Double capacityPerVehicle;
+
+    private TransportAvailabilityStatus availabilityStatus = TransportAvailabilityStatus.AVAILABLE;
+    private String certificateFrontUrl;
+    private String certificateBackUrl;
+
+
 
     @Size(max = 255, message = "Note cannot exceed 255 characters")
     private String note;

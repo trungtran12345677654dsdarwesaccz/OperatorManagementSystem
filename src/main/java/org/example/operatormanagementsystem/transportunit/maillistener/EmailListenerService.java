@@ -1,4 +1,7 @@
 package org.example.operatormanagementsystem.transportunit.maillistener;
+import jakarta.mail.internet.MimeMessage;
+import org.example.operatormanagementsystem.config.CloudinaryService;
+import org.example.operatormanagementsystem.enumeration.TransportAvailabilityStatus;
 
 import jakarta.mail.*;
 import jakarta.mail.internet.MimeMultipart;
@@ -9,6 +12,7 @@ import jakarta.mail.search.AndTerm; // <--- Cần import này để kết hợp 
 import jakarta.mail.search.ReceivedDateTerm;
 import jakarta.mail.search.SearchTerm;
 import org.example.operatormanagementsystem.transportunit.dto.request.TransportUnitEmailRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
@@ -42,17 +47,32 @@ public class EmailListenerService {
     private String onboardingApiUrl;
     @Value("${app.onboarding.api-key}")
     private String onboardingApiKey;
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
 
     // RestTemplate để gửi HTTP request đến API của bạn
     private final RestTemplate restTemplate = new RestTemplate();
 
     // KÍCH HOẠT HÀM NÀY CHẠY ĐỊNH KỲ
-//    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
+    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
     public void scheduleEmailCheck() {
         System.out.println("--- SCHEDULED TASK: Checking emails at " + System.currentTimeMillis() + " ---");
         checkEmailsAndOnboard();
         System.out.println("--- SCHEDULED TASK: Email check finished ---");
     }
+    private String extractSender(Message message) throws MessagingException {
+        if (message.getFrom() != null && message.getFrom().length > 0) {
+            Address address = message.getFrom()[0];
+            if (address instanceof InternetAddress) {
+                return ((InternetAddress) address).getAddress();
+            } else {
+                return address.toString();
+            }
+        }
+        return "UNKNOWN";
+    }
+
 
     public void checkEmailsAndOnboard() {
         Properties properties = new Properties();
@@ -60,138 +80,108 @@ public class EmailListenerService {
         properties.put("mail.imap.port", imapPort);
         properties.put("mail.imap.ssl.enable", "true");
         properties.put("mail.imap.auth", "true");
-
-        // properties.put("mail.debug", "true"); // Bật debug Javamail để xem chi tiết kết nối
         properties.put("mail.mime.charset", "UTF-8");
-        properties.put("mail.imaps.partialfetch", "false"); // Tăng độ ổn định khi fetch toàn bộ email
+        properties.put("mail.imaps.partialfetch", "false");
 
         Session emailSession = Session.getDefaultInstance(properties);
-        emailSession.setDebug(Boolean.parseBoolean(properties.getProperty("mail.debug", "false"))); // Đảm bảo debug được kích hoạt
-
-        System.out.println("IMAP Host: " + imapHost);
-        System.out.println("IMAP Port: " + imapPort);
-        System.out.println("Mail Username: " + mailUsername);
-        System.out.println("Mail Password (length): " + mailPassword.length()); // Kiểm tra độ dài mật khẩu ứng dụng (phải là 16)
-        System.out.println("Onboarding API URL: " + onboardingApiUrl);
-        System.out.println("Onboarding API Key (length): " + onboardingApiKey.length());
-
         Store store = null;
         Folder inbox = null;
+
         try {
             store = emailSession.getStore("imap");
-            System.out.println("Attempting to connect to email store...");
             store.connect(imapHost, mailUsername, mailPassword);
-            System.out.println("Successfully connected to email store.");
-
             inbox = store.getFolder("INBOX");
-            // <--- RẤT QUAN TRỌNG: Mở folder ở chế độ READ_WRITE để có thể thay đổi flag
             inbox.open(Folder.READ_WRITE);
-            System.out.println("Inbox opened. Message count: " + inbox.getMessageCount());
 
-            LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
-            Date dateTwentyFourHoursAgo = Date.from(twentyFourHoursAgo.atZone(ZoneId.systemDefault()).toInstant());
-            SearchTerm receivedInLast24Hours = new ReceivedDateTerm(ComparisonTerm.GT, dateTwentyFourHoursAgo);
+            LocalDateTime since = LocalDateTime.now().minusHours(24);
+            Date date = Date.from(since.atZone(ZoneId.systemDefault()).toInstant());
+            SearchTerm searchTerm = new AndTerm(
+                    new ReceivedDateTerm(ComparisonTerm.GT, date),
+                    new FlagTerm(new Flags(Flags.Flag.SEEN), false)
+            );
 
-            // <--- THÊM ĐIỀU KIỆN TÌM KIẾM: CHỈ EMAIL CHƯA ĐỌC VÀ CÓ TIÊU ĐỀ PHÙ HỢP
-            SearchTerm unreadEmails = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
-
-            // Tìm kiếm email chưa đọc trong 24 giờ qua VÀ có Subject phù hợp
-            // SubjectSearchTerm (hoặc TextSearchTerm) không phân biệt chữ hoa chữ thường.
-            // Để đơn giản, tôi sẽ kiểm tra subject sau khi lấy message, nhưng trong production
-            // bạn có thể thêm SearchTerm cho subject vào đây để lọc ngay từ đầu.
-            // Hiện tại, chúng ta sẽ lọc bằng code Java sau khi lấy message.
-            SearchTerm combinedSearchTerm = new AndTerm(receivedInLast24Hours, unreadEmails);
-
-
-            Message[] messages = inbox.search(combinedSearchTerm); // <--- Bây giờ chỉ tìm email chưa đọc
-
-            System.out.println("Found " + messages.length + " unread emails in the last 24 hours matching criteria.");
-
-            if (messages.length == 0) {
-                System.out.println("No new relevant emails found. Double check subject line and email content.");
-            }
-
-            for (int i = 0; i < messages.length; i++) {
+            Message[] messages = inbox.search(searchTerm);
+            System.out.println("Found " + messages.length + " unread emails in last 24h");
+            int maxEmailsToProcess = 20;
+            int total = Math.min(messages.length, maxEmailsToProcess);
+            for (int i = 0; i < total; i++) {
                 Message message = messages[i];
                 String subject = message.getSubject();
-                String senderEmailFromHeader = "UNKNOWN";
-                if (message.getFrom() != null && message.getFrom().length > 0) {
-                    if (message.getFrom()[0] instanceof InternetAddress) {
-                        senderEmailFromHeader = ((InternetAddress) message.getFrom()[0]).getAddress();
-                    } else {
-                        senderEmailFromHeader = message.getFrom()[0].toString();
+                String sender = extractSender(message);
+
+                if (subject == null || !subject.contains("[ĐĂNG KÝ ĐƠN VỊ VẬN CHUYỂN MỚI]")) {
+                    sendSuggestionEmailToSender(sender);
+                    message.setFlag(Flags.Flag.SEEN, true);
+                    continue;
+                }
+
+                System.out.println("\n--- Email " + (i + 1) + "/" + messages.length + " ---");
+                String content = getTextFromMessage(message);
+                TransportUnitEmailRequest request = parseEmailContent(content, sender);
+
+                // Step 1: Ưu tiên file đính kèm
+                byte[] frontBytes = null;
+                byte[] backBytes = null;
+
+                if (message.isMimeType("multipart/*")) {
+                    Multipart mp = (Multipart) message.getContent();
+                    int index = 0;
+                    for (int j = 0; j < mp.getCount(); j++) {
+                        BodyPart part = mp.getBodyPart(j);
+                        if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+                            byte[] data = part.getInputStream().readAllBytes();
+                            if (index == 0) frontBytes = data;
+                            else if (index == 1) backBytes = data;
+                            index++;
+                        }
                     }
                 }
 
-                Flags flags = message.getFlags();
-                boolean isSeen = flags.contains(Flags.Flag.SEEN); // Luôn là false ở đây vì đã lọc unread
+                // Step 2: Nếu không có file thì thử tải từ link (nếu có)
+                if (frontBytes == null && request.getCertificateFrontUrl() != null) {
+                    frontBytes = downloadImageFromUrl(request.getCertificateFrontUrl());
+                }
+                if (backBytes == null && request.getCertificateBackUrl() != null) {
+                    backBytes = downloadImageFromUrl(request.getCertificateBackUrl());
+                }
 
-                System.out.println("\n--- Processing email [" + (i + 1) + "/" + messages.length + "] ---");
-                System.out.println("Subject: " + subject);
-                System.out.println("From (Parsed): " + senderEmailFromHeader);
-                System.out.println("Received Date: " + message.getReceivedDate());
-                System.out.println("Is Seen (before processing): " + isSeen); // Sẽ luôn là false
-
-                // <--- LỌC SUBJECT TẠI ĐÂY (nếu không thêm SearchTerm cho subject ở trên)
-                if (subject != null && subject.contains("[ĐĂNG KÝ ĐƠN VỊ VẬN CHUYỂN MỚI]")) {
-                    System.out.println("Subject matches. Attempting to get content...");
-                    String content = getTextFromMessage(message);
-                    System.out.println("Nội dung email đọc được (RAW):\n" + content);
-
-                    TransportUnitEmailRequest request = parseEmailContent(content, senderEmailFromHeader);
-
-                    if (request != null) {
-                        System.out.println("Đã parse thành công, gửi đến API...");
-                        System.out.println("Parsed Request DTO: " + request.toString());
-                        sendToOnboardingApi(request);
-                        message.setFlag(Flags.Flag.SEEN, true); // Đánh dấu là đã đọc sau khi xử lý thành công
-                        System.out.println("Đã gửi và đánh dấu email là ĐÃ ĐỌC.");
-                    } else {
-                        System.err.println("Không thể parse nội dung email hoặc dữ liệu không hợp lệ từ: " + subject);
-                        System.err.println("Nội dung email bị lỗi parse:\n" + content);
-                        message.setFlag(Flags.Flag.SEEN, true); // Đánh dấu là đã đọc để tránh xử lý lại email lỗi
-                        System.out.println("Đã đánh dấu email lỗi parse là ĐÃ ĐỌC.");
+                // Step 3: Upload lên Cloudinary
+                try {
+                    if (frontBytes != null) {
+                        String url = cloudinaryService.uploadImage(frontBytes, "certificate_front_" + System.currentTimeMillis());
+                        request.setCertificateFrontUrl(url);
                     }
+                    if (backBytes != null) {
+                        String url = cloudinaryService.uploadImage(backBytes, "certificate_back_" + System.currentTimeMillis());
+                        request.setCertificateBackUrl(url);
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Upload ảnh thất bại: " + e.getMessage());
+                }
+
+                // Step 4: Gửi về API
+                if (request != null) {
+                    sendToOnboardingApi(request);
                 } else {
-                    System.out.println("Subject does not match or is null. Marking as seen to prevent re-processing.");
-                    message.setFlag(Flags.Flag.SEEN, true); // Đánh dấu là đã đọc để không xử lý lại email không liên quan
-                    System.out.println("Đã đánh dấu email không liên quan là ĐÃ ĐỌC.");
+                    sendSuggestionEmailToSender(sender);
                 }
+
+                message.setFlag(Flags.Flag.SEEN, true);
             }
 
-
-        } catch (AuthenticationFailedException e) {
-            System.err.println("LỖI XÁC THỰC: Username/Password/App Password sai hoặc bị chặn. Vui lòng kiểm tra lại application.properties và tài khoản email.");
-            System.err.println("Chi tiết lỗi: " + e.getMessage());
-            e.printStackTrace();
-        } catch (MessagingException e) {
-            System.err.println("LỖI KẾT NỐI EMAIL (IMAP/POP3): " + e.getMessage());
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.err.println("LỖI I/O khi đọc nội dung email: " + e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
-            System.err.println("LỖI KHÔNG XÁC ĐỊNH trong quá trình xử lý email: " + e.getMessage());
             e.printStackTrace();
         } finally {
             try {
-                if (inbox != null && inbox.isOpen()) {
-                    // <--- RẤT QUAN TRỌNG: close(true) để LƯU CÁC THAY ĐỔI VỀ FLAG
-                    inbox.close(true);
-                    System.out.println("Inbox closed and changes (like SEEN flag) saved.");
-                }
-                if (store != null && store.isConnected()) {
-                    store.close();
-                    System.out.println("Email store closed.");
-                }
+                if (inbox != null && inbox.isOpen()) inbox.close(true);
+                if (store != null && store.isConnected()) store.close();
             } catch (MessagingException e) {
-                System.err.println("Lỗi khi đóng kết nối email: " + e.getMessage());
+                System.err.println("❌ Lỗi khi đóng email: " + e.getMessage());
             }
         }
     }
 
     private String getTextFromMessage(Message message) throws IOException, MessagingException {
-        // ... (Giữ nguyên không thay đổi) ...
         if (message.isMimeType("text/plain")) {
             return message.getContent().toString();
         } else if (message.isMimeType("text/html")) {
@@ -204,7 +194,6 @@ public class EmailListenerService {
     }
 
     private String getTextFromMimeMultipart(MimeMultipart mimeMultipart) throws MessagingException, IOException {
-        // ... (Giữ nguyên không thay đổi) ...
         StringBuilder result = new StringBuilder();
         int count = mimeMultipart.getCount();
         for (int i = 0; i < count; i++) {
@@ -221,79 +210,79 @@ public class EmailListenerService {
     }
 
     private String removeHtmlTags(String htmlString) {
-        // ... (Giữ nguyên không thay đổi) ...
-        return htmlString.replaceAll("<[^>]*>", "").replaceAll("&nbsp;", " ").trim();
+        if (htmlString == null || htmlString.isBlank()) return "";
+
+        // 1. Loại bỏ tất cả thẻ HTML như <p>, <b>, <br>, ...
+        String noHtml = htmlString.replaceAll("<[^>]*>", "");
+
+        // 2. Thay thế các ký tự đặc biệt HTML (ví dụ &nbsp;) bằng khoảng trắng
+        noHtml = noHtml.replaceAll("&nbsp;", " ");
+
+        // 3. Loại bỏ khoảng trắng dư thừa đầu và cuối
+        return noHtml.trim();
     }
+
 
     /* =======================================================================
      *  Hàm parseEmailContent mới - linh hoạt & dễ bảo trì hơn
      * ===================================================================== */
-    private TransportUnitEmailRequest parseEmailContent(String rawContent,
-                                                        String defaultSenderEmail) {
-
-        /* 1. Chuẩn hoá văn bản */
+    private TransportUnitEmailRequest parseEmailContent(String rawContent, String defaultSenderEmail) {
         String emailContent = rawContent
-                .replaceAll("[\\u00A0\\u200B]", " ")   // xoá nbsp, zero-width…
-                .replace("\r", "")                     // bỏ CR
-                .replaceAll("[ \\t]{2,}", " ")         // gộp space
+                .replaceAll("[\\u00A0\\u200B]", " ")
+                .replace("\r", "")
+                .replaceAll("[ \\t]{2,}", " ")
                 .trim();
 
         final int FLAGS = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.DOTALL;
 
-        /* 2. Regex – BẮT BUỘC phải có [...]  */
-        Pattern companyP = Pattern.compile(
-                "Tên\\s*Công\\s*ty\\s*Vận\\s*(?:Tải|chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+        Pattern companyP     = Pattern.compile("Tên\\s*Công\\s*ty\\s*Vận\\s*(?:Tải|chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+        Pattern contactP     = Pattern.compile("Tên\\s*Người\\s*Đại\\s*diện\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+        Pattern phoneP       = Pattern.compile("Số\\s*Điện\\s*Thoại\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+        Pattern licenseP     = Pattern.compile("(?:Biển|Bằng).*?Vận\\s*(?:Tải|Chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+        Pattern noteP        = Pattern.compile("Ghi\\s*Chú\\s*Thêm.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
+        Pattern emailP       = Pattern.compile("[\\[(]([a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,6})[\\])]", FLAGS);
+        Pattern quantityP    = Pattern.compile("Số\\s*lượng\\s*xe.*?\\[\\s*(\\d{1,4})\\s*]", FLAGS);
+        Pattern capacityP    = Pattern.compile("(?:Thể\\s*tích|Sức\\s*chứa).*?\\[\\s*([\\d.]+)\\s*m3?\\s*]", FLAGS);
+        Pattern statusP      = Pattern.compile("Tình\\s*trạng\\s*xe.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
 
-        Pattern contactP = Pattern.compile(
-                "Tên\\s*Người\\s*Đại\\s*diện\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
-
-        Pattern phoneP   = Pattern.compile(
-                "Số\\s*Điện\\s*Thoại\\s*Liên\\s*hệ.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
-
-        Pattern licenseP = Pattern.compile(
-                "(?:Biển|Bằng)\\s*(?:Cấp)?\\s*Vận\\s*(?:Tải|Chuyển).*?\\[\\s*([^]]+?)\\s*]", FLAGS);
-
-        Pattern noteP    = Pattern.compile(
-                "Ghi\\s*Chú\\s*Thêm.*?\\[\\s*([^]]+?)\\s*]", FLAGS);
-
-        /* email bất kỳ nằm trong ngoặc vuông/đơn */
-        Pattern emailIn  = Pattern.compile(
-                "[\\[(]([a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,6})[\\])]", FLAGS);
-
-        /* 3. Mapping vào DTO */
         TransportUnitEmailRequest req = new TransportUnitEmailRequest();
-        req.setNameCompany      (find(emailContent, companyP));
+        req.setNameCompany(find(emailContent, companyP));
         req.setNamePersonContact(find(emailContent, contactP));
-        req.setPhone            (find(emailContent, phoneP));
-        req.setLicensePlate     (find(emailContent, licenseP));
-        req.setNote( Optional.ofNullable(find(emailContent, noteP)).orElse("") );
+        req.setPhone(find(emailContent, phoneP));
+        req.setLicensePlate(find(emailContent, licenseP));
+        req.setNote(Optional.ofNullable(find(emailContent, noteP)).orElse(""));
 
-        String sender = find(emailContent, emailIn);
+        String quantityStr = find(emailContent, quantityP);
+        String capacityStr = find(emailContent, capacityP);
+        String availabilityStr = find(emailContent, statusP);
+        String sender = find(emailContent, emailP);
+
         if (sender == null || sender.isBlank()) sender = defaultSenderEmail;
-        if (sender == null || sender.isBlank()) sender = mailUsername;      // fallback cuối
+        if (sender == null || sender.isBlank()) sender = mailUsername;
         req.setSenderEmail(sender);
 
-        /* 4. Debug log */
-        System.out.printf("""
-        Parsed – Company : '%s'
-                 Contact : '%s'
-                 Phone   : '%s'
-                 Plate   : '%s'
-                 Note    : '%s'
-                 Email   : '%s'%n""",
-                req.getNameCompany(), req.getNamePersonContact(), req.getPhone(),
-                req.getLicensePlate(), req.getNote(), req.getSenderEmail());
-
-        /* 5. Kiểm tra field bắt buộc */
-        if (Stream.of(req.getNameCompany(), req.getNamePersonContact(),
-                        req.getPhone(), req.getLicensePlate(), req.getSenderEmail())
-                .anyMatch(s -> s == null || s.isBlank())) {
-
-            System.err.println("❌ Parse error – thiếu field bắt buộc, bỏ qua email.");
-            return null;
+        try {
+            if (quantityStr != null) {
+                req.setNumberOfVehicles(Integer.parseInt(quantityStr));
+            }
+            if (capacityStr != null) {
+                req.setCapacityPerVehicle(Double.parseDouble(capacityStr));
+            }
+            if (availabilityStr != null) {
+                req.setAvailabilityStatus(TransportAvailabilityStatus.valueOf(
+                        availabilityStr.trim().toUpperCase().replace(" ", "_")
+                ));
+            } else {
+                req.setAvailabilityStatus(TransportAvailabilityStatus.AVAILABLE);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Parse số/thể tích/trạng thái thất bại: " + e.getMessage());
         }
+
         return req;
     }
+
+
 
     /* Helper: trả về group(1) nếu match, null nếu không */
     private static String find(String src, Pattern p) {
@@ -317,6 +306,69 @@ public class EmailListenerService {
             e.printStackTrace();
         }
     }
+    private String extractField(String content, String prefix) {
+        for (String line : content.split("\n")) {
+            if (line.trim().toLowerCase().startsWith(prefix.toLowerCase())) {
+                return line.replaceFirst("(?i)" + prefix, "").trim(); // bỏ prefix (không phân biệt hoa thường)
+            }
+        }
+        return null;
+    }
+
+    private void sendSuggestionEmailToSender(String to) {
+        try {
+            Properties props = new Properties();
+            props.put("mail.smtp.host", "smtp.gmail.com");
+            props.put("mail.smtp.port", "587");
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+
+            Session session = Session.getInstance(props, new Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(mailUsername, mailPassword);
+                }
+            });
+
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(mailUsername));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            message.setSubject("Mẫu đăng ký đơn vị vận chuyển");
+
+            String body = """
+                Vui lòng điền đúng mẫu sau đây và gửi lại:
+                --------------------------------------------
+                [ĐĂNG KÝ ĐƠN VỊ VẬN CHUYỂN MỚI]
+                --------------------------------------------
+                Tên Công ty Vận chuyển: [Tên công ty]
+                Tên Người Đại diện Liên hệ: [Họ và tên]
+                Số Điện Thoại Liên hệ: [SĐT]
+                Email Liên hệ: [email liên hệ]
+                Giấy phép Vận chuyển: [ABC]
+                Số lượng xe: [15]
+                Thể tích xe: [18.5 m3]
+                Ghi Chú Thêm: [Tùy chọn]
+                --------------------------------------------
+                LƯU Ý: Hãy điền thông tin trong dấu ngoặc vuông nhé:>>
+            """;
+
+            message.setText(body);
+            Transport.send(message);
+            System.out.println("✅ Đã gửi mẫu đăng ký lại cho người gửi: " + to);
+
+        } catch (Exception e) {
+            System.err.println("❌ Gửi email mẫu thất bại: " + e.getMessage());
+        }
+    }
+    private byte[] downloadImageFromUrl(String imageUrl) {
+        try (java.io.InputStream in = new java.net.URL(imageUrl).openStream()) {
+            return in.readAllBytes();
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khi tải ảnh từ URL: " + imageUrl + " - " + e.getMessage());
+            return null;
+        }
+    }
+
+
 }
 //da co cai loc thong tin nhan va xac thuc 2 yeu to
 //loc thong tin khi nhan

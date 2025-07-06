@@ -14,12 +14,12 @@ import java.time.LocalDateTime;
 @Entity
 public class TransportUnitApproval {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "approval_id")
     private Integer approvalId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transport_unit_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "approval_id") // 🛠 trùng với tên cột ở trên
     private TransportUnit transportUnit;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -45,6 +45,7 @@ public class TransportUnitApproval {
 
     @Column(name = "sender_email")
     private String senderEmail;
+
 
     @PrePersist
     protected void onCreate() {

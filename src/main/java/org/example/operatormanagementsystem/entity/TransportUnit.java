@@ -3,6 +3,7 @@ package org.example.operatormanagementsystem.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.operatormanagementsystem.enumeration.TransportAvailabilityStatus;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -52,6 +53,28 @@ public class TransportUnit {
 
     @OneToMany(mappedBy = "transportUnit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Booking> bookings;
+
+    @Column(name = "number_of_vehicles")
+    private Integer numberOfVehicles;
+
+
+    @Column(name = "capacity_per_vehicle")
+    private Double capacityPerVehicle;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "availability_status", length = 20)
+    private TransportAvailabilityStatus availabilityStatus;
+
+    @Column(name = "certificate_front_url", length = 500)
+    private String certificateFrontUrl;
+
+    @Column(name = "certificate_back_url", length = 500)
+    private String certificateBackUrl;
+
+    @OneToOne(mappedBy = "transportUnit", cascade = CascadeType.ALL)
+    private TransportUnitApproval approval;
+
+
 
     @PrePersist
     protected void onCreate() {
