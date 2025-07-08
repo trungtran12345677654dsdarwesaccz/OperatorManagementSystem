@@ -98,15 +98,18 @@ public class TransportUnitAnalyticsServiceImpl implements TransportUnitAnalytics
 
         double avgApprovalTime = processed.stream()
                 .filter(a -> a.getStatus() == ApprovalStatus.APPROVED)
+                .filter(a -> a.getRequestedAt() != null && a.getProcessedAt() != null)
                 .mapToDouble(a -> Duration.between(a.getRequestedAt(), a.getProcessedAt()).toMinutes() / 60.0)
                 .average().orElse(0);
 
         double avgRejectionTime = processed.stream()
                 .filter(a -> a.getStatus() == ApprovalStatus.REJECTED)
+                .filter(a -> a.getRequestedAt() != null && a.getProcessedAt() != null)
                 .mapToDouble(a -> Duration.between(a.getRequestedAt(), a.getProcessedAt()).toMinutes() / 60.0)
                 .average().orElse(0);
 
         long bottleneckCount = processed.stream()
+                .filter(a -> a.getRequestedAt() != null && a.getProcessedAt() != null)
                 .filter(a -> Duration.between(a.getRequestedAt(), a.getProcessedAt()).toHours() > 48)
                 .count();
 
@@ -123,9 +126,17 @@ public class TransportUnitAnalyticsServiceImpl implements TransportUnitAnalytics
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
-        double systemEfficiency = 100.0 * processed.stream()
-                .filter(a -> Duration.between(a.getRequestedAt(), a.getProcessedAt()).toHours() <= 24)
-                .count() / (double) processed.size();
+        // Only count valid records for system efficiency
+        long validCount = processed.stream()
+                .filter(a -> a.getRequestedAt() != null && a.getProcessedAt() != null)
+                .count();
+        double systemEfficiency = 0.0;
+        if (validCount > 0) {
+            systemEfficiency = 100.0 * processed.stream()
+                    .filter(a -> a.getRequestedAt() != null && a.getProcessedAt() != null)
+                    .filter(a -> Duration.between(a.getRequestedAt(), a.getProcessedAt()).toHours() <= 24)
+                    .count() / (double) validCount;
+        }
 
         return new PerformanceMetricsResponse(
                 avgApprovalTime,
@@ -135,5 +146,5 @@ public class TransportUnitAnalyticsServiceImpl implements TransportUnitAnalytics
                 systemEfficiency
         );
     }
-}
 
+}

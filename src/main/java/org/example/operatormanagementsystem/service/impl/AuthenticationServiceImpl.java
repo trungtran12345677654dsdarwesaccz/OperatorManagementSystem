@@ -106,7 +106,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new BadCredentialsException("Your account is inactive. Please activate your account first.");
         }
         emailService.sendOTP(user.getEmail());
-//        emailService.sendOTP("");
 
         // 4. Trả về một thông báo cho frontend biết OTP đã được gửi thành công.
         // Frontend sẽ chuyển sang màn hình nhập OTP.
@@ -148,8 +147,6 @@ public UserResponse register(RegisterRequest register) {
     StatusChangeRequest statusChangeRequest = StatusChangeRequest.builder()
             .email(user.getEmail()) // Sử dụng email của user vừa tạo
             .build();
-    // Gọi phương thức requestStatusChange của chính service này
-    // Lưu ý: Kết quả của requestStatusChange (là String) sẽ được gắn vào errorMessage của UserResponse
     String statusChangeMessage = this.requestStatusChange(statusChangeRequest); // Sử dụng 'this' để gọi phương thức của cùng class
     System.out.println("DEBUG: Auto status change request initiated for new user: " + statusChangeMessage);
     // --- Kết thúc phần thay đổi ---
@@ -187,149 +184,18 @@ public UserResponse register(RegisterRequest register) {
         }
     }
 
-    // Phương thức chung để quản lý thay đổi trạng thái bởi MANAGER
-    @Override
-    @Transactional
-    public Users updateStatusByManager(String email, UserStatus newStatus) {
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        UserStatus oldStatus = user.getStatus(); // Lưu trạng thái cũ để kiểm tra logic gửi email
-
-        switch (newStatus) {
-            case ACTIVE:
-                if (oldStatus == UserStatus.PENDING_APPROVAL || oldStatus == UserStatus.INACTIVE) {
-                    user.setStatus(UserStatus.ACTIVE);
-                    userRepository.save(user);
-                    try {
-                        emailService.sendStatusChangeNotification(user.getEmail(), UserStatus.ACTIVE); // Gửi email kích hoạt
-                    } catch (MessagingException e) {
-                        System.err.println("Failed to send activation email to " + user.getEmail() + ": " + e.getMessage());
-                        // Có thể log lỗi chi tiết hơn hoặc ném lại ngoại lệ nếu việc gửi email là quan trọng
-                    }
-                    return user;
-                } else if (oldStatus == UserStatus.ACTIVE) {
-                    throw new IllegalStateException("User with email: " + email + " is already active.");
-                } else {
-                    throw new IllegalStateException("Cannot activate user from current status: " + oldStatus);
-                }
-            case REJECTED:
-                // Nếu người dùng đang PENDING_APPROVAL và bị REJECT, chuyển về INACTIVE
-                if (oldStatus == UserStatus.PENDING_APPROVAL) {
-                    user.setStatus(UserStatus.INACTIVE); // Chuyển về INACTIVE khi bị từ chối
-                    userRepository.save(user);
-                    try {
-                        // Gửi email thông báo trạng thái INACTIVE (do bị từ chối)
-                        emailService.sendStatusChangeNotification(user.getEmail(), UserStatus.INACTIVE);
-                    } catch (MessagingException e) {
-                        System.err.println("Failed to send rejection (to inactive) email to " + user.getEmail() + ": " + e.getMessage());
-                    }
-                    return user;
-                }
-                // Các trường hợp khác khi cố gắng REJECT:
-                else if (oldStatus == UserStatus.INACTIVE) {
-                    throw new IllegalStateException("User with email: " + email + " is already INACTIVE. Cannot change to REJECTED.");
-                } else if (oldStatus == UserStatus.ACTIVE) {
-                    throw new IllegalStateException("Cannot reject an ACTIVE user directly. Please set to INACTIVE first if necessary.");
-                } else if (oldStatus == UserStatus.REJECTED) {
-                    throw new IllegalStateException("User with email: " + email + " is already rejected.");
-                } else {
-                    throw new IllegalStateException("Cannot reject user from current status: " + oldStatus);
-                }
-            case INACTIVE:
-                if (oldStatus == UserStatus.ACTIVE) {
-                    user.setStatus(UserStatus.INACTIVE);
-                    userRepository.save(user);
-                    try {
-                        emailService.sendStatusChangeNotification(user.getEmail(), UserStatus.INACTIVE); // Gửi email vô hiệu hóa
-                    } catch (MessagingException e) {
-                        System.err.println("Failed to send inactive email to " + user.getEmail() + ": " + e.getMessage());
-                    }
-                    return user;
-                } else if (oldStatus == UserStatus.INACTIVE) {
-                    throw new IllegalStateException("User with email: " + email + " is already inactive.");
-                } else {
-                    throw new IllegalStateException("Cannot set user to inactive from current status: " + oldStatus);
-                }
-            default:
-                throw new IllegalArgumentException("Invalid status for manager update: " + newStatus);
-        }
-    }
-    @Override
-    public UserResponse getUserDetailsForManager(String email) {
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        UserResponse response = new UserResponse();
-        response.setUserName(user.getUsername());
-        response.setEmail(user.getEmail());
-        response.setFullName(user.getFullName());
-        response.setGender(user.getGender().toString());
-        response.setAddress(user.getAddress());
-        response.setStatus(user.getStatus());
-        return response;
-    }
-
-    @Override
-    public List<UserResponse> getUsersByStatus(UserStatus status) {
-        List<Users> users = userRepository.findByStatus(UserStatus.PENDING_APPROVAL);
-        // Trả về một danh sách rỗng nếu không có người dùng nào khớp
-        return users.stream()
-                .map(user -> {
-                    UserResponse response = new UserResponse();
-                    response.setUserName(user.getUsername());
-                    response.setEmail(user.getEmail());
-                    response.setFullName(user.getFullName());
-                    response.setGender(user.getGender().toString());
-                    response.setAddress(user.getAddress());
-                    response.setStatus(user.getStatus());
-                    return response;
-                })
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<UserResponse> getUsersNeedingManagerAction() {
-        List<Users> pendingUsers = userRepository.findByStatus(UserStatus.PENDING_APPROVAL);
-        List<Users> inactiveUsers = userRepository.findByStatus(UserStatus.INACTIVE);
-
-        List<Users> usersToReview = new ArrayList<>(pendingUsers);
-        usersToReview.addAll(inactiveUsers);
-
-        // Trả về một danh sách rỗng nếu không có người dùng nào cần duyệt
-        return usersToReview.stream()
-                .map(user -> {
-                    UserResponse response = new UserResponse();
-                    response.setUserName(user.getUsername());
-                    response.setEmail(user.getEmail());
-                    response.setFullName(user.getFullName());
-                    response.setGender(user.getGender().toString());
-                    response.setAddress(user.getAddress());
-                    response.setStatus(user.getStatus());
-                    return response;
-                })
-                .collect(Collectors.toList());
-    }
-
-
-
 
     @Override
     @Transactional
     public void requestPasswordReset(String email) throws MessagingException {
-        // Tìm người dùng theo email
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Tạo token đặt lại mật khẩu
         String resetToken = jwtUtil.generatePasswordResetToken(user);
-
-        // Gửi email chứa liên kết đặt lại mật khẩu
         emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
         System.out.println("Password reset link sent to: " + email);
     }
-
-    // --- NEW METHOD: Đặt lại mật khẩu ---
+    // ---  Đặt lại mật khẩu ---
     @Override
     @Transactional
     public void resetPassword(String token, String newPassword) {
@@ -364,17 +230,3 @@ public UserResponse register(RegisterRequest register) {
 
 
 }
-
-
-/*
-    String token = jwtUtil.generateToken(userDetails);
-    String role = userDetails.getAuthorities().stream()
-            .findFirst()
-            .map(Object::toString)
-            .orElse("USER");
-
-    AuthLoginResponse authLoginResponse = new AuthLoginResponse();
-    authLoginResponse.setAccessToken(token);
-    authLoginResponse.setRole(role);
-    return authLoginResponse;
-    */

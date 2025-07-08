@@ -1,10 +1,14 @@
 package org.example.operatormanagementsystem.dto.response;
 import jakarta.persistence.Enumerated;
-import lombok.Data;
+import lombok.*;
 import org.example.operatormanagementsystem.enumeration.UserRole;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserResponse {
     private String userName;
     private String address;

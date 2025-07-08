@@ -55,7 +55,7 @@ public class EmailListenerService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // KÍCH HOẠT HÀM NÀY CHẠY ĐỊNH KỲ
-    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
+//    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
     public void scheduleEmailCheck() {
         System.out.println("--- SCHEDULED TASK: Checking emails at " + System.currentTimeMillis() + " ---");
         checkEmailsAndOnboard();
@@ -349,6 +349,7 @@ public class EmailListenerService {
                 Ghi Chú Thêm: [Tùy chọn]
                 --------------------------------------------
                 LƯU Ý: Hãy điền thông tin trong dấu ngoặc vuông nhé:>>
+                       Gửi bằng cấp xin hãy gửi link ảnh bên dưới.
             """;
 
             message.setText(body);

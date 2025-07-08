@@ -19,17 +19,10 @@ public interface AuthenticationService {
     String login(LoginRequest request) throws MessagingException;
     UserResponse register(RegisterRequest request);
     String requestStatusChange(StatusChangeRequest request);
-    Users updateStatusByManager(String email, UserStatus newStatus);
-    UserResponse getUserDetailsForManager(String email);
-    // Phương thức này vẫn ổn, trả về List<UserResponse>
-    List<UserResponse> getUsersByStatus(UserStatus status);
 
-    // Phương thức này cũng vẫn ổn, trả về List<UserResponse>
-    List<UserResponse> getUsersNeedingManagerAction();
     void resetPassword(String token, String newPassword);
     void requestPasswordReset(String email) throws MessagingException;
     List<UserSessionResponse> getActiveSessions(HttpServletRequest request);
-
     List<LoginHistory> getLoginHistory(HttpServletRequest request);
 
 }

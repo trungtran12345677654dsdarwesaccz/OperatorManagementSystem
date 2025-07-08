@@ -1,6 +1,8 @@
 package org.example.operatormanagementsystem.transportunit.service;
 
+import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.transportunit.dto.response.*;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,4 +15,6 @@ public interface TransportUnitAnalyticsService {
     List<StatusDistributionResponse> getStatusDistribution();
     List<ApprovalTrendResponse> getApprovalTrends(int days);
     PerformanceMetricsResponse getPerformanceMetrics();
+
+
 }

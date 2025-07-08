@@ -327,40 +327,6 @@ private final UserUsageStatRepository usageStatRepository;
     }
 
 
-    // CHỈNH SỬA PHƯƠNG THỨC NÀY ĐỂ TRUYỀN THAM SỐ VÀO EMAIL TEMPLATE ĐÚNG CÁCH
-//    @Async
-//    @Override
-//    public void sendTransportUnitApprovalNotification(String recipientEmail, String transportUnitName, String userName, ApprovalStatus status, String managerNote) throws MessagingException {
-//        System.out.println("DEBUG: sendTransportUnitApprovalNotification - Attempting to send notification to: '" + recipientEmail + "' for Transport Unit '" + transportUnitName + "' with status: " + status.name() + " (User: " + userName + ")");
-//
-//        String subject;
-//        String htmlBody;
-//
-//        // userName đã được truyền vào, sử dụng trực tiếp
-//        String displayUserName = (userName != null && !userName.trim().isEmpty()) ? userName : "Bạn";
-//
-//        switch (status) {
-//            case APPROVED:
-//                subject = "[OperatorManagementSystem] Đơn vị Vận chuyển của bạn đã được duyệt";
-//                // Gọi đúng phương thức static từ EmailTemplate
-//                htmlBody = EmailTemplate.buildTransportUnitApprovedEmail(displayUserName, transportUnitName, managerNote);
-//                break;
-//            case REJECTED:
-//                subject = "[OperatorManagementSystem] Đơn vị Vận chuyển của bạn đã bị từ chối";
-//                // Gọi đúng phương thức static từ EmailTemplate
-//                htmlBody = EmailTemplate.buildTransportUnitRejectedEmail(displayUserName, transportUnitName, managerNote);
-//                break;
-//            default:
-//                subject = "[OperatorManagementSystem] Cập nhật trạng thái đơn vị Vận chuyển";
-//                // Gọi đúng phương thức static từ EmailTemplate
-//                htmlBody = EmailTemplate.buildGenericTransportUnitStatusUpdateEmail(displayUserName, transportUnitName, status.name(), managerNote);
-//                break;
-//        }
-//
-//        sendHtmlEmail(recipientEmail, subject, htmlBody);
-//
-//        System.out.println("DEBUG: sendTransportUnitApprovalNotification - Email sent successfully to '" + recipientEmail + "' for Transport Unit '" + transportUnitName + "' with status: " + status.name());
-//    }
     @Async
     @Override
     public void sendTransportUnitApprovalNotification(String recipientEmail, String userName, String transportUnitName, ApprovalStatus status, String managerNote) throws MessagingException {

@@ -104,9 +104,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
                         .requestMatchers("/api/dashboard/staff/**").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_MANAGER")
-
-
-
+                        .requestMatchers("/api/pending-staff/**").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/dashboard-stats").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/historical-data").hasAnyRole("MANAGER")
                         .requestMatchers("/api/transport-unit-analytics/weekly-activity").hasAnyRole("MANAGER")

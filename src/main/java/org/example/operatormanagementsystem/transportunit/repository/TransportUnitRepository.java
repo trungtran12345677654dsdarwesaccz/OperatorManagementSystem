@@ -3,6 +3,8 @@
     import org.example.operatormanagementsystem.entity.TransportUnit;
     import org.example.operatormanagementsystem.enumeration.UserStatus;
     import org.example.operatormanagementsystem.transportunit.dto.response.HistoricalDataResponse;
+    import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.Pageable;
     import org.springframework.data.jpa.repository.JpaRepository;
     import org.springframework.data.jpa.repository.Query;
     import org.springframework.data.repository.query.Param;
@@ -22,8 +24,9 @@
         );
 
 
-        List<TransportUnit> findByStatus(org.example.operatormanagementsystem.enumeration.UserStatus status);
-        int countByStatus(UserStatus status);
+        @Query("SELECT COUNT(t) FROM TransportUnit t WHERE t.status = :status")
+        int countByStatus(@Param("status") UserStatus status);
+
 
         @Query("SELECT COUNT(t) FROM TransportUnit t")
         int countAll();
@@ -40,7 +43,7 @@
                         "SUM(CASE WHEN tua.status = 'APPROVED' THEN 1 ELSE 0 END) AS totalApprovals, " +
                         "SUM(CASE WHEN tua.status = 'REJECTED' THEN 1 ELSE 0 END) AS totalRejections " +
                         "FROM transport_unit tu " +
-                        "LEFT JOIN transport_unit_approval tua ON tua.transport_unit_id = tu.transport_id " +
+                        "LEFT JOIN transport_unit_approval tua ON tua.approval_id = tu.transport_id " +
                         "WHERE tua.processed_at BETWEEN :start AND :end " +
                         "GROUP BY DATE_FORMAT(tua.processed_at, '%Y-%m') " +
                         "ORDER BY period ASC",
@@ -70,5 +73,11 @@
                 @Param("start") LocalDate start,
                 @Param("end") LocalDate end
         );
+        @Query("SELECT t FROM TransportUnit t WHERE t.status = :status")
+        List<TransportUnit> findByStatus(@Param("status") UserStatus status);
+
+        Page<TransportUnit> findByStatus(UserStatus status, Pageable pageable);
+
+
     }
 
