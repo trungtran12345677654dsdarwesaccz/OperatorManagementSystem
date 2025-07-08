@@ -31,7 +31,7 @@ public class SessionController {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        List<UserSession> sessions = userSessionRepository.findByUserAndActiveTrue(user);
+        List<UserSession> sessions = userSessionRepository.findTop10ByUserOrderByLastAccessedAtDesc(user);
 
         List<UserSessionResponse> response = sessions.stream().map(session -> UserSessionResponse.builder()
                 .id(session.getId())
