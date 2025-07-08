@@ -32,5 +32,15 @@ public class CreateBookingRequest {
     private Long total;
     
     // Trường promotion name (optional)
-    private String name;
+    private String promotionName;
+    
+    // Thêm homeType
+    private String homeType;
+
+    // Thêm slotIndex
+    @NotNull(message = "Slot index is required")
+    private Integer slotIndex;
+    
+    // Thêm danh sách items
+    private java.util.List<org.example.operatormanagementsystem.customer_thai.dto.request.ItemsRequest> items;
 } 

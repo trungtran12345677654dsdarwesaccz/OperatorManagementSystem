@@ -72,6 +72,12 @@ public class Booking {
     @Column(name="slot_index", nullable=false)
     private Integer slotIndex;
 
+    @Column(name = "home_type", length = 100)
+    private String homeType; // Loại nhà: chung cư, nhà riêng, văn phòng, etc.
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Items> items;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Debt> debts;
 
