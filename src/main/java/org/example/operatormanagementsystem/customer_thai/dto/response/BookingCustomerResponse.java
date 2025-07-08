@@ -30,4 +30,18 @@ public class BookingCustomerResponse {
     private LocalDateTime deliveryDate;
     private String note;
     private Long total;
+    
+    // Thông tin promotion
+    private Long promotionId;
+    private String promotionName;
+    private String promotionDescription;
+    
+    // Thêm homeType
+    private String homeType;
+    
+    // Thêm slotIndex
+    private Integer slotIndex;
+    
+    // Thêm danh sách items
+    private java.util.List<org.example.operatormanagementsystem.customer_thai.dto.response.ItemsResponse> items;
 } 

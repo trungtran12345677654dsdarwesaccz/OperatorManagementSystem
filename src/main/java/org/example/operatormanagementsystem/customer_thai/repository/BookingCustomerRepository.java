@@ -13,4 +13,8 @@ public interface BookingCustomerRepository extends JpaRepository<Booking, Intege
     List<Booking> findByCustomer_CustomerId(Integer customerId);
 
     Optional<Booking> findByBookingIdAndCustomer_CustomerId(Integer bookingId, Integer customerId);
+
+    List<Booking> findByStorageUnit_StorageId(Integer storageId);
+
+    Optional<Booking> findByStorageUnit_StorageIdAndSlotIndex(Integer storageId, Integer slotIndex);
 } 

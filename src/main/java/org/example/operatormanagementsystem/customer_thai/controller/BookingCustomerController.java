@@ -2,8 +2,13 @@ package org.example.operatormanagementsystem.customer_thai.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.customer_thai.dto.request.CreateBookingRequest;
+import org.example.operatormanagementsystem.customer_thai.dto.request.ItemsRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.response.BookingCustomerResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.ItemsResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.PromotionBookingResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.SlotStatusResponse;
 import org.example.operatormanagementsystem.customer_thai.service.BookingCustomerService;
+import org.example.operatormanagementsystem.customer_thai.service.PromotionService;
 import org.example.operatormanagementsystem.entity.OperatorStaff;
 import org.example.operatormanagementsystem.entity.StorageUnit;
 import org.example.operatormanagementsystem.entity.TransportUnit;
@@ -34,6 +39,9 @@ public class    BookingCustomerController {
     
     @Qualifier("operatorStaffRepository_thai")
     private final OperatorStaffRepository operatorStaffRepository;
+    
+    @Qualifier("promotionService_thai")
+    private final PromotionService promotionService;
 
     @PostMapping("/bookings")
     public ResponseEntity<BookingCustomerResponse> createBooking(@RequestBody CreateBookingRequest request) {
@@ -56,6 +64,48 @@ public class    BookingCustomerController {
     @DeleteMapping("/bookings/{bookingId}")
     public ResponseEntity<Void> deleteBooking(@PathVariable Integer bookingId) {
         bookingCustomerService.deleteBooking(bookingId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Endpoint để lấy items của một booking
+    @GetMapping("/bookings/{bookingId}/items")
+    public ResponseEntity<List<ItemsResponse>> getBookingItems(@PathVariable Integer bookingId) {
+        List<ItemsResponse> items = bookingCustomerService.getBookingItems(bookingId);
+        return ResponseEntity.ok(items);
+    }
+
+    // Endpoint để thêm items vào booking
+    @PostMapping("/bookings/{bookingId}/items")
+    public ResponseEntity<List<ItemsResponse>> addItemsToBooking(
+            @PathVariable Integer bookingId,
+            @RequestBody List<ItemsRequest> itemsRequest) {
+        List<ItemsResponse> items = bookingCustomerService.addItemsToBooking(bookingId, itemsRequest);
+        return ResponseEntity.ok(items);
+    }
+
+    // Endpoint để cập nhật một item cụ thể trong booking
+    @PutMapping("/bookings/{bookingId}/items/{itemId}")
+    public ResponseEntity<ItemsResponse> updateBookingItem(
+            @PathVariable Integer bookingId,
+            @PathVariable Integer itemId,
+            @RequestBody ItemsRequest itemRequest) {
+        ItemsResponse item = bookingCustomerService.updateBookingItem(bookingId, itemId, itemRequest);
+        return ResponseEntity.ok(item);
+    }
+
+    // Endpoint để cập nhật tất cả items của booking
+    @PutMapping("/bookings/{bookingId}/items")
+    public ResponseEntity<List<ItemsResponse>> updateBookingItems(
+            @PathVariable Integer bookingId,
+            @RequestBody List<ItemsRequest> itemsRequest) {
+        List<ItemsResponse> items = bookingCustomerService.updateBookingItems(bookingId, itemsRequest);
+        return ResponseEntity.ok(items);
+    }
+
+    // Endpoint để xóa một item cụ thể trong booking
+    @DeleteMapping("/bookings/{bookingId}/items/{itemId}")
+    public ResponseEntity<Void> deleteBookingItem(@PathVariable Integer bookingId, @PathVariable Integer itemId) {
+        bookingCustomerService.deleteBookingItem(bookingId, itemId);
         return ResponseEntity.noContent().build();
     }
 
@@ -111,6 +161,19 @@ public class    BookingCustomerController {
                         .build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(operatorStaffInfos);
+    }
+
+    @GetMapping("/promotions")
+    public ResponseEntity<List<PromotionBookingResponse>> getAvailablePromotions() {
+        List<PromotionBookingResponse> promotions = promotionService.getActivePromotions();
+        return ResponseEntity.ok(promotions);
+    }
+
+    // Endpoint mới: lấy trạng thái slot của một storage
+    @GetMapping("/storage-units/{storageId}/slots")
+    public ResponseEntity<SlotStatusResponse> getSlotStatusByStorageId(@PathVariable Integer storageId) {
+        SlotStatusResponse response = bookingCustomerService.getSlotStatusByStorageId(storageId);
+        return ResponseEntity.ok(response);
     }
 
     // DTO classes for the new endpoints
