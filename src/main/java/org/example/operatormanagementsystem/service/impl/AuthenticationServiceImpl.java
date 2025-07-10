@@ -46,6 +46,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final SecurityConfig securityConfig;
+    private final EmailAsyncSender emailAsyncSender;
     private final RoleRepository roleRepository;
     private final EmailService emailService;
     private final JwtUtil jwtUtil;
