@@ -145,20 +145,19 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
 //                "*"
 //
 //        ));
-        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
-//        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+        corsConfiguration.setAllowedOriginPatterns(List.of("*")); // vietnam.com ,.vn cho moi duoi truy cap dc
         corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
-        corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
-        corsConfiguration.setExposedHeaders(Arrays.asList("*"));
-//        corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.setAllowCredentials(false);
+        corsConfiguration.setAllowedHeaders(Arrays.asList("*")); //  la method option  vdu goi get goi option trc bao trinh duyet mehtod dc thuc hien hay k
+        // chia 2 loai get post bthg k can qua option , put delete can qua option
+        corsConfiguration.setExposedHeaders(Arrays.asList("*")); // allow bear/ auth token
+//      corsConfiguration.setAllowCredentials(true); // cookies token
+        corsConfiguration.setAllowCredentials(false); // dung true khi get lsu don hang
         corsConfiguration.setAllowedOriginPatterns(List.of("*"));
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
     }
-
 //    NGHĨA LÀ CSRF TOKEN LÀ CÁI TRÁNH BỊ GỬI REQUEST TỪ 1 TRANG WEB KHÁC KÈM TOKEN ĐĂNG NHAAPH
 //    Ở WEB TỐT CÒN CORS LÀ CHI CHO PHEP NHUNG CAI TRNAG NAO DC GUI REQUEST CHO NHAU
 }
+

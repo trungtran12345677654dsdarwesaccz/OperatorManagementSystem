@@ -50,7 +50,6 @@ public class PaymentServiceImpl implements PaymentService {
             System.out.println("SMS content: " + sms.getMessage());
             System.out.println("Extracted amount: " + amount);
             System.out.println("Extracted note: " + note);
-
             return "Không tìm thấy booking phù hợp để xác nhận thanh toán.";
         }
 
@@ -84,7 +83,6 @@ public class PaymentServiceImpl implements PaymentService {
         Matcher m = Pattern.compile("\\+(\\d+(?:,\\d{3})*)").matcher(msg);
         return m.find() ? new BigDecimal(m.group(1).replace(",", "")) : BigDecimal.ZERO;
     }
-
 
 
     private String extractNote(String msg) {

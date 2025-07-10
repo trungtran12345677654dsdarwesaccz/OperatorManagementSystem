@@ -21,6 +21,7 @@ public class PaymentQRController {
         System.out.println("📩 [SMS Callback] Received request: " + sms.getMessage());
         return ResponseEntity.ok(paymentService.confirmPaymentFromSms(sms, request));
     }
+
     @GetMapping("/generate-vietqr/{bookingId}")
     public ResponseEntity<BookingQRResponse> generateVietQr(@PathVariable Integer bookingId) {
         return ResponseEntity.ok(paymentService.generateVietQrForBooking(bookingId));
