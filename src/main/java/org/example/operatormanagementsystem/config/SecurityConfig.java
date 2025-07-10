@@ -92,7 +92,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
-
+                               "/api/payment/**",
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
                                 "/api/auth/reset-password",
@@ -116,6 +116,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
+                        .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
+
 
 
 

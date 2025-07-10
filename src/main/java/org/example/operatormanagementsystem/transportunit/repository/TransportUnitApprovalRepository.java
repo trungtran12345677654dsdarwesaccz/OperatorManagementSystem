@@ -35,6 +35,8 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
     @Query("SELECT a FROM TransportUnitApproval a WHERE a.status IN (:s1, :s2) AND a.processedAt IS NOT NULL")
     List<TransportUnitApproval> findProcessedApprovals(@Param("s1") ApprovalStatus s1, @Param("s2") ApprovalStatus s2);
 
+    // Suggestion: Add index on (processed_at), (status), (requested_at)
+
     @Query(
             value = "SELECT " +
                     "day_of_week, " +
@@ -55,20 +57,23 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
 
 
     @Query(
-            value = "SELECT " +
-                    "u.full_name AS managerName, " +
-                    "u.email AS managerEmail, " +
-                    "COUNT(a.approval_id) AS totalProcessed, " +
-                    "SUM(CASE WHEN a.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved, " +
-                    "SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected, " +
-                    "SUM(CASE WHEN a.status = 'PENDING' THEN 1 ELSE 0 END) AS pending, " +
-                    "ROUND(SUM(CASE WHEN a.status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / COUNT(*), 2) AS approvalRate, " +
-                    "ROUND(AVG(TIMESTAMPDIFF(SECOND, a.requested_at, a.processed_at)) / 3600, 2) AS avgProcessingTime " +
-                    "FROM transport_unit_approval a " +
-                    "JOIN manager m ON a.approved_by_manager_id = m.manager_id " +
-                    "JOIN users u ON m.manager_id = u.id " +
-                    "WHERE a.processed_at IS NOT NULL AND a.requested_at BETWEEN :start AND :end " +
-                    "GROUP BY u.id",
+            value = """
+                SELECT 
+                    u.full_name AS managerName,
+                    u.email AS managerEmail,
+                    COUNT(a.approval_id) AS totalProcessed,
+                    SUM(CASE WHEN a.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+                    SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected,
+                    SUM(CASE WHEN a.status = 'PENDING' THEN 1 ELSE 0 END) AS pending,
+                    ROUND(SUM(CASE WHEN a.status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / COUNT(*), 2) AS approvalRate,
+                    ROUND(AVG(TIMESTAMPDIFF(SECOND, a.requested_at, a.processed_at)) / 3600, 2) AS avgProcessingTime
+                FROM transport_unit_approval a
+                JOIN manager m ON a.approved_by_manager_id = m.manager_id
+                JOIN users u ON m.manager_id = u.id
+                WHERE a.processed_at IS NOT NULL
+                AND a.requested_at BETWEEN :start AND :end
+                GROUP BY u.id
+            """,
             nativeQuery = true
     )
     List<ManagerPerformanceResponse> getManagerPerformanceBetween(
@@ -77,42 +82,44 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
     );
 
 
-
-
     @Query(
-            value = "SELECT " +
-                    "DATE(processed_at) AS date, " +
-                    "COUNT(*) AS submissions, " +
-                    "SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) AS approvals, " +
-                    "SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejections, " +
-                    "ROUND(SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / COUNT(*), 2) AS approvalRate " +
-                    "FROM transport_unit_approval " +
-                    "WHERE processed_at >= :fromDate " +
-                    "GROUP BY DATE(processed_at) " +
-                    "ORDER BY DATE(processed_at)",
+            value = """
+                SELECT 
+                    DATE(processed_at) AS date,
+                    COUNT(*) AS submissions,
+                    SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) AS approvals,
+                    SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejections,
+                    ROUND(SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / COUNT(*), 2) AS approvalRate
+                FROM transport_unit_approval
+                WHERE processed_at >= :fromDate
+                GROUP BY DATE(processed_at)
+                ORDER BY DATE(processed_at)
+            """,
             nativeQuery = true
     )
     List<ApprovalTrendResponse> getApprovalTrendsSince(@Param("fromDate") LocalDate fromDate);
 
 
-
-
     @Query(
-            value = "SELECT " +
-                    "SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / COUNT(*) " +
-                    "FROM transport_unit_approval " +
-                    "WHERE status IN ('APPROVED', 'REJECTED')",
+            value = """
+                SELECT 
+                    SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / COUNT(*)
+                FROM transport_unit_approval
+                WHERE status IN ('APPROVED', 'REJECTED')
+            """,
             nativeQuery = true
     )
     double countApprovalRate();
 
+
     @Query(
-            value = "SELECT " +
-                    "AVG(TIMESTAMPDIFF(SECOND, requested_at, processed_at)) / 3600 " +
-                    "FROM transport_unit_approval " +
-                    "WHERE status IN ('APPROVED', 'REJECTED') AND processed_at IS NOT NULL",
+            value = """
+                SELECT 
+                    AVG(TIMESTAMPDIFF(SECOND, requested_at, processed_at)) / 3600
+                FROM transport_unit_approval
+                WHERE status IN ('APPROVED', 'REJECTED') AND processed_at IS NOT NULL
+            """,
             nativeQuery = true
     )
     double calculateAvgProcessingTime();
-
 }

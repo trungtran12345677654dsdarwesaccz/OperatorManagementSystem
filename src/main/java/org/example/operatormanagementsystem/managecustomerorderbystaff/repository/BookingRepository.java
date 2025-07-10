@@ -1,6 +1,7 @@
 package org.example.operatormanagementsystem.managecustomerorderbystaff.repository;
 
 import org.example.operatormanagementsystem.entity.Booking;
+import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,5 +15,5 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     List<Booking> findByCustomerUsersFullNameContainingIgnoreCase(String fullName);
     List<Booking> findAllByStorageUnit_StorageId(Integer storageId);
     Optional<Booking> findByStorageUnit_StorageIdAndSlotIndex(Integer storageId, Integer slotIndex);
-
+    Optional<Booking> findByPaymentStatusAndTotalAndNote(PaymentStatus paymentStatus, Long total, String note);
 }

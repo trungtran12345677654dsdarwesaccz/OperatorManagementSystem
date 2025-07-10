@@ -26,22 +26,22 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     @Query("SELECT p FROM Payment p WHERE p.paidDate BETWEEN :fromDate AND :toDate")
     List<Payment> findByDateRange(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 
-    // Tìm payment theo payer type
-    List<Payment> findByPayerType(String payerType);
 
-    // Tìm payment theo payer ID
-    List<Payment> findByPayerId(Integer payerId);
+
+
 
     // Custom search method (cần implement bằng Specification hoặc @Query phức tạp)
-    @Query("SELECT p FROM Payment p WHERE " +
-            "(:#{#search.status} IS NULL OR p.status = :#{#search.status}) AND " +
-            "(:#{#search.payerType} IS NULL OR p.payerType = :#{#search.payerType}) AND " +
-            "(:#{#search.payerId} IS NULL OR p.payerId = :#{#search.payerId}) AND " +
-            "(:#{#search.fromDate} IS NULL OR p.paidDate >= :#{#search.fromDate}) AND " +
-            "(:#{#search.toDate} IS NULL OR p.paidDate <= :#{#search.toDate}) AND " +
-            "(:#{#search.minAmount} IS NULL OR p.amount >= :#{#search.minAmount}) AND " +
-            "(:#{#search.maxAmount} IS NULL OR p.amount <= :#{#search.maxAmount})")
+    @Query("""
+    SELECT p FROM Payment p
+    WHERE (:#{#search.status} IS NULL OR p.status = :#{#search.status})
+      AND (:#{#search.fromDate} IS NULL OR p.paidDate >= :#{#search.fromDate})
+      AND (:#{#search.toDate} IS NULL OR p.paidDate <= :#{#search.toDate})
+      AND (:#{#search.minAmount} IS NULL OR p.amount >= :#{#search.minAmount})
+      AND (:#{#search.maxAmount} IS NULL OR p.amount <= :#{#search.maxAmount})
+      AND (:#{#search.payerId} IS NULL OR p.payer.id = :#{#search.payerId})
+""")
     Page<Payment> searchPayments(@Param("search") PaymentSearchDTO search, Pageable pageable);
+
 
     // Thống kê payment theo trạng thái
     @Query("SELECT p.status, COUNT(p) FROM Payment p GROUP BY p.status")
