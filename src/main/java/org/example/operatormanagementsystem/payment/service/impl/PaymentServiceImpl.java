@@ -86,9 +86,10 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     private String extractNote(String msg) {
-        Matcher m = Pattern.compile("ND:\\s*(BOOKING\\d+)").matcher(msg);
-        return m.find() ? m.group(1).trim() : "";
+        Matcher m = Pattern.compile("(BOOKING\\s?\\d+)").matcher(msg.toUpperCase());
+        return m.find() ? m.group(1).replace(" ", "").trim() : "";
     }
+
 
     @Override
     public BookingQRResponse generateVietQrForBooking(Integer bookingId) {
