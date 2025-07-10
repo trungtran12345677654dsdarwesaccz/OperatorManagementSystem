@@ -30,27 +30,30 @@ public class GmailConfig {
     public Gmail gmailService() throws Exception {
         var httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 
-        // Load client secrets.
+        // Load client secrets từ resources
         var in = getClass().getClassLoader().getResourceAsStream("credentials.json");
         if (in == null) throw new RuntimeException("credentials.json not found in resources!");
-
         var clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
-        // Build flow and trigger user authorization request.
+        // Build flow (có thể không cần setDataStoreFactory nếu không tạo mới token)
         var flow = new GoogleAuthorizationCodeFlow.Builder(
                 httpTransport, JSON_FACTORY, clientSecrets, List.of(GmailScopes.GMAIL_READONLY))
-                .setDataStoreFactory(new FileDataStoreFactory(Paths.get(TOKENS_DIRECTORY_PATH).toFile()))
                 .setAccessType("offline")
                 .build();
 
-        var credential = flow.loadCredential("user");
-        if (credential == null || credential.getAccessToken() == null) {
+        // Load token từ file StoredCredential (trong resources)
+        var tokenStream = getClass().getClassLoader().getResourceAsStream("tokens/StoredCredential");
+        if (tokenStream == null) {
             throw new IllegalStateException("Token không tồn tại hoặc bị lỗi. Vui lòng chạy local để tạo lại.");
         }
 
-        // Create Gmail service
+        // Deserialize token
+        var credential = JSON_FACTORY.fromInputStream(tokenStream, com.google.api.client.auth.oauth2.Credential.class);
+
+        // Build Gmail service
         return new Gmail.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
+
 }
