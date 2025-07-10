@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.google.api.client.json.jackson2.JacksonFactory;
+
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.List;
@@ -30,30 +32,28 @@ public class GmailConfig {
     public Gmail gmailService() throws Exception {
         var httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 
-        // Load client secrets từ resources
+        // Load credentials.json từ resources
         var in = getClass().getClassLoader().getResourceAsStream("credentials.json");
-        if (in == null) throw new RuntimeException("credentials.json not found in resources!");
+        if (in == null) throw new RuntimeException("credentials.json not found");
         var clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
-        // Build flow (có thể không cần setDataStoreFactory nếu không tạo mới token)
+        // Load token từ thư mục "tokens" bằng FileDataStoreFactory (phải là thư mục thật)
+        var dataStoreFactory = new FileDataStoreFactory(new File("tokens"));
         var flow = new GoogleAuthorizationCodeFlow.Builder(
                 httpTransport, JSON_FACTORY, clientSecrets, List.of(GmailScopes.GMAIL_READONLY))
+                .setDataStoreFactory(dataStoreFactory)
                 .setAccessType("offline")
                 .build();
 
-        // Load token từ file StoredCredential (trong resources)
-        var tokenStream = getClass().getClassLoader().getResourceAsStream("tokens/StoredCredential");
-        if (tokenStream == null) {
+        var credential = flow.loadCredential("user");
+        if (credential == null || credential.getAccessToken() == null) {
             throw new IllegalStateException("Token không tồn tại hoặc bị lỗi. Vui lòng chạy local để tạo lại.");
         }
 
-        // Deserialize token
-        var credential = JSON_FACTORY.fromInputStream(tokenStream, com.google.api.client.auth.oauth2.Credential.class);
-
-        // Build Gmail service
         return new Gmail.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
+
 
 }
