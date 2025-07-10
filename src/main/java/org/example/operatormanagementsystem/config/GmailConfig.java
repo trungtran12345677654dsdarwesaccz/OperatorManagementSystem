@@ -1,59 +1,74 @@
 package org.example.operatormanagementsystem.config;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.auth.oauth2.BearerToken;
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.auth.oauth2.ClientParametersAuthentication;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-
-import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.GmailScopes;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.google.api.client.json.jackson2.JacksonFactory;
-
-import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Paths;
-import java.util.List;
 
 @Configuration
 public class GmailConfig {
 
     private static final String APPLICATION_NAME = "Gmail Payment Reader";
-    private static final JsonFactory JSON_FACTORY =
-            JacksonFactory.getDefaultInstance();
-    private static final String TOKENS_DIRECTORY_PATH = "tokens";
+    private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
     @Bean
     public Gmail gmailService() throws Exception {
-        var httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 
-        // Load credentials.json từ resources
-        var in = getClass().getClassLoader().getResourceAsStream("credentials.json");
-        if (in == null) throw new RuntimeException("credentials.json not found");
-        var clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+        // Load credentials.json
+        InputStream credentialsStream = getClass().getClassLoader().getResourceAsStream("credentials.json");
+        if (credentialsStream == null) {
+            throw new IllegalStateException("❌ Không tìm thấy credentials.json trong classpath");
+        }
 
-        // Load token từ thư mục "tokens" bằng FileDataStoreFactory (phải là thư mục thật)
-        var dataStoreFactory = new FileDataStoreFactory(new File("tokens"));
-        var flow = new GoogleAuthorizationCodeFlow.Builder(
-                httpTransport, JSON_FACTORY, clientSecrets, List.of(GmailScopes.GMAIL_READONLY))
-                .setDataStoreFactory(dataStoreFactory)
-                .setAccessType("offline")
+        InputStream tokenStream = getClass().getClassLoader().getResourceAsStream("tokens/StoredCredential.json");
+        if (tokenStream == null) {
+            throw new IllegalStateException("❌ Không tìm thấy StoredCredential.json trong classpath");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode tokenNode = mapper.readTree(tokenStream);
+
+        // Lấy client info
+        String clientId = getRequiredField(tokenNode, "client_id");
+        String clientSecret = getRequiredField(tokenNode, "client_secret");
+        String accessToken = getRequiredField(tokenNode, "access_token");
+        String refreshToken = getRequiredField(tokenNode, "refresh_token");
+
+        // Tạo credential đúng cách
+        Credential credential = new Credential.Builder(BearerToken.authorizationHeaderAccessMethod())
+                .setTransport(httpTransport)
+                .setJsonFactory(JSON_FACTORY)
+                .setTokenServerUrl(new GenericUrl("https://oauth2.googleapis.com/token"))
+                .setClientAuthentication(new ClientParametersAuthentication(clientId, clientSecret))
                 .build();
 
-        var credential = flow.loadCredential("user");
-        if (credential == null || credential.getAccessToken() == null) {
-            throw new IllegalStateException("Token không tồn tại hoặc bị lỗi. Vui lòng chạy local để tạo lại.");
-        }
+        credential.setAccessToken(accessToken);
+        credential.setRefreshToken(refreshToken);
 
         return new Gmail.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
 
-
+    private String getRequiredField(JsonNode node, String fieldName) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.asText().isEmpty()) {
+            throw new IllegalStateException("❌ Thiếu trường bắt buộc: " + fieldName + " trong StoredCredential");
+        }
+        return field.asText();
+    }
 }
