@@ -28,6 +28,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
 
     @Qualifier("bookingRepository_thai")
     private final BookingCustomerRepository bookingCustomerRepository;
+
     private final CustomerInfoService customerInfoService;
     @Qualifier("storageUnitRepository_thai")
     private final StorageUnitRepository storageUnitRepository;
@@ -65,6 +66,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                     .orElse(null);
         }
 
+        // Tạo booking ban đầu (chưa có note vì bookingId chưa có)
         Booking booking = Booking.builder()
                 .customer(currentUser.getCustomer())
                 .storageUnit(storageUnit)
@@ -75,15 +77,22 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .status("PENDING")
                 .paymentStatus(PaymentStatus.INCOMPLETED)
                 .deliveryDate(request.getDeliveryDate())
-                .note(request.getNote())
+                .note(null) // tạm để null
                 .total(request.getTotal())
                 .promotion(promotion)
                 .homeType(request.getHomeType())
-                .slotIndex(request.getSlotIndex()) 
+                .slotIndex(request.getSlotIndex())
                 .build();
 
         Booking savedBooking = bookingCustomerRepository.save(booking);
-        
+
+        if (savedBooking.getNote() == null || savedBooking.getNote().isBlank()) {
+            String note = "BOOKING_" + savedBooking.getBookingId();
+            savedBooking.setNote(note);
+            bookingCustomerRepository.save(savedBooking); // update lại note
+        }
+
+
         // Xử lý items nếu có
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             java.util.            List<Items> itemsList = request.getItems().stream()

@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,11 +19,10 @@ public class Payment {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
-    @Column(name = "payer_type", length = 50)
-    private String payerType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payer_user_id", nullable = false)
+    private Users payer;
 
-    @Column(name = "payer_id")
-    private Integer payerId;
 
     @Column(precision = 18, scale = 2)
     private BigDecimal amount;
@@ -31,8 +31,13 @@ public class Payment {
     private LocalDate paidDate;
 
     @Column(length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus status;
 
     @Column(length = 255)
     private String note;
+
+    @Column(name = "transaction_no", length = 100)
+    private String transactionNo; // Mã giao dịch VNPay trả về
+
 }
