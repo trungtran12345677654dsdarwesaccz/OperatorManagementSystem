@@ -132,24 +132,28 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(Arrays.asList(
-//                "http://localhost:5173",
-//                "http://localhost:5174",// Vite dev server
-//                "http://localhost:5175",
-//                "http://localhost:3000",    // React dev server
-//                "http://127.0.0.1:5173",
-//                "http://127.0.0.1:5175",
-//                "http://127.0.0.1:5174", // Alternative localhost
-//                "http://127.0.0.1:3000"
-//               // Alternative localhost
-                "https://operator-management-system.onrender.com"
-        ));
-//        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
+//        corsConfiguration.setAllowedOrigins(Arrays.asList(
+////                "http://localhost:5173",
+////                "http://localhost:5174",// Vite dev server
+////                "http://localhost:5175",
+////                "http://localhost:3000",    // React dev server
+////                "http://127.0.0.1:5173",
+////                "http://127.0.0.1:5175",
+////                "http://127.0.0.1:5174", // Alternative localhost
+////                "http://127.0.0.1:3000"
+////               // Alternative localhost
+//                "*"
+//
+//        ));
+        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
 //        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
         corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
         corsConfiguration.setExposedHeaders(Arrays.asList("*"));
-        corsConfiguration.setAllowCredentials(true);
+//        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setAllowCredentials(false);
+        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
