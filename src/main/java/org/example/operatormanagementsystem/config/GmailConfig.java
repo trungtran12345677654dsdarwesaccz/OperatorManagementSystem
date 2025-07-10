@@ -43,7 +43,10 @@ public class GmailConfig {
                 .setAccessType("offline")
                 .build();
 
-        var credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+        var credential = flow.loadCredential("user");
+        if (credential == null || credential.getAccessToken() == null) {
+            throw new IllegalStateException("Token không tồn tại hoặc bị lỗi. Vui lòng chạy local để tạo lại.");
+        }
 
         // Create Gmail service
         return new Gmail.Builder(httpTransport, JSON_FACTORY, credential)
