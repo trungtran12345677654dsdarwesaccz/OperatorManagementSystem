@@ -140,7 +140,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
 //                "http://127.0.0.1:5174", // Alternative localhost
 //                "http://127.0.0.1:3000"
 //               // Alternative localhost
-                "*"
+                "https://operator-management-system.onrender.com"
         ));
 //        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
         corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
