@@ -23,11 +23,6 @@ import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/dashboard/staff")
-@CrossOrigin(
-        origins = {"http://localhost:5173", "http://localhost:3000"},
-        allowCredentials = "true",
-        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.OPTIONS}
-)
 public class DashboardStaffController {
 
     private static final Logger logger = Logger.getLogger(DashboardStaffController.class.getName());

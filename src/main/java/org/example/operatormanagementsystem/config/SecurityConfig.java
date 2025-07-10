@@ -92,7 +92,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
-                               "/api/payment/**",
+                                "/api/payment/**",
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
                                 "/api/auth/reset-password",
@@ -117,11 +117,6 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
-
-
-
-
-
                         .anyRequest().authenticated()
                 )
 
@@ -150,11 +145,12 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         corsConfiguration.setAllowedHeaders(Arrays.asList("*")); //  la method option  vdu goi get goi option trc bao trinh duyet mehtod dc thuc hien hay k
         // chia 2 loai get post bthg k can qua option , put delete can qua option
         corsConfiguration.setExposedHeaders(Arrays.asList("*")); // allow bear/ auth token
-//      corsConfiguration.setAllowCredentials(true); // cookies token
-        corsConfiguration.setAllowCredentials(false); // dung true khi get lsu don hang
-        corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+        corsConfiguration.setAllowCredentials(false); // dung true cookies token can gui ve backend
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
+        System.out.println("🔍 allowCredentials: " + corsConfiguration.getAllowCredentials());
+        System.out.println("🔍 allowedOriginPatterns: " + corsConfiguration.getAllowedOriginPatterns());
+
         return source;
     }
 //    NGHĨA LÀ CSRF TOKEN LÀ CÁI TRÁNH BỊ GỬI REQUEST TỪ 1 TRANG WEB KHÁC KÈM TOKEN ĐĂNG NHAAPH

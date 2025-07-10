@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
-@CrossOrigin(origins = "http://localhost:5174")
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/manager/{managerId}/staff")

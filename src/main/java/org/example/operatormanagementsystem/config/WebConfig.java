@@ -19,7 +19,7 @@ public class WebConfig  implements WebMvcConfigurer {
                         .allowedOrigins("*") // Frontend domain ở đây!
                         .allowedMethods("*")
                         .allowedHeaders("*")
-                        .allowCredentials(true); // Nếu FE có dùng cookie, session
+                        .allowCredentials(false); // Nếu FE có dùng cookie, session
             }
         };
     }
