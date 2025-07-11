@@ -31,7 +31,7 @@ public class BookingController {
     private final BookingService bookingService;
 
     @GetMapping("/overview")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<Map<String, Object>> getOverview() {
         try {
             Map<String, Object> overview = Map.of(
@@ -49,7 +49,7 @@ public class BookingController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<List<BookingResponse>> getAllBookings() {
         try {
             List<Booking> bookings = bookingService.getAllBookings();
@@ -67,7 +67,7 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable Integer id) {
         try {
             return bookingService.getBookingById(id)
@@ -83,7 +83,7 @@ public class BookingController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<BookingResponse> updateBooking(@PathVariable Integer id, @Valid @RequestBody BookingRequest bookingRequest) {
         try {
             // Chuyển trạng thái tiếng Việt sang tiếng Anh trước khi cập nhật
@@ -111,7 +111,7 @@ public class BookingController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<List<BookingResponse>> searchBookings(@RequestParam String fullName) {
         try {
             List<Booking> bookings = bookingService.searchBookingsByCustomerName(fullName);
@@ -128,7 +128,7 @@ public class BookingController {
     }
 
     @PutMapping("/{id}/payment")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<BookingResponse> updatePaymentStatus(@PathVariable Integer id, @RequestParam String status) {
         try {
             // Convert string to enum safely (case-insensitive)
@@ -198,14 +198,14 @@ public class BookingController {
 
     // 1) Lấy slotCount + danh sách ô đã full cho kho
     @GetMapping("/storage/{storageId}/slots")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<SlotsInfoResponse> getSlotsInfo(@PathVariable Integer storageId) {
         return ResponseEntity.ok(bookingService.getSlotsInfo(storageId));
     }
 
     // 2) Lấy chi tiết booking cho một ô cụ thể
     @GetMapping("/storage/{storageId}/slots/{slotIndex}")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<BookingDetailResponse> getBookingDetail(
             @PathVariable Integer storageId,
             @PathVariable Integer slotIndex) {
@@ -215,7 +215,7 @@ public class BookingController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<BookingDetailResponse> createBooking(
             @Valid @RequestBody BookingRequest req) {
         BookingDetailResponse dto = bookingService.createBooking(req);
@@ -223,7 +223,7 @@ public class BookingController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF')")
     public ResponseEntity<Void> deleteBooking(@PathVariable Integer id) {
             bookingService.deleteBooking(id);
             return ResponseEntity.noContent().build();
