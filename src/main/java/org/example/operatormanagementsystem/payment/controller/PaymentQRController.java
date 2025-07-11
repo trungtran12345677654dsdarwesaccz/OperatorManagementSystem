@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
+//@PreAuthorize("hasAnyRole('CUSTOMER')")
 @RequiredArgsConstructor
 public class PaymentQRController {
 
