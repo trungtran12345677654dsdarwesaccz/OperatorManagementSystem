@@ -124,35 +124,47 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return http.build();
     }
 
+
+
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-//        corsConfiguration.setAllowedOrigins(Arrays.asList(
-////                "http://localhost:5173",
-////                "http://localhost:5174",// Vite dev server
-////                "http://localhost:5175",
-////                "http://localhost:3000",    // React dev server
-////                "http://127.0.0.1:5173",
-////                "http://127.0.0.1:5175",
-////                "http://127.0.0.1:5174", // Alternative localhost
-////                "http://127.0.0.1:3000"
-////               // Alternative localhost
-//                "*"
-//
-//        ));
+
+        // Chỉ cho phép frontend chạy ở các địa chỉ sau
+        corsConfiguration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173"
+        ));
         corsConfiguration.setAllowedOriginPatterns(List.of("*")); // vietnam.com ,.vn cho moi duoi truy cap dc
-        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
-        corsConfiguration.setAllowedHeaders(Arrays.asList("*")); //  la method option  vdu goi get goi option trc bao trinh duyet mehtod dc thuc hien hay k
-        // chia 2 loai get post bthg k can qua option , put delete can qua option
+        // Chỉ định các HTTP method được phép
         corsConfiguration.setExposedHeaders(Arrays.asList("*")); // allow bear/ auth token
-        corsConfiguration.setAllowCredentials(false); // dung true cookies token can gui ve backend
+        corsConfiguration.setAllowedHeaders(Arrays.asList("*")); //  la method option  vdu goi get goi option trc bao trinh duyet mehtod dc thuc hien hay k
+        corsConfiguration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
+
+
+        // Chỉ định các header được phép gửi từ client
+        corsConfiguration.setAllowedHeaders(Arrays.asList(
+                "Authorization", "Content-Type", "X-Requested-With"
+        ));
+
+        // Chỉ định các header client được phép đọc từ response
+        corsConfiguration.setExposedHeaders(List.of("Authorization"));
+
+        // Bật allowCredentials để dùng cookie / token trong header
+        corsConfiguration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
-        System.out.println("🔍 allowCredentials: " + corsConfiguration.getAllowCredentials());
-        System.out.println("🔍 allowedOriginPatterns: " + corsConfiguration.getAllowedOriginPatterns());
-
         return source;
     }
+
+//    NGHĨA LÀ CSRF TOKEN LÀ CÁI TRÁNH BỊ GỬI REQUEST TỪ 1 TRANG WEB KHÁC KÈM TOKEN ĐĂNG NHAAPH
+//    Ở WEB TỐT CÒN CORS LÀ CHI CHO PHEP NHUNG CAI TRNAG NAO DC GUI REQUEST CHO NHAU
+
+
+
 //    NGHĨA LÀ CSRF TOKEN LÀ CÁI TRÁNH BỊ GỬI REQUEST TỪ 1 TRANG WEB KHÁC KÈM TOKEN ĐĂNG NHAAPH
 //    Ở WEB TỐT CÒN CORS LÀ CHI CHO PHEP NHUNG CAI TRNAG NAO DC GUI REQUEST CHO NHAU
 }

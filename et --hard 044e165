@@ -1,0 +1,177 @@
+[33ma4dd1fd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m fixsessioncontroller
+[33m5956155[m acprejectStaff
+[33mbb2c690[m fixmailcothemanh
+[33mf753d7d[m fixPhong
+[33m8c36ba0[m dashboard
+[33m044e165[m Restore deleted files from main-backup after merge
+[33m9344d46[m[33m ([m[1;31morigin/minhtrung-update[m[33m, [m[1;32mminhtrung-update[m[33m)[m Merge pull request #11 from trungtran12345677654dsdarwesaccz/master
+[33m4b33921[m[33m ([m[1;32mbackup-before-merge[m[33m)[m fixtrung
+[33m37d1fe3[m fixemailservice
+[33md373727[m fix sercurity
+[33mec1fa6b[m fix reveneu and user
+[33md48f05d[m mergeYen
+[33m0109e96[m Merge branch 'hungmoi'
+[33mf0e8785[m promotion
+[33mc751c1e[m mergethai
+[33m493d6cf[m Merge branch 'thai' of https://github.com/trungtran12345677654dsdarwesaccz/OperatorManagementSystem into thai
+[33m0ebfe57[m listProfile
+[33md46005e[m Thêm promotion cho booking
+[33m0d7f5f1[m commit
+[33m3711d4b[m[33m ([m[1;31morigin/yen[m[33m, [m[1;32myen[m[33m)[m  update dashboard
+[33me3d95f0[m  them màn hiệu suất nhân viên
+[33md7502cc[m Merge branch 'hungmoi'
+[33m329d34f[m TRUNG
+[33ma121012[m update pics
+[33mafc09f3[m Đồng bộ với master
+[33m292ec71[m fixCloudDB
+[33ma0adb26[m deletePackage-Json
+[33mb108f1c[m fix
+[33md6577f2[m Merge branch 'phong'
+[33m1b553f1[m Merge remote-tracking branch 'origin/phong' into phong
+[33m65e3306[m mergehung
+[33m6fd7d76[m push
+[33m3d8d752[m mergehungmoi
+[33m2ee073e[m entity
+[33mf215a51[m mergeThai
+[33mab948ad[m merrgeThai
+[33m827d2da[m thêm crud cho feedback
+[33m433396d[m :wq Merge branch 'yen'
+[33mdad5468[m mergeHung
+[33m80327d8[m[33m ([m[1;32mphongdz[m[33m, [m[1;32mphong1[m[33m)[m fixSendOtp
+[33m8cb6cbb[m fixSendOtp
+[33m8dd5023[m update store
+[33m8b6d825[m  update
+[33mcff6f7d[m fix revenue
+[33m3074bc5[m Merge remote-tracking branch 'origin/hungmoi'
+[33m8bc1735[m WIP: local changes before merging hungmoi
+[33mbdfe1a3[m update store
+[33mfab3b16[m merge
+[33m7ebc7e2[m updateLocalFrontEnd
+[33m4bf9759[m Update RevenueController.java
+[33m26c89cb[m Update UserController.java
+[33m32345b7[m Update UserController.java
+[33m182cff3[m Update RevenueController.java
+[33m5cbb543[m Make changes
+[33m7549d4c[m mergePhong1
+[33mb528b4c[m Merged branch 'yen' and resolved conflicts
+[33m61437bc[m WIP: lưu lại thay đổi trước khi merge yen
+[33m79076d4[m mergecodeyen
+[33m575639b[m fix
+[33mf857dc9[m  sửa promotion
+[33m40e723f[m  them export excel
+[33mb782cae[m mail
+[33m5774b40[m updateDBToCloudEivan
+[33mdfa5daa[m fixCodeBackEndMerge
+[33mb804053[m updatemail
+[33m36788d0[m fix
+[33mf77f693[m fix
+[33mee54cae[m Merge remote-tracking branch 'origin/phong1'
+[33mf1edb86[m suaCodePhuHopvsDB
+[33ma057e62[m suacauhinh
+[33m58fc3d5[m[33m ([m[1;31morigin/phong1[m[33m)[m fixxonghet
+[33m8c5e5d5[m cauhinhDBlenClou
+[33m9517ff5[m fix
+[33m6f33fd0[m update
+[33mbc5e3a7[m commit
+[33m466bb73[m fixing
+[33m13208d2[m Merge remote-tracking branch 'origin/yen'
+[33m779f786[m  update
+[33m7eb47e8[m updateEmail
+[33mb078f36[m fixall
+[33mf4a7666[m fixTrungx2
+[33mf0bd94a[m update email
+[33m6d7ba4f[m Update SecurityConfig.java
+[33md81f4f7[m Update SecurityConfig.java
+[33md622c68[m Revert "Merge branch 'He191672'"
+[33mbbf8513[m Merge remote-tracking branch 'origin/yen'
+[33m5296c90[m Merge branch 'He191672'
+[33m460356e[m sua lai local host
+[33m2ac1197[m Bỏ Manager Booking repo gộp vào nhánh Yến với Phong đã có thuộc tính của phần bị bỏ
+[33m7449a32[m commit
+[33m514f428[m Merge
+[33m9e3233c[m Merge remote-tracking branch 'origin/yen'
+[33m6f2bcf1[m  thêm search
+[33m7675531[m Merge branch 'trung'
+[33mc96ad46[m Revert
+[33mc3e2d84[m Create ApprovalStatus.java
+[33mc307a2c[m Merge branch 'minh-trung---new' into trung
+[33m20e7b48[m thêm quản lí khuyến mãi
+[33mba95c80[m update be
+[33m82cbfb6[m fixing
+[33m3feb78b[m fixing
+[33m4f4a844[m fixing
+[33m682108c[m update
+[33mc9be0c3[m Merge remote-tracking branch 'origin/yen'
+[33m1a76526[m Merge remote-tracking branch 'origin/phong'
+[33mfbf94de[m Update application.properties
+[33m24a6794[m manageorder
+[33md5356e1[m fixxing
+[33m05c90aa[m Merge branch 'He191672'
+[33mb3ea652[m Merge branch 'trung'
+[33mfee816e[m fix
+[33m0651af6[m commit
+[33mb153593[m[33m ([m[1;31morigin/minh-trung---new[m[33m, [m[1;32mminh-trung---new[m[33m)[m Merge pull request #6 from trungtran12345677654dsdarwesaccz/minh-trung---new
+[33m4262da8[m manage revenue
+[33m052772d[m  thêm promotions
+[33md858c47[m Merge pull request #5 from trungtran12345677654dsdarwesaccz/minh-trung
+[33m7e98d98[m[33m ([m[1;31morigin/minh-trung[m[33m)[m fix
+[33m142ed3a[m Merge branch 'trung'
+[33md2f818e[m manage staff
+[33m1f33e7f[m Thêm tính năng quản lý đơn vị vận chuyển và cập nhật cấu trúc dự án
+[33m4ce0fb5[m commit
+[33m87d3cdd[m Update PaymentController.java
+[33m04f25c7[m update receipt view
+[33m0702831[m Update CustomerServiceImpl.java
+[33me043421[m fixxing
+[33mb0a7a5a[m fix-login-register-reset password-phan quyen
+[33m8b61676[m Update PaymentController.java
+[33md60e348[m update hung pj
+[33m25b5674[m update hung pj
+[33m5cc0cf1[m update hung pj
+[33m2cef27b[m Merge branch 'trung'
+[33m40a2ef8[m Update OperatorStaff.java
+[33mb18c1d1[m Merge branch 'trung'
+[33m2cf34d3[m Update SecurityConfig.java
+[33me5e894d[m merging
+[33m2332599[m update
+[33mead4798[m Hoàn thành chức năng đăng ký và quên mật khẩu
+[33m40b17e6[m feat: Implement OTP verification and email sending fixes
+[33m6beb260[m Login/register(no otp)
+[33m0961ae2[m merging
+[33mb463d75[m Merge branch 'trung'
+[33m61feea5[m fix security swagger
+[33m5a0596f[m update
+[33m1597905[m Merge branch 'trung' into He191672
+[33mc9e94e8[m Update pom.xml
+[33m7814a47[m Merge branch 'He191672' into trung
+[33mc6e3a8c[m fixx conffig
+[33m1166b74[m thêm storage
+[33m9074a1e[m update payment by staff
+[33mc011d06[m fixx
+[33m0724000[m fix api for new entityentity
+[33mfde5991[m fixx
+[33m5b72e0a[m fixx
+[33ma44616a[m sua lai ddb-register
+[33m5f320c1[m manage storage unit
+[33m339ea6d[m frontend
+[33m8fb9308[m Merge branch 'master' of https://github.com/trungtran12345677654dsdarwesaccz/OperatorManagementSystem
+[33m4b4a72f[m Delete he.html
+[33meb74399[m Merge pull request #2 from trungtran12345677654dsdarwesaccz/trung-new
+[33mc8bac5b[m add function manager customer
+[33m1b3f708[m update entity
+[33mbce8520[m update entity 2
+[33m7b30362[m webcretask
+[33m146050b[m Login_DaPhanQuyen
+[33m756cec2[m Create UserName.java
+[33me5904e5[m Merge branch 'master' of https://github.com/trungtran12345677654dsdarwesaccz/OperatorManagementSystem
+[33mcb18dc4[m Create UserRole.java
+[33m7196c43[m update frontend
+[33m3481fac[m creatask
+[33m9c119b8[m frontEnd
+[33m6f5593a[m[33m ([m[1;31morigin/Phong[m[33m)[m fixing entity
+[33m8d9331b[m fixing entity
+[33m617c4e4[m Merge branch 'master' into trung
+[33m1b7fc30[m update entity
+[33md648666[m Tạo khung toàn bộ backend
+[33md91c622[m Thêm các entity JPA cho database
+[33mff30f21[m Replace old project with new one
