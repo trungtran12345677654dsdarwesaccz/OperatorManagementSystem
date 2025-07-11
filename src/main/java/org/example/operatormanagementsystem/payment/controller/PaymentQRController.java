@@ -11,16 +11,16 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
-//@PreAuthorize("hasAnyRole('CUSTOMER')")
+@PreAuthorize("hasAnyRole('CUSTOMER')")
 @RequiredArgsConstructor
 public class PaymentQRController {
 
     private final PaymentService paymentService;
 
     @PostMapping("/sms-callback")
-    public ResponseEntity<String> handleSmsCallback(@RequestBody SmsMessageDto sms) {
+    public ResponseEntity<String> handleSmsCallback(@RequestBody SmsMessageDto sms,  HttpServletRequest request) {
         System.out.println("📩 [SMS Callback] Received: " + sms.getMessage());
-        String result = paymentService.confirmPaymentFromSms(sms, null);
+        String result = paymentService.confirmPaymentFromSms(sms, request);
         return ResponseEntity.ok(result);
     }
 

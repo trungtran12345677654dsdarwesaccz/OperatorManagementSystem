@@ -92,13 +92,13 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
-                                "/api/payment/sms-callback",
-                                "/api/payment/generate-vietqr/{bookingId}",
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
                                 "/api/auth/reset-password",
                                 "/api/auth/login/verify-otp").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/payment/sms-callback").hasAnyRole("CUSTOMER")
+                        .requestMatchers("/api/payment/generate-vietqr/{bookingId}").hasAnyRole("CUSTOMER")
                         .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                         .requestMatchers("/api/promotions/**").hasRole("MANAGER")
                         .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")

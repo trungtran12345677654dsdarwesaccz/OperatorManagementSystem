@@ -33,6 +33,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public String confirmPaymentFromSms(SmsMessageDto sms, HttpServletRequest request) {
+        Users currentUser = resolveUser(request);
         String content = sms.getMessage();
         String timestamp = sms.getTimestamp();
 
@@ -61,7 +62,8 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setPaymentStatus(PaymentStatus.COMPLETED);
         bookingRepository.save(booking);
 
-        Users currentUser = resolveUser(request);
+        // Log cập nhật booking
+        System.out.println("✅ Cập nhật trạng thái booking #" + booking.getBookingId() + " thành COMPLETED");
 
         Payment payment = Payment.builder()
                 .booking(booking)
@@ -73,25 +75,36 @@ public class PaymentServiceImpl implements PaymentService {
                 .transactionNo("SMS_" + System.currentTimeMillis())
                 .build();
 
+        System.out.println("💳 Tạo đối tượng Payment: " + payment);
         paymentRepository.save(payment);
+
+        System.out.println("✅ Đã lưu Payment với mã giao dịch: " + payment.getTransactionNo());
 
         return "✅ Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
     }
 
+
     private Users resolveUser(HttpServletRequest request) {
-        if (request == null) {
-            return userRepository.findByEmail("system@backend.local")
-                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng hệ thống"));
-        }
         try {
+            // Lấy token từ request
             String token = jwtUtil.extractTokenFromRequest(request);
-            String email = jwtUtil.extractUsername(token);
-            return userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
+            System.out.println("Token từ header: " + token); // Kiểm tra token
+
+            if (token != null && jwtUtil.validateToken(token)) {
+                String email = jwtUtil.extractUsername(token);  // Lấy email từ token
+                System.out.println("Email người dùng từ token: " + email);
+                return userRepository.findByEmail(email)  // Lấy user từ email
+                        .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
+            } else {
+                throw new RuntimeException("Token không hợp lệ hoặc không có token");
+            }
         } catch (Exception e) {
             throw new RuntimeException("Không xác thực được người dùng từ JWT", e);
         }
     }
+
+
+
 
     private BigDecimal extractAmount(String msg) {
         Matcher m = Pattern.compile("\\+(\\d+(?:,\\d{3})*)").matcher(msg);
