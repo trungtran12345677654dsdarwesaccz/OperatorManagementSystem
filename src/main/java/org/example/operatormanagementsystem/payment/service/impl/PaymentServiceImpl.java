@@ -34,46 +34,34 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String confirmPaymentFromSms(SmsMessageDto sms, HttpServletRequest request) {
         String content = sms.getMessage();
-        String timestamp = sms.getTimestamp(); // Có thể null nếu không từ Gmail
-        System.out.println(" Nội dung SMS: " + content);
-        System.out.println(" Thời gian: " + (timestamp != null ? timestamp : "Không có"));
+        String timestamp = sms.getTimestamp();
+
+        System.out.println("📩 Nội dung SMS: " + content);
+        System.out.println("🕒 Thời gian: " + (timestamp != null ? timestamp : "Không có"));
 
         BigDecimal amount = extractAmount(content);
         String note = extractNote(content);
 
-        System.out.println(" Amount = " + amount);
-        System.out.println(" Note = '" + note + "'");
+        System.out.println("💰 Amount = " + amount);
+        System.out.println("📝 Note = '" + note + "'");
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0 || note.isEmpty()) {
-            return " Không thể xác định số tiền hoặc mã booking từ SMS.";
+            return "⚠️ Không thể xác định số tiền hoặc mã booking từ SMS.";
         }
 
         Optional<Booking> optionalBooking = bookingRepository
                 .findByPaymentStatusAndTotalAndNote(PaymentStatus.INCOMPLETED, amount.longValue(), note);
 
         if (optionalBooking.isEmpty()) {
-            System.out.println(" Không tìm thấy booking phù hợp.");
-            return "Không tìm thấy booking phù hợp để xác nhận thanh toán.";
+            System.out.println("❌ Không tìm thấy booking phù hợp.");
+            return "❌ Không tìm thấy booking phù hợp để xác nhận thanh toán.";
         }
 
         Booking booking = optionalBooking.get();
         booking.setPaymentStatus(PaymentStatus.COMPLETED);
         bookingRepository.save(booking);
 
-        Users currentUser;
-        if (request != null) {
-            try {
-                String token = jwtUtil.extractTokenFromRequest(request);
-                String email = jwtUtil.extractUsername(token);
-                currentUser = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
-            } catch (Exception e) {
-                throw new RuntimeException("Không xác thực được người dùng từ JWT", e);
-            }
-        } else {
-            currentUser = userRepository.findByEmail("system@backend.local")
-                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng hệ thống"));
-        }
+        Users currentUser = resolveUser(request);
 
         Payment payment = Payment.builder()
                 .booking(booking)
@@ -87,7 +75,22 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.save(payment);
 
-        return " Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
+        return "✅ Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
+    }
+
+    private Users resolveUser(HttpServletRequest request) {
+        if (request == null) {
+            return userRepository.findByEmail("system@backend.local")
+                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng hệ thống"));
+        }
+        try {
+            String token = jwtUtil.extractTokenFromRequest(request);
+            String email = jwtUtil.extractUsername(token);
+            return userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
+        } catch (Exception e) {
+            throw new RuntimeException("Không xác thực được người dùng từ JWT", e);
+        }
     }
 
     private BigDecimal extractAmount(String msg) {
@@ -105,9 +108,9 @@ public class PaymentServiceImpl implements PaymentService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy booking"));
 
-        String bankCode = "BIDV";
-        String accountNumber = "4801011314";
-        String accountName = "TRAN DUY TRUNG";
+        String bankCode = "MB"; // MB = MBBank
+        String accountNumber = "0123317466666";
+        String accountName = "NGUYEN VAN PHONG";
 
         String note = booking.getNote();
         BigDecimal amount = BigDecimal.valueOf(booking.getTotal());

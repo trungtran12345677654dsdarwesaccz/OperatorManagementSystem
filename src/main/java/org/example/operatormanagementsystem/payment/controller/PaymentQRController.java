@@ -17,9 +17,10 @@ public class PaymentQRController {
     private final PaymentService paymentService;
 
     @PostMapping("/sms-callback")
-    public ResponseEntity<String> handleSmsCallback(@RequestBody SmsMessageDto sms, HttpServletRequest request) {
-        System.out.println("📩 [SMS Callback] Received request: " + sms.getMessage());
-        return ResponseEntity.ok(paymentService.confirmPaymentFromSms(sms, request));
+    public ResponseEntity<String> handleSmsCallback(@RequestBody SmsMessageDto sms) {
+        System.out.println("📩 [SMS Callback] Received: " + sms.getMessage());
+        String result = paymentService.confirmPaymentFromSms(sms, null);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/generate-vietqr/{bookingId}")
