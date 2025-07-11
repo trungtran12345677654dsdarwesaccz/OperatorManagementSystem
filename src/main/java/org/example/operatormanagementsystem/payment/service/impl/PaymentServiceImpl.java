@@ -34,21 +34,25 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String confirmPaymentFromSms(SmsMessageDto sms, HttpServletRequest request) {
         String content = sms.getMessage();
+        String timestamp = sms.getTimestamp(); // Có thể null nếu không từ Gmail
+        System.out.println(" Nội dung SMS: " + content);
+        System.out.println(" Thời gian: " + (timestamp != null ? timestamp : "Không có"));
+
         BigDecimal amount = extractAmount(content);
         String note = extractNote(content);
 
-        System.out.println("==> amount = " + amount);
-        System.out.println("==> note = '" + note + "'");
+        System.out.println(" Amount = " + amount);
+        System.out.println(" Note = '" + note + "'");
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0 || note.isEmpty()) {
+            return " Không thể xác định số tiền hoặc mã booking từ SMS.";
+        }
 
         Optional<Booking> optionalBooking = bookingRepository
                 .findByPaymentStatusAndTotalAndNote(PaymentStatus.INCOMPLETED, amount.longValue(), note);
 
-        System.out.println("==> booking exists = " + optionalBooking.isPresent());
-
         if (optionalBooking.isEmpty()) {
-            System.out.println("SMS content: " + sms.getMessage());
-            System.out.println("Extracted amount: " + amount);
-            System.out.println("Extracted note: " + note);
+            System.out.println(" Không tìm thấy booking phù hợp.");
             return "Không tìm thấy booking phù hợp để xác nhận thanh toán.";
         }
 
@@ -56,7 +60,6 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setPaymentStatus(PaymentStatus.COMPLETED);
         bookingRepository.save(booking);
 
-        // Lấy thông tin người gửi
         Users currentUser;
         if (request != null) {
             try {
@@ -68,7 +71,6 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new RuntimeException("Không xác thực được người dùng từ JWT", e);
             }
         } else {
-            // fallback người dùng hệ thống
             currentUser = userRepository.findByEmail("system@backend.local")
                     .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng hệ thống"));
         }
@@ -85,7 +87,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.save(payment);
 
-        return "Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
+        return " Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
     }
 
     private BigDecimal extractAmount(String msg) {

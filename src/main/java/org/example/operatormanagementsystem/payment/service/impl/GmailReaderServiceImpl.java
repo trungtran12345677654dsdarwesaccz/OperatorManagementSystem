@@ -31,17 +31,26 @@ public class GmailReaderServiceImpl implements GmailReaderService {
                     .setMaxResults(3L)
                     .execute();
 
+            if (messages.getMessages() == null || messages.getMessages().isEmpty()) {
+                System.out.println("❗ Không có email SMS Banking nào được tìm thấy.");
+                return;
+            }
+
             for (Message msg : messages.getMessages()) {
                 var fullMsg = gmailService.users().messages().get("me", msg.getId()).execute();
                 var content = extractBody(fullMsg);
 
-                // Extract timestamp từ Gmail message
+                if (content == null || content.trim().isEmpty()) {
+                    System.out.println("⚠️ Nội dung email trống, bỏ qua.");
+                    continue;
+                }
+
+                // Extract timestamp
                 long internalDateMillis = fullMsg.getInternalDate();
                 String timestamp = Instant.ofEpochMilli(internalDateMillis)
                         .atOffset(ZoneOffset.UTC)
-                        .format(DateTimeFormatter.ISO_INSTANT); // ISO format
+                        .format(DateTimeFormatter.ISO_INSTANT);
 
-                // Trích xuất thông tin từ nội dung email
                 BigDecimal amount = extractAmount(content);
                 String note = extractNote(content);
 
@@ -49,9 +58,8 @@ public class GmailReaderServiceImpl implements GmailReaderService {
                 System.out.println("==> Extracted note: " + note);
                 System.out.println("==> Timestamp: " + timestamp);
 
-                // Gửi về service
                 SmsMessageDto sms = new SmsMessageDto("SMS_GATEWAY", content, timestamp);
-                paymentService.confirmPaymentFromSms(sms, null); // gọi mà không có request
+                paymentService.confirmPaymentFromSms(sms, null);
             }
 
         } catch (Exception e) {
@@ -60,19 +68,24 @@ public class GmailReaderServiceImpl implements GmailReaderService {
     }
 
     private String extractBody(Message message) {
-        var part = message.getPayload();
-        var body = part.getBody().getData();
+        try {
+            var part = message.getPayload();
+            var body = part.getBody().getData();
 
-        if (body == null && part.getParts() != null) {
-            for (var sub : part.getParts()) {
-                if ("text/plain".equals(sub.getMimeType())) {
-                    body = sub.getBody().getData();
-                    break;
+            if (body == null && part.getParts() != null) {
+                for (var sub : part.getParts()) {
+                    if ("text/plain".equals(sub.getMimeType())) {
+                        body = sub.getBody().getData();
+                        break;
+                    }
                 }
             }
-        }
 
-        return body != null ? new String(Base64.getDecoder().decode(body)) : "";
+            return body != null ? new String(Base64.getDecoder().decode(body)) : "";
+        } catch (Exception e) {
+            System.out.println("❌ Lỗi khi extract body từ email: " + e.getMessage());
+            return "";
+        }
     }
 
     private BigDecimal extractAmount(String msg) {
