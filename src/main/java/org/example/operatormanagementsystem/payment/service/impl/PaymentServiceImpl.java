@@ -10,7 +10,6 @@ import org.example.operatormanagementsystem.managecustomerorderbystaff.repositor
 import org.example.operatormanagementsystem.payment.dto.BookingQRResponse;
 import org.example.operatormanagementsystem.payment.dto.SmsMessageDto;
 import org.example.operatormanagementsystem.payment.service.PaymentService;
-
 import org.example.operatormanagementsystem.repository.UserRepository;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -38,8 +37,8 @@ public class PaymentServiceImpl implements PaymentService {
         BigDecimal amount = extractAmount(content);
         String note = extractNote(content);
 
-        System.out.println("==> amount = " + amount); // kiểm tra có phải 10000 không
-        System.out.println("==> note = '" + note + "'"); // kiểm tra xem có khoảng trắng dư không
+        System.out.println("==> amount = " + amount);
+        System.out.println("==> note = '" + note + "'");
 
         Optional<Booking> optionalBooking = bookingRepository
                 .findByPaymentStatusAndTotalAndNote(PaymentStatus.INCOMPLETED, amount.longValue(), note);
@@ -57,12 +56,22 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setPaymentStatus(PaymentStatus.COMPLETED);
         bookingRepository.save(booking);
 
-        // Lấy thông tin user từ token
-        String token = jwtUtil.extractTokenFromRequest(request);
-        String email = jwtUtil.extractUsername(token);
-
-        Users currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
+        // Lấy thông tin người gửi
+        Users currentUser;
+        if (request != null) {
+            try {
+                String token = jwtUtil.extractTokenFromRequest(request);
+                String email = jwtUtil.extractUsername(token);
+                currentUser = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
+            } catch (Exception e) {
+                throw new RuntimeException("Không xác thực được người dùng từ JWT", e);
+            }
+        } else {
+            // fallback người dùng hệ thống
+            currentUser = userRepository.findByEmail("system@backend.local")
+                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng hệ thống"));
+        }
 
         Payment payment = Payment.builder()
                 .booking(booking)
@@ -76,7 +85,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.save(payment);
 
-        return " Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
+        return "Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
     }
 
     private BigDecimal extractAmount(String msg) {
@@ -84,28 +93,23 @@ public class PaymentServiceImpl implements PaymentService {
         return m.find() ? new BigDecimal(m.group(1).replace(",", "")) : BigDecimal.ZERO;
     }
 
-
     private String extractNote(String msg) {
         Matcher m = Pattern.compile("(BOOKING\\s?\\d+)").matcher(msg.toUpperCase());
         return m.find() ? m.group(1).replace(" ", "").trim() : "";
     }
-
 
     @Override
     public BookingQRResponse generateVietQrForBooking(Integer bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy booking"));
 
-        // Thông tin cố định (có thể đưa vào file cấu hình application.yml sau)
         String bankCode = "BIDV";
         String accountNumber = "4801011314";
         String accountName = "TRAN DUY TRUNG";
 
-        // Dữ liệu động từ booking
         String note = booking.getNote();
         BigDecimal amount = BigDecimal.valueOf(booking.getTotal());
 
-        // Sinh link VietQR
         String qrUrl = String.format(
                 "https://img.vietqr.io/image/%s-%s-qr_only.png?amount=%d&addInfo=%s&accountName=%s",
                 bankCode,
@@ -117,7 +121,4 @@ public class PaymentServiceImpl implements PaymentService {
 
         return new BookingQRResponse(qrUrl, note, amount);
     }
-
 }
-
-
