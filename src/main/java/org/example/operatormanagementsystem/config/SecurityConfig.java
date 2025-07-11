@@ -117,7 +117,6 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                         .anyRequest().authenticated()
                 )
 
