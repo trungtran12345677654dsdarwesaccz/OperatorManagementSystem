@@ -131,7 +131,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         corsConfiguration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
-                "https://operator-management-system.onrender.com"
+                "https://operator-management-system.onrender.com",
+                "https://only-front-gx6maxper-phongnguyens-projects-b9072833.vercel.app"
         ));
         corsConfiguration.setAllowedOriginPatterns(List.of("https://*.onrender.com",
                 "http://localhost:*"));
