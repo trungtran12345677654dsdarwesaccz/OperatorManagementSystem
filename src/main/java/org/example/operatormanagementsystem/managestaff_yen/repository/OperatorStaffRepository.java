@@ -88,9 +88,5 @@ public interface OperatorStaffRepository extends JpaRepository<OperatorStaff, In
     """)
     List<OperatorStaff> findTop5ByManagerOrderByBookingCountDesc(@Param("managerId") Integer managerId);
 
-//    @Query("""
-//        SELECT COUNT(os) FROM OperatorStaff os
-//        WHERE os.manager.managerId = :managerId AND os.isOnline = true
-//    """)
-//    long countByManagerAndOnlineTrue(@Param("managerId") Integer managerId);
+
 }

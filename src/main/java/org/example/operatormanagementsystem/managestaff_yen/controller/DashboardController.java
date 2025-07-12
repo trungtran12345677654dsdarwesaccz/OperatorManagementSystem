@@ -5,8 +5,10 @@ import org.example.operatormanagementsystem.managestaff_yen.dto.request.ChartFil
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.TopOperatorFilterRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.*;
 import org.example.operatormanagementsystem.managestaff_yen.service.DashboardService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -22,17 +24,32 @@ public class DashboardController {
     }
 
     @GetMapping("/recent-issues")
-    public List<RecentIssueResponse> getRecentIssues(@RequestParam(defaultValue = "5") int limit) {
-        return dashboardService.getRecentIssues(limit);
+    public List<RecentIssueResponse> getRecentIssues(
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+
+        if (fromDate == null) fromDate = LocalDate.now().minusMonths(1);
+        if (toDate == null) toDate = LocalDate.now();
+
+        return dashboardService.getRecentIssues(fromDate, toDate, limit);
     }
+
+
 
     @PostMapping("/top-operators")
     public List<TopOperatorResponse> getTopOperators(@RequestBody TopOperatorFilterRequest request) {
         return dashboardService.getTopOperators(request);
     }
 
-    @PostMapping("/chart")
-    public List<ChartDataPointResponse> getChart(@RequestBody ChartFilterRequest request) {
-        return dashboardService.getChartData(request);
+    @PostMapping("/chart/orders")
+    public List<ChartDataPointResponse> getOrderChart(@RequestBody ChartFilterRequest request) {
+        return dashboardService.getOrderChartData(request);
     }
+
+    @PostMapping("/chart/revenue")
+    public List<ChartDataPointResponse> getRevenueChart(@RequestBody ChartFilterRequest request) {
+        return dashboardService.getRevenueChartData(request);
+    }
+
 }

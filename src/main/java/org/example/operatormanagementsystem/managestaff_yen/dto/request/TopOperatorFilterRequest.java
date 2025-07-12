@@ -1,13 +1,16 @@
 package org.example.operatormanagementsystem.managestaff_yen.dto.request;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class TopOperatorFilterRequest {
-    private Integer managerId;
-    private int limit;         // Số operator cần lấy
-    private String sortBy;     // successOrders | onTimeRate
+    private int limit;
+    private LocalDate fromDate;
+    private LocalDate toDate;
 }

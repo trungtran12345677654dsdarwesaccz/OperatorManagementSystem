@@ -1,6 +1,7 @@
 package org.example.operatormanagementsystem.managestaff_yen.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.operatormanagementsystem.entity.IssueLog;
 import org.example.operatormanagementsystem.entity.Payment;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.ChartFilterRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.TopOperatorFilterRequest;
@@ -14,8 +15,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.*;
-import java.util.Collections;
+import java.sql.Date;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,10 +33,8 @@ public class DashBoardServiceImpl implements DashboardService {
     @Override
     public DashboardOverviewResponse getOverview() {
         LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
 
-        long totalOrders = bookingRepository.countByCreatedAtBetween(startOfDay, endOfDay);
+        long totalOrders = bookingRepository.countByDate(today);
 
         BigDecimal revenueToday = paymentRepository
                 .findByPaidDate(today)
@@ -44,29 +44,94 @@ public class DashBoardServiceImpl implements DashboardService {
 
         long activePromotions = promotionRepository.countByStatus("ACTIVE");
 
-        long totalDelivered = bookingRepository.countByCreatedAtBetween(startOfDay, endOfDay);
-        long onTimeDelivered = bookingRepository.countByCreatedAtBetweenAndStatus(startOfDay, endOfDay, "ONTIME");
+        long totalDelivered = bookingRepository.countByDate(today);
+        long onTimeDelivered = bookingRepository.countByDateAndStatus(today, "ONTIME");
         double onTimeRate = totalDelivered == 0 ? 0 : (onTimeDelivered * 100.0 / totalDelivered);
 
         return new DashboardOverviewResponse(totalOrders, revenueToday, activePromotions, onTimeRate);
     }
 
     @Override
-    public List<RecentIssueResponse> getRecentIssues(int limit) {
-        return issueLogRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit))
+    public List<ChartDataPointResponse> getOrderChartData(ChartFilterRequest request) {
+        LocalDate start;
+        LocalDate end;
+        LocalDate today = LocalDate.now();
+
+        switch (request.getRange().toLowerCase()) {
+            case "week" -> {
+                start = today.with(DayOfWeek.MONDAY);
+                end = today;
+            }
+            case "month" -> {
+                start = today.withDayOfMonth(1);
+                end = today;
+            }
+            case "year" -> {
+                start = today.withDayOfYear(1);
+                end = today;
+            }
+            case "range" -> {
+                start = request.getFromDate();
+                end = request.getToDate();
+            }
+            default -> {
+                start = today;
+                end = today;
+            }
+        }
+
+        return bookingRepository.countByDateBetween(start, end)
                 .stream()
-                .map(i -> new RecentIssueResponse(
-                        i.getIssueId(),
-                        i.getDescription(),
-                        i.getStatus(),
-                        i.getCreatedAt()
+                .map(obj -> new ChartDataPointResponse(
+                        ((Date) obj[0]).toLocalDate(),
+                        ((Number) obj[1]).intValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ChartDataPointResponse> getRevenueChartData(ChartFilterRequest request) {
+        LocalDate start;
+        LocalDate end;
+        LocalDate today = LocalDate.now();
+
+        switch (request.getRange().toLowerCase()) {
+            case "week" -> {
+                start = today.with(DayOfWeek.MONDAY);
+                end = today;
+            }
+            case "month" -> {
+                start = today.withDayOfMonth(1);
+                end = today;
+            }
+            case "year" -> {
+                start = today.withDayOfYear(1);
+                end = today;
+            }
+            case "range" -> {
+                start = request.getFromDate();
+                end = request.getToDate();
+            }
+            default -> {
+                start = today;
+                end = today;
+            }
+        }
+
+        return paymentRepository.sumAmountByPaidDateBetween(start, end)
+                .stream()
+                .map(obj -> new ChartDataPointResponse(
+                        ((Date) obj[0]).toLocalDate(),
+                        ((BigDecimal) obj[1]).intValue()
                 ))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<TopOperatorResponse> getTopOperators(TopOperatorFilterRequest request) {
-        List<Object[]> rawData = bookingRepository.getTopOperatorsStats();
+        LocalDate start = request.getFromDate();
+        LocalDate end = request.getToDate();
+        List<Object[]> rawData = bookingRepository.getTopOperatorsStatsByDate(start, end);
         return rawData.stream()
                 .limit(request.getLimit())
                 .map(obj -> new TopOperatorResponse(
@@ -79,28 +144,18 @@ public class DashBoardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<ChartDataPointResponse> getChartData(ChartFilterRequest request) {
-        LocalDate today = LocalDate.now();
-        LocalDate start;
+    public List<RecentIssueResponse> getRecentIssues(LocalDate fromDate, LocalDate toDate, int limit) {
+        List<IssueLog> issues = issueLogRepository.findRecentIssuesNative(fromDate, toDate, limit);
 
-        switch (request.getRange().toLowerCase()) {
-            case "week" -> start = today.with(DayOfWeek.MONDAY);
-            case "month" -> start = today.withDayOfMonth(1);
-            default -> start = today;
-        }
+        return issues.stream()
+                .map(issue -> new RecentIssueResponse(
+                        issue.getIssueId(),
+                        issue.getDescription(),
+                        issue.getStatus(),
+                        issue.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
 
-        if ("orders".equalsIgnoreCase(request.getType())) {
-            return bookingRepository.countByDateBetween(start, today)
-                    .stream()
-                    .map(obj -> new ChartDataPointResponse((LocalDate) obj[0], ((Number) obj[1]).intValue()))
-                    .collect(Collectors.toList());
-        } else if ("revenue".equalsIgnoreCase(request.getType())) {
-            return paymentRepository.sumAmountByPaidDateBetween(start, today)
-                    .stream()
-                    .map(obj -> new ChartDataPointResponse((LocalDate) obj[0], ((BigDecimal) obj[1]).intValue()))
-                    .collect(Collectors.toList());
-        }
-
-        return Collections.emptyList();
     }
-}
+
+    }
