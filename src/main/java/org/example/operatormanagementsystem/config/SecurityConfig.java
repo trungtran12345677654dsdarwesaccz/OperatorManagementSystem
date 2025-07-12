@@ -128,15 +128,13 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
         // Chỉ cho phép frontend chạy ở các địa chỉ sau
-        corsConfiguration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "https://operator-management-system.onrender.com",
-                "https://*.vercel.app"
-        ));
-        corsConfiguration.setAllowedOriginPatterns(List.of("https://*.onrender.com",
+        corsConfiguration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
                 "https://*.vercel.app",
-                "http://localhost:*"));
+                "https://*.onrender.com"
+        ));
+
 // vietnam.com ,.vn cho moi duoi truy cap dc
         // Chỉ định các HTTP method được phép
         corsConfiguration.setExposedHeaders(Arrays.asList("*")); // allow bear/ auth token
