@@ -3,6 +3,8 @@ package org.example.operatormanagementsystem.customer_thai.service;
 import org.example.operatormanagementsystem.customer_thai.dto.request.CreateFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.request.UpdateFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.response.FeedbackResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.StorageSummaryResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.TransportSummaryResponse;
 
 import java.util.List;
 
@@ -14,9 +16,13 @@ public interface CustomerFeedbackService {
     
     void deleteFeedback(Integer feedbackId, Integer customerId);
     
-    List<FeedbackResponse> getAllFeedbacksByCustomer(Integer customerId);
+    FeedbackResponse likeFeedback(Integer feedbackId, Integer customerId);
     
-    List<FeedbackResponse> getFeedbacksByBooking(Integer bookingId, Integer customerId);
+    FeedbackResponse dislikeFeedback(Integer feedbackId, Integer customerId);
     
-    FeedbackResponse getFeedbackById(Integer feedbackId, Integer customerId);
+    // API mới để lấy tất cả storage với feedback
+    List<StorageSummaryResponse> getAllStorageWithFeedbacks();
+    
+    // API mới để lấy tất cả transport với feedback
+    List<TransportSummaryResponse> getAllTransportWithFeedbacks();
 } 

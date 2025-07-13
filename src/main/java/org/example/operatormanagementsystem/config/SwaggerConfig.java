@@ -27,6 +27,6 @@ public class SwaggerConfig {
                 .info(new Info()
                         .description("Dự án TEST ABC")
                         .contact(new Contact().email("tranduytrung251105@gmail.com")))
-                .addServersItem(new Server().url("http://localhost:8083/").description("Local server"));
+                .addServersItem(new Server().url("http://localhost:8080/").description("Local server"));
     }
 }

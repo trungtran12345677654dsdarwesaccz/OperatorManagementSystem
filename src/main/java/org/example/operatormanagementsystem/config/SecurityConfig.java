@@ -117,6 +117,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
+                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
 
 
 
