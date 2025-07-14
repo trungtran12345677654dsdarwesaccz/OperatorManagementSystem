@@ -17,4 +17,6 @@ public interface BookingCustomerRepository extends JpaRepository<Booking, Intege
     List<Booking> findByStorageUnit_StorageId(Integer storageId);
 
     Optional<Booking> findByStorageUnit_StorageIdAndSlotIndex(Integer storageId, Integer slotIndex);
+
+    Optional<Booking> findTopByCustomer_Users_EmailOrderByCreatedAtDesc(String email);
 } 

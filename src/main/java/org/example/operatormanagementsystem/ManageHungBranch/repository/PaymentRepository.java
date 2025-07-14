@@ -18,6 +18,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     // Tìm theo trạng thái
     List<Payment> findByStatus(String status);
 
+    List<Payment> findTop3ByBooking_Customer_Users_EmailOrderByPaidDateDesc(String email);
+
     // Tìm payment quá hạn
     @Query("SELECT p FROM Payment p WHERE p.status = 'PENDING' AND p.paidDate < CURRENT_DATE")
     List<Payment> findOverduePayments();

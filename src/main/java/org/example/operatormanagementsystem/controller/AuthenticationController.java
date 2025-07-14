@@ -108,70 +108,7 @@ public class AuthenticationController {
         }
     }
 
-//    @PostMapping("/manager/update-status/{email}")
-//    @PreAuthorize("hasRole('MANAGER')") // Chỉ người dùng có vai trò MANAGER mới được truy cập
-//    public ResponseEntity<String> updateUserStatusByManager(@PathVariable String email,
-//                                                            @Valid @RequestBody ManagerStatusUpdateRequest request) { // <-- Nhận request body với trạng thái mới
-//        try {
-//            // Gọi phương thức service với userId và newStatus từ request body
-//            Users updatedUser = authenticationService.updateStatusByManager(email, request.getNewStatus());
-//
-//            String responseMessage;
-//            if (request.getNewStatus() == UserStatus.ACTIVE) {
-//                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " has been activated.";
-//            } else if (request.getNewStatus() == UserStatus.REJECTED) {
-//                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " has been rejected.";
-//            } else if (request.getNewStatus() == UserStatus.INACTIVE) {
-//                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " has been set to inactive.";
-//            } else {
-//                responseMessage = "User '" + updatedUser.getEmail() + "' with email " + email + " status updated to " + request.getNewStatus();
-//            }
-//            return ResponseEntity.ok(responseMessage);
-//        } catch (UsernameNotFoundException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-//        } catch (IllegalStateException e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-//        } catch (IllegalArgumentException e) { // Bắt thêm IllegalArgumentException nếu có từ service
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + e.getMessage());
-//        }
-//    }
 
-//    @GetMapping("/manager/user-details/{email}")
-//    @PreAuthorize("hasRole('MANAGER')")
-//    public ResponseEntity<UserResponse> getUserDetailsForManager(@PathVariable String email) {
-//        try {
-//            UserResponse userDetails = authenticationService.getUserDetailsForManager(email);
-//            return ResponseEntity.ok(userDetails);
-//        } catch (UsernameNotFoundException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new UserResponse());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new UserResponse());
-//        }
-//    }
-
-    // Endpoint để lấy danh sách người dùng theo trạng thái
-//    @GetMapping("/manager/users-by-status/{status}")
-//    @PreAuthorize("hasRole('MANAGER')")
-//    public ResponseEntity<List<UserResponse>> getUsersByStatus(@PathVariable UserStatus status) {
-//        List<UserResponse> users = authenticationService.getUsersByStatus(status);
-//        if (users.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 204 No Content nếu danh sách rỗng
-//        }
-//        return ResponseEntity.ok(users); // Trả về danh sách trực tiếp
-//    }
-//
-//    // Endpoint để lấy danh sách người dùng cần quản lý hành động (PENDING_APPROVAL hoặc INACTIVE)
-//    @GetMapping("/manager/users-for-action")
-//    @PreAuthorize("hasRole('MANAGER')")
-//    public ResponseEntity<List<UserResponse>> getUsersNeedingManagerAction() {
-//        List<UserResponse> users = authenticationService.getUsersNeedingManagerAction();
-//        if (users.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 204 No Content nếu danh sách rỗng
-//        }
-//        return ResponseEntity.ok(users); // Trả về danh sách trực tiếp
-//    }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequest request) {
