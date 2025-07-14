@@ -92,6 +92,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
+
                                 "/api/auth/forgot-password",
                                 "/api/onboarding/**",
                                 "/api/auth/reset-password",
@@ -114,6 +115,13 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAuthority("ROLE_STAFF")
                         .requestMatchers("/api/storage-units").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
+                        .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
+                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+
+
+
+
+
                         .anyRequest().authenticated()
                 )
 

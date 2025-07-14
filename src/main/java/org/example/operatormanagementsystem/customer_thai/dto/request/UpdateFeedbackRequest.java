@@ -19,4 +19,8 @@ public class UpdateFeedbackRequest {
     
     @NotNull(message = "Feedback type is required")
     private TypeFeedback type;
+
+    private Integer star;
+    private Integer likes;
+    private Integer dislikes;
 } 

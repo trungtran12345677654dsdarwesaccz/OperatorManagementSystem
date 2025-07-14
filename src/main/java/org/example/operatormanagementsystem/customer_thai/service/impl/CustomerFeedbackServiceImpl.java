@@ -4,18 +4,25 @@ import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.customer_thai.dto.request.CreateFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.request.UpdateFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.response.FeedbackResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.StorageSummaryResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.TransportSummaryResponse;
 import org.example.operatormanagementsystem.customer_thai.repository.BookingCustomerRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.CustomerFeedbackRepository;
+import org.example.operatormanagementsystem.customer_thai.repository.StorageUnitRepository;
+import org.example.operatormanagementsystem.customer_thai.repository.C_TransportUnitRepository;
 import org.example.operatormanagementsystem.customer_thai.service.CustomerFeedbackService;
 import org.example.operatormanagementsystem.customer_thai.service.NotificationEventService;
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.entity.Customer;
 import org.example.operatormanagementsystem.entity.Feedback;
+import org.example.operatormanagementsystem.entity.StorageUnit;
+import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +35,8 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
     private final BookingCustomerRepository bookingRepository;
     private final UserRepository userRepository;
     private final NotificationEventService notificationEventService;
+    private final StorageUnitRepository storageUnitRepository;
+    private final C_TransportUnitRepository CTransportUnitRepository;
 
     @Override
     public FeedbackResponse createFeedback(CreateFeedbackRequest request, Integer customerId) {
@@ -39,23 +48,32 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
             throw new RuntimeException("User is not a customer");
         }
 
-        // Validate booking exists and belongs to customer
-        Booking booking = bookingRepository.findByBookingIdAndCustomer_CustomerId(request.getBookingId(), customerId)
-                .orElseThrow(() -> new RuntimeException("Booking not found or does not belong to this customer"));
-
-        // Check if feedback already exists for this booking
-        if (feedbackRepository.existsByBookingIdAndCustomerId(request.getBookingId(), customerId)) {
-            throw new RuntimeException("Feedback already exists for this booking");
+        // Tạo feedback không cần booking (hoặc booking=null nếu không truyền bookingId)
+        Booking booking = null;
+        StorageUnit storageUnit = null;
+        TransportUnit transportUnit = null;
+        if (request.getBookingId() != null) {
+            booking = bookingRepository.findById(request.getBookingId()).orElse(null);
+        }
+        if (request.getStorageId() != null) {
+            storageUnit = storageUnitRepository.findById(request.getStorageId()).orElse(null);
+        }
+        if (request.getTransportId() != null) {
+            transportUnit = CTransportUnitRepository.findById(request.getTransportId()).orElse(null);
         }
 
-        // Create new feedback
-        Feedback feedback = Feedback.builder()
+        Feedback.FeedbackBuilder feedbackBuilder = Feedback.builder()
                 .booking(booking)
                 .customer(user.getCustomer())
-                .operatorStaff(booking.getOperatorStaff())
+                .operatorStaff(booking != null ? booking.getOperatorStaff() : null)
                 .content(request.getContent())
                 .type(request.getType())
-                .build();
+                .star(request.getStar())
+                .likes(request.getLikes())
+                .dislikes(request.getDislikes());
+        if (storageUnit != null) feedbackBuilder.storageUnit(storageUnit);
+        if (transportUnit != null) feedbackBuilder.transportUnit(transportUnit);
+        Feedback feedback = feedbackBuilder.build();
 
         Feedback savedFeedback = feedbackRepository.save(feedback);
 
@@ -87,6 +105,9 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
         // Update feedback
         feedback.setContent(request.getContent());
         feedback.setType(request.getType());
+        feedback.setStar(request.getStar());
+        feedback.setLikes(request.getLikes());
+        feedback.setDislikes(request.getDislikes());
 
         Feedback updatedFeedback = feedbackRepository.save(feedback);
 
@@ -103,43 +124,165 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
     }
 
     @Override
-    public List<FeedbackResponse> getAllFeedbacksByCustomer(Integer customerId) {
-        List<Feedback> feedbacks = feedbackRepository.findByCustomerId(customerId);
-        return feedbacks.stream()
-                .map(this::mapToResponse)
+    public FeedbackResponse likeFeedback(Integer feedbackId, Integer customerId) {
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new RuntimeException("Feedback not found"));
+        
+        Integer currentLikes = feedback.getLikes() != null ? feedback.getLikes() : 0;
+        feedback.setLikes(currentLikes + 1);
+        
+        Feedback updatedFeedback = feedbackRepository.save(feedback);
+        return mapToResponse(updatedFeedback);
+    }
+
+    @Override
+    public FeedbackResponse dislikeFeedback(Integer feedbackId, Integer customerId) {
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new RuntimeException("Feedback not found"));
+        
+        Integer currentLikes = feedback.getLikes() != null ? feedback.getLikes() : 0;
+        feedback.setLikes(Math.max(0, currentLikes - 1)); // Không cho phép âm
+        
+        Feedback updatedFeedback = feedbackRepository.save(feedback);
+        return mapToResponse(updatedFeedback);
+    }
+
+    @Override
+    public List<StorageSummaryResponse> getAllStorageWithFeedbacks() {
+        List<StorageUnit> storageUnits = storageUnitRepository.findAllStorageUnits();
+        
+        return storageUnits.stream()
+                .map(this::mapToStorageSummaryResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<FeedbackResponse> getFeedbacksByBooking(Integer bookingId, Integer customerId) {
-        List<Feedback> feedbacks = feedbackRepository.findByBookingIdAndCustomerId(bookingId, customerId);
-        return feedbacks.stream()
-                .map(this::mapToResponse)
+    public List<TransportSummaryResponse> getAllTransportWithFeedbacks() {
+        List<TransportUnit> transportUnits = CTransportUnitRepository.findAllTransportUnits();
+        
+        return transportUnits.stream()
+                .map(this::mapToTransportSummaryResponse)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public FeedbackResponse getFeedbackById(Integer feedbackId, Integer customerId) {
-        Feedback feedback = feedbackRepository.findByFeedbackIdAndCustomerId(feedbackId, customerId)
-                .orElseThrow(() -> new RuntimeException("Feedback not found or access denied"));
+    private StorageSummaryResponse mapToStorageSummaryResponse(StorageUnit storageUnit) {
+        // Lấy feedback trực tiếp cho storage (không qua booking)
+        List<Feedback> directFeedbacks = feedbackRepository.findByStorageIdWithCustomerInfo(storageUnit.getStorageId());
+        
+        // Tính toán thống kê
+        double averageStar = directFeedbacks.stream()
+                .filter(f -> f.getStar() != null)
+                .mapToInt(Feedback::getStar)
+                .average()
+                .orElse(0.0);
+        
+        long totalLikes = directFeedbacks.stream()
+                .filter(f -> f.getLikes() != null)
+                .mapToLong(Feedback::getLikes)
+                .sum();
+        
+        long totalDislikes = directFeedbacks.stream()
+                .filter(f -> f.getDislikes() != null)
+                .mapToLong(Feedback::getDislikes)
+                .sum();
+        
+        // Map feedback sang DTO
+        List<FeedbackResponse> feedbackResponses = directFeedbacks.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        
+        return StorageSummaryResponse.builder()
+                .storageId(storageUnit.getStorageId())
+                .name(storageUnit.getName())
+                .address(storageUnit.getAddress())
+                .phone(storageUnit.getPhone())
+                .status(storageUnit.getStatus())
+                .note(storageUnit.getNote())
+                .image(storageUnit.getImage())
+                .slotCount(storageUnit.getSlotCount())
+                .createdAt(storageUnit.getCreatedAt())
+                .managerId(storageUnit.getManager() != null ? storageUnit.getManager().getManagerId() : null)
+                .managerName(storageUnit.getManager() != null && storageUnit.getManager().getUsers() != null ? 
+                    storageUnit.getManager().getUsers().getFullName() : null)
+                .averageStar(averageStar)
+                .totalFeedbacks((long) directFeedbacks.size())
+                .totalLikes(totalLikes)
+                .totalDislikes(totalDislikes)
+                .feedbacks(feedbackResponses)
+                .build();
+    }
 
-        return mapToResponse(feedback);
+    private TransportSummaryResponse mapToTransportSummaryResponse(TransportUnit transportUnit) {
+        // Lấy feedback trực tiếp cho transport (không qua booking)
+        List<Feedback> directFeedbacks = feedbackRepository.findByTransportIdWithCustomerInfo(transportUnit.getTransportId());
+        
+        // Tính toán thống kê
+        double averageStar = directFeedbacks.stream()
+                .filter(f -> f.getStar() != null)
+                .mapToInt(Feedback::getStar)
+                .average()
+                .orElse(0.0);
+        
+        long totalLikes = directFeedbacks.stream()
+                .filter(f -> f.getLikes() != null)
+                .mapToLong(Feedback::getLikes)
+                .sum();
+        
+        long totalDislikes = directFeedbacks.stream()
+                .filter(f -> f.getDislikes() != null)
+                .mapToLong(Feedback::getDislikes)
+                .sum();
+        
+        // Map feedback sang DTO
+        List<FeedbackResponse> feedbackResponses = directFeedbacks.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        
+        return TransportSummaryResponse.builder()
+                .transportId(transportUnit.getTransportId())
+                .nameCompany(transportUnit.getNameCompany())
+                .namePersonContact(transportUnit.getNamePersonContact())
+                .phone(transportUnit.getPhone())
+                .licensePlate(transportUnit.getLicensePlate())
+                .status(transportUnit.getStatus() != null ? transportUnit.getStatus().toString() : null)
+                .note(transportUnit.getNote())
+                .imageTransportUnit(transportUnit.getImageTransportUnit())
+                .createdAt(transportUnit.getCreatedAt())
+                .numberOfVehicles(transportUnit.getNumberOfVehicles())
+                .capacityPerVehicle(transportUnit.getCapacityPerVehicle())
+                .availabilityStatus(transportUnit.getAvailabilityStatus() != null ? transportUnit.getAvailabilityStatus().toString() : null)
+                .certificateFrontUrl(transportUnit.getCertificateFrontUrl())
+                .averageStar(averageStar)
+                .totalFeedbacks((long) directFeedbacks.size())
+                .totalLikes(totalLikes)
+                .totalDislikes(totalDislikes)
+                .feedbacks(feedbackResponses)
+                .build();
     }
 
     private FeedbackResponse mapToResponse(Feedback feedback) {
         return FeedbackResponse.builder()
                 .feedbackId(feedback.getFeedbackId())
-                .bookingId(feedback.getBooking().getBookingId())
+                .bookingId(feedback.getBooking() != null ? feedback.getBooking().getBookingId() : null)
                 .content(feedback.getContent())
                 .type(feedback.getType())
                 .createdAt(feedback.getCreatedAt())
                 .processStatus(feedback.getProcessStatus())
                 .operatorName(feedback.getOperatorStaff() != null ? 
                     feedback.getOperatorStaff().getUsers().getFullName() : null)
-                .storageUnitName(feedback.getBooking().getStorageUnit() != null ? 
-                    feedback.getBooking().getStorageUnit().getName() : null)
-                .transportUnitName(feedback.getBooking().getTransportUnit() != null ? 
-                    feedback.getBooking().getTransportUnit().getNameCompany() : null)
+                .storageUnitName(
+                    feedback.getStorageUnit() != null ? feedback.getStorageUnit().getName() : null
+                )
+                .transportUnitName(
+                    feedback.getTransportUnit() != null ? feedback.getTransportUnit().getNameCompany() : null
+                )
+                .star(feedback.getStar())
+                .likes(feedback.getLikes())
+                .dislikes(feedback.getDislikes())
+                .customerFullName(feedback.getCustomer() != null && feedback.getCustomer().getUsers() != null ? 
+                    feedback.getCustomer().getUsers().getFullName() : null)
+                .customerImage(feedback.getCustomer() != null && feedback.getCustomer().getUsers() != null ? 
+                    feedback.getCustomer().getUsers().getImg() : null)
                 .build();
     }
 } 

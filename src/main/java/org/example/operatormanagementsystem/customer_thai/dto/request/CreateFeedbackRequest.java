@@ -22,4 +22,10 @@ public class CreateFeedbackRequest {
     
     @NotNull(message = "Feedback type is required")
     private TypeFeedback type;
+
+    private Integer star;
+    private Integer likes;
+    private Integer dislikes;
+    private Integer storageId;
+    private Integer transportId;
 } 

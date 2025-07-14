@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.customer_thai.dto.request.CreateFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.request.UpdateFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.response.FeedbackResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.StorageSummaryResponse;
+import org.example.operatormanagementsystem.customer_thai.dto.response.TransportSummaryResponse;
 import org.example.operatormanagementsystem.customer_thai.service.CustomerFeedbackService;
 import org.example.operatormanagementsystem.customer_thai.service.CustomerInfoService;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,24 @@ public class CustomerFeedbackController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/storage/{storageId}")
+    public ResponseEntity<FeedbackResponse> createFeedbackForStorage(@PathVariable Integer storageId, @Valid @RequestBody CreateFeedbackRequest request) {
+        Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
+        request.setStorageId(storageId);
+        request.setBookingId(null); 
+        FeedbackResponse response = feedbackService.createFeedback(request, customerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/transport/{transportId}")
+    public ResponseEntity<FeedbackResponse> createFeedbackForTransport(@PathVariable Integer transportId, @Valid @RequestBody CreateFeedbackRequest request) {
+        Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
+        request.setTransportId(transportId);
+        request.setBookingId(null); 
+        FeedbackResponse response = feedbackService.createFeedback(request, customerId);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/{feedbackId}")
     public ResponseEntity<FeedbackResponse> updateFeedback(
             @PathVariable Integer feedbackId,
@@ -45,24 +65,31 @@ public class CustomerFeedbackController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<FeedbackResponse>> getAllFeedbacks() {
+    @PatchMapping("/{feedbackId}/like")
+    public ResponseEntity<FeedbackResponse> likeFeedback(@PathVariable Integer feedbackId) {
         Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
-        List<FeedbackResponse> feedbacks = feedbackService.getAllFeedbacksByCustomer(customerId);
-        return ResponseEntity.ok(feedbacks);
+        FeedbackResponse response = feedbackService.likeFeedback(feedbackId, customerId);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/booking/{bookingId}")
-    public ResponseEntity<List<FeedbackResponse>> getFeedbacksByBooking(@PathVariable Integer bookingId) {
+    @PatchMapping("/{feedbackId}/dislike")
+    public ResponseEntity<FeedbackResponse> dislikeFeedback(@PathVariable Integer feedbackId) {
         Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
-        List<FeedbackResponse> feedbacks = feedbackService.getFeedbacksByBooking(bookingId, customerId);
-        return ResponseEntity.ok(feedbacks);
+        FeedbackResponse response = feedbackService.dislikeFeedback(feedbackId, customerId);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{feedbackId}")
-    public ResponseEntity<FeedbackResponse> getFeedbackById(@PathVariable Integer feedbackId) {
-        Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
-        FeedbackResponse feedback = feedbackService.getFeedbackById(feedbackId, customerId);
-        return ResponseEntity.ok(feedback);
+    // API mới: Lấy tất cả storage units với feedback
+    @GetMapping("/storage-units")
+    public ResponseEntity<List<StorageSummaryResponse>> getAllStorageWithFeedbacks() {
+        List<StorageSummaryResponse> storageUnits = feedbackService.getAllStorageWithFeedbacks();
+        return ResponseEntity.ok(storageUnits);
+    }
+
+    // API mới: Lấy tất cả transport units với feedback
+    @GetMapping("/transport-units")
+    public ResponseEntity<List<TransportSummaryResponse>> getAllTransportWithFeedbacks() {
+        List<TransportSummaryResponse> transportUnits = feedbackService.getAllTransportWithFeedbacks();
+        return ResponseEntity.ok(transportUnits);
     }
 } 

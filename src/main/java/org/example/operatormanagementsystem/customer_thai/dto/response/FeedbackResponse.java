@@ -23,4 +23,11 @@ public class FeedbackResponse {
     private String operatorName;
     private String storageUnitName;
     private String transportUnitName;
+    private Integer star;
+    private Integer likes;
+    private Integer dislikes;
+    
+    // Customer info
+    private String customerFullName;
+    private String customerImage;
 } 

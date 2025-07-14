@@ -31,6 +31,14 @@ public class Feedback {
     @JoinColumn(name = "manager_id") // <-- Đây là trường "manager" trong Feedback
     private Manager manager; // <-- Nó có tồn tại!
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "storage_id")
+    private StorageUnit storageUnit;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transport_id")
+    private TransportUnit transportUnit;
+
     @Column(length = 500)
     private String content;
 
@@ -46,6 +54,15 @@ public class Feedback {
     @Enumerated(EnumType.STRING)
     @Column(name = "type")
     private TypeFeedback type;
+
+    @Column(name = "star")
+    private Integer star;
+
+    @Column(name = "likes")
+    private Integer likes;
+
+    @Column(name = "dislikes")
+    private Integer dislikes;
 
     @PrePersist
     protected void onCreate() {
