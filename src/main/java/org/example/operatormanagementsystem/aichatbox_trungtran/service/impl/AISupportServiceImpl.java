@@ -18,6 +18,7 @@
     import org.springframework.web.client.RestTemplate;
     import jakarta.servlet.http.HttpServletRequest;
 
+    import java.util.Arrays;
     import java.util.Collections;
     import java.util.List;
     import java.util.Optional;
@@ -43,6 +44,10 @@
         public String answerFromGemini(AnswerRequest answerRequest) {
             String question = answerRequest.getQuestion();
 
+            if (isInappropriateQuestion(question)) {
+                return "❗ Tôi không thể hỗ trợ yêu cầu này. Vui lòng đặt câu hỏi liên quan đến dịch vụ chuyển nhà hoặc thông tin đơn hàng.";
+            }
+
             if (isBookingStatusQuestion(question)) {
                 return generateBookingStatusReply();
             }
@@ -51,13 +56,6 @@
                 return generatePaymentHistoryReply();
             }
 
-            if (isProfileInfoQuestion(question)) {
-                return generateProfileInfoReply();
-            }
-
-            if (isChangePasswordRequestQuestion(question)) {
-                return generateChangePasswordInstruction();
-            }
 
             String fallbackPrompt = String.format("""
                     Bạn là một nhân viên tư vấn AI đang làm việc trong hệ thống đặt xe chuyển nhà tại Việt Nam. 
@@ -120,35 +118,45 @@
             return sb.toString();
         }
 
-        private String generateProfileInfoReply() {
-            String email = getCurrentCustomerEmailFromToken();
-            ViewProfileResponse profile = viewProfileService.getUserProfileByEmail(email);
-            return String.format("👤 Thông tin cá nhân của bạn:\n- Họ tên: %s\n- Email: %s\n- Số điện thoại: %s\n- Địa chỉ: %s\n👉 [Cập nhật hồ sơ](/profile)",
-                    profile.getFullName(), profile.getEmail(), profile.getPhone(), profile.getAddress());
-        }
-
-        private String generateChangePasswordInstruction() {
-            return "🔐 Để thay đổi mật khẩu, bạn vui lòng nhấn vào đây: 👉 [Đổi mật khẩu](/change-password). Hệ thống sẽ gửi email xác thực để đảm bảo an toàn.";
-        }
 
         private String queryGemini(String prompt) {
             GeminiRequest.Part part = new GeminiRequest.Part(prompt);
             GeminiRequest.Content content = new GeminiRequest.Content(Collections.singletonList(part));
             GeminiRequest requestBody = new GeminiRequest(Collections.singletonList(content));
             String url = GEMINI_URL + DEFAULT_GEMINI_MODEL + ":generateContent?key=" + apiKey;
-            try {
-                GeminiResponse response = restTemplate.postForObject(url, requestBody, GeminiResponse.class);
-                if (response != null && response.getCandidates() != null && !response.getCandidates().isEmpty()) {
-                    GeminiResponse.Content contentRes = response.getCandidates().get(0).getContent();
-                    if (contentRes != null && contentRes.getParts() != null && !contentRes.getParts().isEmpty()) {
-                        return contentRes.getParts().get(0).getText();
+
+            int maxAttempts = 3;
+
+            for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    GeminiResponse response = restTemplate.postForObject(url, requestBody, GeminiResponse.class);
+
+                    if (response != null && response.getCandidates() != null && !response.getCandidates().isEmpty()) {
+                        GeminiResponse.Content contentRes = response.getCandidates().get(0).getContent();
+                        if (contentRes != null && contentRes.getParts() != null && !contentRes.getParts().isEmpty()) {
+                            return contentRes.getParts().get(0).getText();
+                        }
+                    }
+
+                    return "⚠️ Không thể tạo phản hồi từ hệ thống AI. Vui lòng thử lại sau.";
+                } catch (Exception e) {
+                    String errorMsg = e.getMessage() != null ? e.getMessage() : "";
+
+                    // Nếu lỗi do quá tải (503), thử lại sau thời gian chờ
+                    if (errorMsg.contains("503") && attempt < maxAttempts) {
+                        try {
+                            Thread.sleep(2000L * attempt); // 2s, 4s, 6s
+                        } catch (InterruptedException ignored) {}
+                    } else {
+                        // Nếu không phải lỗi quá tải hoặc đã hết số lần thử
+                        return "🚧 Hệ thống AI hiện đang quá tải hoặc gặp lỗi. Vui lòng thử lại sau ít phút.";
                     }
                 }
-                return " Không thể tạo phản hồi từ Gemini. Vui lòng thử lại sau.";
-            } catch (Exception e) {
-                return " Lỗi khi gọi Gemini API: " + e.getMessage();
             }
+
+            return "🚧 Hệ thống AI hiện đang quá tải. Bạn có thể thử lại sau hoặc làm mới trang.";
         }
+
 
         private boolean isBookingStatusQuestion(String question) {
             String lower = question.toLowerCase();
@@ -184,4 +192,19 @@
             }
             return null;
         }
+        private static final String[] BLACKLIST_KEYWORDS = {
+                "tiền", "vay", "cho mượn", "chuyển khoản", "momo", "mbbank", "vietcombank",
+                "yêu", "crush", "bạn trai", "tình cảm", "thất tình", "cô đơn",
+                "phim", "ca sĩ", "idol", "nhạc", "tấu hài", "TikTok",
+                "trời mưa", "nắng", "lạnh", "nhiệt độ", "thời tiết",
+                "đmm", "vcl", "ngu", "chửi", "tục", "địt", "lol", "cút", "ăn", "uống", "thích", "ngủ"
+        };
+
+        private boolean isInappropriateQuestion(String question) {
+            String lower = question.toLowerCase();
+            return Arrays.stream(BLACKLIST_KEYWORDS).anyMatch(lower::contains);
+        }
+
+
+
     }
