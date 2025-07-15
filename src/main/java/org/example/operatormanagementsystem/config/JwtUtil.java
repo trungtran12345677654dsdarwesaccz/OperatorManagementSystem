@@ -84,7 +84,7 @@ public class JwtUtil {
     public String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // Bỏ "Bearer " để lấy phần token thực sự
+            return authHeader.substring(7);
         }
         return null;
     }

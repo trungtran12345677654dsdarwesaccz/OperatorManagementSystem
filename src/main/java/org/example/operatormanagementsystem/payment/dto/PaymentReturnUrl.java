@@ -1,0 +1,19 @@
+package org.example.operatormanagementsystem.payment.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.example.operatormanagementsystem.entity.Payment;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class PaymentReturnUrl {
+    private String qrUrl;
+    private String note;
+    private BigDecimal amount;
+}

@@ -1,24 +1,30 @@
 package org.example.operatormanagementsystem.payment.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.ManageHungBranch.repository.PaymentRepository;
 import org.example.operatormanagementsystem.config.JwtUtil;
-import org.example.operatormanagementsystem.entity.*;
+import org.example.operatormanagementsystem.config.OauthGmail;
+import org.example.operatormanagementsystem.entity.Booking;
+import org.example.operatormanagementsystem.entity.Payment;
+import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
-import org.example.operatormanagementsystem.payment.dto.BookingQRResponse;
-import org.example.operatormanagementsystem.payment.dto.SmsMessageDto;
+import org.example.operatormanagementsystem.payment.dto.PaymentReturnUrl;
+import org.example.operatormanagementsystem.payment.dto.request.CreatePaymentRequest;
+import org.example.operatormanagementsystem.payment.dto.response.Transaction;
 import org.example.operatormanagementsystem.payment.service.PaymentService;
+import org.example.operatormanagementsystem.payment.utils.VietQrProperties;
 import org.example.operatormanagementsystem.repository.UserRepository;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,117 +32,119 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
-    private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
-    private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final HttpServletRequest request;
+    private final VietQrProperties vietQrProperties;
+    private final OauthGmail oauthGmail;
+    private final BookingRepository bookingRepository;
+
 
     @Override
-    public String confirmPaymentFromSms(SmsMessageDto sms, HttpServletRequest request) {
-        Users currentUser = resolveUser(request);
-        String content = sms.getMessage();
-        String timestamp = sms.getTimestamp();
-
-        System.out.println("📩 Nội dung SMS: " + content);
-        System.out.println("🕒 Thời gian: " + (timestamp != null ? timestamp : "Không có"));
-
-        BigDecimal amount = extractAmount(content);
-        String note = extractNote(content);
-
-        System.out.println("💰 Amount = " + amount);
-        System.out.println("📝 Note = '" + note + "'");
-
-        if (amount.compareTo(BigDecimal.ZERO) <= 0 || note.isEmpty()) {
-            return "⚠️ Không thể xác định số tiền hoặc mã booking từ SMS.";
-        }
-
-        Optional<Booking> optionalBooking = bookingRepository
-                .findByPaymentStatusAndTotalAndNote(PaymentStatus.INCOMPLETED, amount.longValue(), note);
-
-        if (optionalBooking.isEmpty()) {
-            System.out.println("❌ Không tìm thấy booking phù hợp.");
-            return "❌ Không tìm thấy booking phù hợp để xác nhận thanh toán.";
-        }
-
-        Booking booking = optionalBooking.get();
-        booking.setPaymentStatus(PaymentStatus.COMPLETED);
-        bookingRepository.save(booking);
-
-        // Log cập nhật booking
-        System.out.println("✅ Cập nhật trạng thái booking #" + booking.getBookingId() + " thành COMPLETED");
-
-        Payment payment = Payment.builder()
-                .booking(booking)
-                .amount(BigDecimal.valueOf(booking.getTotal()))
-                .paidDate(LocalDate.now())
-                .status(PaymentStatus.COMPLETED)
-                .note(note)
-                .payer(currentUser)
-                .transactionNo("SMS_" + System.currentTimeMillis())
-                .build();
-
-        System.out.println("💳 Tạo đối tượng Payment: " + payment);
-        paymentRepository.save(payment);
-
-        System.out.println("✅ Đã lưu Payment với mã giao dịch: " + payment.getTransactionNo());
-
-        return "✅ Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
-    }
-
-
-    private Users resolveUser(HttpServletRequest request) {
-        try {
-            // Lấy token từ request
-            String token = jwtUtil.extractTokenFromRequest(request);
-            System.out.println("Token từ header: " + token); // Kiểm tra token
-
-            if (token != null && jwtUtil.validateToken(token)) {
-                String email = jwtUtil.extractUsername(token);  // Lấy email từ token
-                System.out.println("Email người dùng từ token: " + email);
-                return userRepository.findByEmail(email)  // Lấy user từ email
-                        .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
-            } else {
-                throw new RuntimeException("Token không hợp lệ hoặc không có token");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Không xác thực được người dùng từ JWT", e);
-        }
-    }
-
-
-
-
-    private BigDecimal extractAmount(String msg) {
-        Matcher m = Pattern.compile("\\+(\\d+(?:,\\d{3})*)").matcher(msg);
-        return m.find() ? new BigDecimal(m.group(1).replace(",", "")) : BigDecimal.ZERO;
-    }
-
-    private String extractNote(String msg) {
-        Matcher m = Pattern.compile("(BOOKING\\s?\\d+)").matcher(msg.toUpperCase());
-        return m.find() ? m.group(1).replace(" ", "").trim() : "";
-    }
-
-    @Override
-    public BookingQRResponse generateVietQrForBooking(Integer bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
+    public PaymentReturnUrl createQr(CreatePaymentRequest request) {
+        Booking booking = bookingRepository.findById(request.getBookingId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy booking"));
 
-        String bankCode = "MB"; // MB = MBBank
-        String accountNumber = "0123317466666";
-        String accountName = "NGUYEN VAN PHONG";
+        Long totalValue = booking.getTotal();
+        if (totalValue == null || totalValue <= 0) {
+            throw new IllegalArgumentException("Giá trị tổng tiền trong booking không hợp lệ");
+        }
+
+        BigDecimal amount = BigDecimal.valueOf(totalValue);
 
         String note = booking.getNote();
-        BigDecimal amount = BigDecimal.valueOf(booking.getTotal());
+        if (note == null || note.isBlank()) {
+            note = "BOOKING";
+        }
+
+        String encodedAccountName = URLEncoder.encode(vietQrProperties.getAccountName(), StandardCharsets.UTF_8);
+        String encodedNote = URLEncoder.encode(note, StandardCharsets.UTF_8);
 
         String qrUrl = String.format(
                 "https://img.vietqr.io/image/%s-%s-qr_only.png?amount=%d&addInfo=%s&accountName=%s",
-                bankCode,
-                accountNumber,
+                vietQrProperties.getBankId(),
+                vietQrProperties.getAccountNumber(),
                 amount.longValue(),
-                note,
-                URLEncoder.encode(accountName, StandardCharsets.UTF_8)
+                encodedNote,
+                encodedAccountName
         );
 
-        return new BookingQRResponse(qrUrl, note, amount);
+        return new PaymentReturnUrl(qrUrl, note, amount);
+    }
+
+
+
+
+
+    @Override
+    public String confirmPayment() {
+        List<String> messages = oauthGmail.listLatestEmails(1);
+        List<Transaction> transactions = parseTransactions(messages);
+
+        if (transactions == null || transactions.isEmpty()) {
+            throw new RuntimeException("No transactions found");
+        }
+
+        Users user = getCurrentUser();
+
+        for (Transaction transaction : transactions) {
+            Payment payment = paymentRepository.findById(Integer.valueOf(transaction.getId()))
+                    .orElseThrow(() -> new RuntimeException("Payment not found for ID: " + transaction.getId()));
+
+            if (payment.getAmount().compareTo(BigDecimal.valueOf(transaction.getAmount())) != 0) {
+                throw new RuntimeException("Amount mismatch");
+            }
+
+            if (!payment.getPayer().getId().equals(user.getId())) {
+                throw new RuntimeException("User mismatch");
+            }
+
+            // Cập nhật trạng thái thanh toán của booking thành COMPLETED
+            Booking booking = payment.getBooking();
+            booking.setPaymentStatus(PaymentStatus.COMPLETED);
+            bookingRepository.save(booking);
+
+            paymentRepository.save(payment);
+        }
+
+        return "Confirmed Successfully";
+    }
+
+
+    private Users getCurrentUser() {
+        String token = jwtUtil.resolveToken(request);
+        if (token == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Token không hợp lệ hoặc đã hết hạn");
+        }
+
+        String email = jwtUtil.extractUsername(token);
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email: " + email));
+    }
+
+    private List<Transaction> parseTransactions(List<String> messages) {
+        List<Transaction> transactions = new ArrayList<>();
+        for (String message : messages) {
+            if (!message.contains("KL")) continue;
+
+            Pattern amountPattern = Pattern.compile("PS:\\s*\\+([\\d,]+)\\s*VND");
+            Matcher amountMatcher = amountPattern.matcher(message);
+            if (!amountMatcher.find()) continue;
+            String rawAmount = amountMatcher.group(1).replace(",", "");
+            double amount = Double.parseDouble(rawAmount);
+
+            Pattern idPattern = Pattern.compile("KL_(\\d+)");
+            Matcher idMatcher = idPattern.matcher(message);
+            if (!idMatcher.find()) continue;
+            String id = idMatcher.group(1);
+
+            Transaction tx = new Transaction();
+            tx.setAmount(amount);
+            tx.setId(id);
+            tx.setDescription("KL");
+            transactions.add(tx);
+        }
+        return transactions;
     }
 }

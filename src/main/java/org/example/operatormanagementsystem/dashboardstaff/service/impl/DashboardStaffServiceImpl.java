@@ -26,7 +26,6 @@ import java.util.List;
 public class DashboardStaffServiceImpl implements DashboardStaffService {
 
     private final PositionRepository positionRepository;
-    private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
@@ -37,7 +36,6 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                                      CustomerRepository customerRepository,
                                      UserRepository userRepository) {
         this.positionRepository = positionRepository;
-        this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
@@ -103,9 +101,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
         try {
             DashboardStaffResponse stats = new DashboardStaffResponse();
             stats.setPendingOrders((int) bookingRepository.countByStatus("PENDING"));
-            stats.setNewReceipts((int) paymentRepository.findByStatus("PENDING").size());
             stats.setNewCustomers((int) customerRepository.countByCreatedAtAfter(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusDays(30))); // Khách hàng mới trong 30 ngày
-            stats.setPendingSupport((int) bookingRepository.countByStatus("PENDING") + paymentRepository.findByStatus("PENDING").size()); // Hỗ trợ chờ
             stats.setPendingCustomers((int) customerRepository.countByStatus("PENDING")); // Khách hàng chờ
 
             System.out.println("Thống kê: Pending Orders = " + stats.getPendingOrders());
@@ -129,14 +125,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                 activities.add(response);
             }
 
-            // Thêm hoạt động từ Payment
-            List<Payment> recentPayments = paymentRepository.findByStatus("PENDING");
-            for (Payment payment : recentPayments) {
-                RecentActivityResponse response = new RecentActivityResponse();
-                response.setAction("Xử lý biên lai #" + payment.getPaymentId());
-                response.setTimeAgo("1 giờ trước");
-                activities.add(response);
-            }
+
 
             // Thêm hoạt động từ Position
             List<Position> recentPositions = positionRepository.findAll();
