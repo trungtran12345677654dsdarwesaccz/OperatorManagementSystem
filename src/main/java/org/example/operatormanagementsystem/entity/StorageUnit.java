@@ -54,7 +54,10 @@ public class StorageUnit {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "storageUnit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Booking> bookings;
+    @Builder.Default // Chỉ có tác dụng với Lombok Builder!
+    private Set<Booking> bookings = new HashSet<>();
+
+
 
     @PrePersist
     protected void onCreate() {
