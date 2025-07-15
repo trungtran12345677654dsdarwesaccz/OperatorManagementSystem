@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -216,6 +217,19 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy booking với ID: " + id));
         bookingRepository.delete(booking);
     }
+    // BookingServiceImpl.java
+
+    @Override
+    public Map<String, List<Integer>> getAllRelatedIds() {
+        Map<String, List<Integer>> ids = new java.util.HashMap<>();
+        // Chỉ lấy id, không lấy object (đúng nhu cầu FE)
+        ids.put("customerIds", customerRepository.findAll().stream().map(c -> c.getCustomerId()).toList());
+        ids.put("operatorStaffIds", operatorStaffRepository.findAll().stream().map(o -> o.getOperatorId()).toList());
+        ids.put("transportUnitIds", transportUnitRepository.findAll().stream().map(t -> t.getTransportId()).toList());
+        ids.put("storageUnitIds", storageUnitRepository.findAll().stream().map(s -> s.getStorageId()).toList());
+        return ids;
+    }
+
 
 
 }

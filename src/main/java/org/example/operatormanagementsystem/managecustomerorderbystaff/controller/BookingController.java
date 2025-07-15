@@ -224,6 +224,15 @@ public class BookingController {
             return ResponseEntity.noContent().build();
         }
 
+    @GetMapping("/init-ids")
+    @PreAuthorize("hasRole('ROLE_STAFF')")
+    public ResponseEntity<Map<String, List<Integer>>> getInitIds() {
+        // Gọi trực tiếp repository qua bookingService (không tạo controller khác)
+        Map<String, List<Integer>> ids = bookingService.getAllRelatedIds();
+        return ResponseEntity.ok(ids);
+    }
+
+
 
 
 
