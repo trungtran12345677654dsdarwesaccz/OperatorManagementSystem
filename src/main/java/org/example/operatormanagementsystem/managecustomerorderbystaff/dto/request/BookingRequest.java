@@ -47,4 +47,11 @@ public class BookingRequest {
     @PositiveOrZero(message = "Slot index must be zero or positive")
     private Integer slotIndex;
 
+    @NotBlank(message = "Delivery location cannot be blank")
+    private String deliveryLocation;
+
+    @NotBlank(message = "Pickup location cannot be blank")
+    private String pickupLocation;
+
+
 }
