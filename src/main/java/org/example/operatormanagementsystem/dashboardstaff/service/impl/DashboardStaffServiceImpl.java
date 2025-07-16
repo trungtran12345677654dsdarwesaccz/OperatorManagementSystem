@@ -31,7 +31,6 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     private final UserRepository userRepository;
 
     public DashboardStaffServiceImpl(PositionRepository positionRepository,
-                                     PaymentRepository paymentRepository,
                                      BookingRepository bookingRepository,
                                      CustomerRepository customerRepository,
                                      UserRepository userRepository) {

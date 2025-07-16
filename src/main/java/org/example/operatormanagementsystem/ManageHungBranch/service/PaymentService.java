@@ -104,19 +104,6 @@ public class PaymentService {
                 .payer(payer)
                 .build();
     }
-    private PaymentStatus convertStatus(String status) {
-        if (status == null) return null;
-        switch (status.trim().toLowerCase()) {
-            case "đã thanh toán":
-            case "completed":
-                return PaymentStatus.COMPLETED;
-            case "chưa thanh toán":
-            case "incompleted":
-                return PaymentStatus.INCOMPLETED;
-            default:
-                throw new IllegalArgumentException("Trạng thái không hợp lệ: " + status);
-        }
-    }
 
 
     private void updatePaymentFields(Payment payment, PaymentDTO dto) {

@@ -12,9 +12,5 @@ import lombok.Setter;
 public class PaymentResponse {
     private String id;
     private String userId;
-    private String fullName;
-    private String paymentMethod;
     private Double amount;
-    private String status;
-    private String description;
 }

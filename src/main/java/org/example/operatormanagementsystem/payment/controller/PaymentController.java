@@ -10,15 +10,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController("paymentControllerMain")
-@PreAuthorize("hasAnyRole('CUSTOMER')")
 @RequestMapping("/api/payment")
 @RequiredArgsConstructor
 public class PaymentController {
 
     private final PaymentService paymentService;
-
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @PostMapping
-    public ResponseEntity<PaymentReturnUrl> createQr(@Valid @RequestBody CreatePaymentRequest request) {
+    public ResponseEntity<PaymentReturnUrl> createQr( @RequestBody CreatePaymentRequest request) {
         return ResponseEntity.ok(paymentService.createQr(request));
     }
 

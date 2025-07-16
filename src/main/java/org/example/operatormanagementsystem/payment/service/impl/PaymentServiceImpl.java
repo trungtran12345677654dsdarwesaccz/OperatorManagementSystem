@@ -23,8 +23,10 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,13 +39,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final JwtUtil jwtUtil;
     private final HttpServletRequest request;
     private final VietQrProperties vietQrProperties;
-    private final OauthGmail oauthGmail;
     private final BookingRepository bookingRepository;
-
+    private final  OauthGmail oauthGmail;
 
     @Override
-    public PaymentReturnUrl createQr(CreatePaymentRequest request) {
-        Booking booking = bookingRepository.findById(request.getBookingId())
+    public PaymentReturnUrl createQr(CreatePaymentRequest req) {
+        Booking booking = bookingRepository.findById(req.getBookingId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy booking"));
 
         Long totalValue = booking.getTotal();
@@ -74,42 +75,101 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
 
-
-
-
     @Override
     public String confirmPayment() {
         List<String> messages = oauthGmail.listLatestEmails(1);
+        for (String msg : messages) {
+            System.out.println("Email content: " + msg);
+        }
         List<Transaction> transactions = parseTransactions(messages);
-
         if (transactions == null || transactions.isEmpty()) {
             throw new RuntimeException("No transactions found");
         }
 
-        Users user = getCurrentUser();
+        Users currentUser = getCurrentUser();
 
-        for (Transaction transaction : transactions) {
-            Payment payment = paymentRepository.findById(Integer.valueOf(transaction.getId()))
-                    .orElseThrow(() -> new RuntimeException("Payment not found for ID: " + transaction.getId()));
-
-            if (payment.getAmount().compareTo(BigDecimal.valueOf(transaction.getAmount())) != 0) {
-                throw new RuntimeException("Amount mismatch");
+        for (Transaction tx : transactions) {
+            Integer bookingId;
+            try {
+                bookingId = Integer.valueOf(tx.getId());
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid booking id format: " + tx.getId());
             }
 
-            if (!payment.getPayer().getId().equals(user.getId())) {
-                throw new RuntimeException("User mismatch");
+            Booking booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> new RuntimeException("Booking not found for id: " + bookingId));
+
+            if (booking.getTotal() == null || booking.getTotal().compareTo(BigDecimal.valueOf(tx.getAmount())) != 0) {
+                throw new RuntimeException("Amount mismatch for transaction ID: " + tx.getId());
             }
 
-            // Cập nhật trạng thái thanh toán của booking thành COMPLETED
-            Booking booking = payment.getBooking();
-            booking.setPaymentStatus(PaymentStatus.COMPLETED);
-            bookingRepository.save(booking);
+            if (!payment.getPayer().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("User mismatch for transaction ID: " + tx.getId());
+            }
+
+            // Tạo mới đối tượng Payment
+            Payment payment = Payment.builder()
+                    .booking(booking)
+                    .payer(currentUser)
+                    .amount(BigDecimal.valueOf(tx.getAmount()))
+                    .paidDate(LocalDate.now())
+                    .transactionNo(tx.getDescription())
+                    .build();
 
             paymentRepository.save(payment);
+
+
+
+            booking.setPaymentStatus(PaymentStatus.COMPLETED); // hoặc COMPLETED tùy enum của bạn
+            bookingRepository.save(booking);
+
+
+
         }
 
         return "Confirmed Successfully";
     }
+
+
+    private List<Transaction> parseTransactions(List<String> messages) {
+        List<Transaction> transactions = new ArrayList<>();
+
+        for (String message : messages) {
+            // 1. Lấy số tiền sau "GD: "
+            Pattern amountPattern = Pattern.compile("GD:\\s*([+-][\\d,]+)VND");
+            Matcher amountMatcher = amountPattern.matcher(message);
+            if (!amountMatcher.find()) continue;
+
+            String rawAmount = amountMatcher.group(1).replace(",", "");
+            Double amount;
+            try {
+                amount = Double.parseDouble(rawAmount);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+
+            // 2. Lấy số sau "BOOKING"
+            Pattern bookingIdPattern = Pattern.compile("BOOKING(\\d+)");
+            Matcher bookingIdMatcher = bookingIdPattern.matcher(message);
+            if (!bookingIdMatcher.find()) continue;
+
+            String rawIdStr = bookingIdMatcher.group(1);
+
+            Integer rawId;
+            try {
+                rawId = Integer.valueOf(rawIdStr);
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid id format: " + rawIdStr);
+            }
+
+            transactions.add(new Transaction(rawId, amount, "SMS"));
+        }
+
+        return transactions;
+    }
+
+
+
 
 
     private Users getCurrentUser() {
@@ -117,34 +177,8 @@ public class PaymentServiceImpl implements PaymentService {
         if (token == null || !jwtUtil.validateToken(token)) {
             throw new RuntimeException("Token không hợp lệ hoặc đã hết hạn");
         }
-
         String email = jwtUtil.extractUsername(token);
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email: " + email));
-    }
-
-    private List<Transaction> parseTransactions(List<String> messages) {
-        List<Transaction> transactions = new ArrayList<>();
-        for (String message : messages) {
-            if (!message.contains("KL")) continue;
-
-            Pattern amountPattern = Pattern.compile("PS:\\s*\\+([\\d,]+)\\s*VND");
-            Matcher amountMatcher = amountPattern.matcher(message);
-            if (!amountMatcher.find()) continue;
-            String rawAmount = amountMatcher.group(1).replace(",", "");
-            double amount = Double.parseDouble(rawAmount);
-
-            Pattern idPattern = Pattern.compile("KL_(\\d+)");
-            Matcher idMatcher = idPattern.matcher(message);
-            if (!idMatcher.find()) continue;
-            String id = idMatcher.group(1);
-
-            Transaction tx = new Transaction();
-            tx.setAmount(amount);
-            tx.setId(id);
-            tx.setDescription("KL");
-            transactions.add(tx);
-        }
-        return transactions;
     }
 }
