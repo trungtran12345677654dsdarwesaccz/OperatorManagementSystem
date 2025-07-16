@@ -1,7 +1,10 @@
 package org.example.operatormanagementsystem.managestaff_yen.dto.response;
 
+import lombok.Builder;
+
 import java.util.Date;
 
+@Builder
 public class PromotionResponse {
     private Long id;
     private String name;

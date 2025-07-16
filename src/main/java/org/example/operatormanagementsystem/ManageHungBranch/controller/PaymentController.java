@@ -74,18 +74,6 @@ public class PaymentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/overdue")
-    @Operation(summary = "Get overdue payments", description = "Get list of overdue payments for staff follow-up")
-    public ResponseEntity<List<PaymentDTO>> getOverduePayments() {
-        List<PaymentDTO> overduePayments = paymentService.getOverduePayments();
-        return ResponseEntity.ok(overduePayments);
-    }
 
-    @GetMapping("/pending")
-    @Operation(summary = "Get pending payments", description = "Get list of pending payments")
-    public ResponseEntity<List<PaymentDTO>> getPendingPayments() {
-        List<PaymentDTO> pendingPayments = paymentService.getPendingPayments();
-        return ResponseEntity.ok(pendingPayments);
-    }
 
 }

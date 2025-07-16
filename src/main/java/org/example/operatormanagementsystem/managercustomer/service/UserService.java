@@ -1,7 +1,7 @@
 package org.example.operatormanagementsystem.managercustomer.service;
 
 import org.example.operatormanagementsystem.entity.Users;
-import org.example.operatormanagementsystem.base.BaseService;
+import org.example.operatormanagementsystem.listProfileTrungTran.dto.base.BaseService;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserCreateRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserUpdateRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.response.UserSearchResponse;

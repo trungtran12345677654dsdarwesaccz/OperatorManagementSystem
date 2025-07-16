@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.CreateStorageUnitDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.service.StorageUnitService;
 import org.springframework.http.HttpStatus;
@@ -133,11 +134,10 @@ public class StorageUnitController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_STAFF')")
     public ResponseEntity<StorageUnitDTO> createStorageUnit(
-            @Parameter(description = "Thông tin storage unit cần tạo")
-            @Valid @RequestBody StorageUnitDTO storageUnitDTO) {
-        log.info("POST /api/storage-units - Tạo mới storage unit: {}", storageUnitDTO.getName());
+            @Valid @RequestBody CreateStorageUnitDTO createDTO) {
+        log.info("POST /api/storage-units - Tạo mới storage unit: {}", createDTO.getName());
         try {
-            StorageUnitDTO createdStorageUnit = storageUnitService.createStorageUnit(storageUnitDTO);
+            StorageUnitDTO createdStorageUnit = storageUnitService.createStorageUnit(createDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdStorageUnit);
         } catch (RuntimeException e) {
             log.error("Lỗi khi tạo storage unit: ", e);
@@ -147,6 +147,7 @@ public class StorageUnitController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
     @Operation(summary = "Update Storage Unit Information",
             description = "Cập nhật thông tin của một kho lưu trữ")

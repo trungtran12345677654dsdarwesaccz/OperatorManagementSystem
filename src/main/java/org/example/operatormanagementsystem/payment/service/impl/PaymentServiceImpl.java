@@ -1,24 +1,34 @@
 package org.example.operatormanagementsystem.payment.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.ManageHungBranch.repository.PaymentRepository;
 import org.example.operatormanagementsystem.config.JwtUtil;
-import org.example.operatormanagementsystem.entity.*;
+import org.example.operatormanagementsystem.config.OauthGmail;
+import org.example.operatormanagementsystem.entity.Booking;
+import org.example.operatormanagementsystem.entity.Payment;
+import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
-import org.example.operatormanagementsystem.payment.dto.BookingQRResponse;
-import org.example.operatormanagementsystem.payment.dto.SmsMessageDto;
+import org.example.operatormanagementsystem.payment.dto.PaymentReturnUrl;
+import org.example.operatormanagementsystem.payment.dto.request.CreatePaymentRequest;
+import org.example.operatormanagementsystem.payment.dto.response.Transaction;
 import org.example.operatormanagementsystem.payment.service.PaymentService;
+import org.example.operatormanagementsystem.payment.utils.VietQrProperties;
 import org.example.operatormanagementsystem.repository.UserRepository;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,117 +36,154 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
-    private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
-    private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final HttpServletRequest request;
+    private final VietQrProperties vietQrProperties;
+    private final BookingRepository bookingRepository;
+    private final  OauthGmail oauthGmail;
 
     @Override
-    public String confirmPaymentFromSms(SmsMessageDto sms, HttpServletRequest request) {
-        Users currentUser = resolveUser(request);
-        String content = sms.getMessage();
-        String timestamp = sms.getTimestamp();
-
-        System.out.println("📩 Nội dung SMS: " + content);
-        System.out.println("🕒 Thời gian: " + (timestamp != null ? timestamp : "Không có"));
-
-        BigDecimal amount = extractAmount(content);
-        String note = extractNote(content);
-
-        System.out.println("💰 Amount = " + amount);
-        System.out.println("📝 Note = '" + note + "'");
-
-        if (amount.compareTo(BigDecimal.ZERO) <= 0 || note.isEmpty()) {
-            return "⚠️ Không thể xác định số tiền hoặc mã booking từ SMS.";
-        }
-
-        Optional<Booking> optionalBooking = bookingRepository
-                .findByPaymentStatusAndTotalAndNote(PaymentStatus.INCOMPLETED, amount.longValue(), note);
-
-        if (optionalBooking.isEmpty()) {
-            System.out.println("❌ Không tìm thấy booking phù hợp.");
-            return "❌ Không tìm thấy booking phù hợp để xác nhận thanh toán.";
-        }
-
-        Booking booking = optionalBooking.get();
-        booking.setPaymentStatus(PaymentStatus.COMPLETED);
-        bookingRepository.save(booking);
-
-        // Log cập nhật booking
-        System.out.println("✅ Cập nhật trạng thái booking #" + booking.getBookingId() + " thành COMPLETED");
-
-        Payment payment = Payment.builder()
-                .booking(booking)
-                .amount(BigDecimal.valueOf(booking.getTotal()))
-                .paidDate(LocalDate.now())
-                .status(PaymentStatus.COMPLETED)
-                .note(note)
-                .payer(currentUser)
-                .transactionNo("SMS_" + System.currentTimeMillis())
-                .build();
-
-        System.out.println("💳 Tạo đối tượng Payment: " + payment);
-        paymentRepository.save(payment);
-
-        System.out.println("✅ Đã lưu Payment với mã giao dịch: " + payment.getTransactionNo());
-
-        return "✅ Đã xác nhận thanh toán cho booking #" + booking.getBookingId();
-    }
-
-
-    private Users resolveUser(HttpServletRequest request) {
-        try {
-            // Lấy token từ request
-            String token = jwtUtil.extractTokenFromRequest(request);
-            System.out.println("Token từ header: " + token); // Kiểm tra token
-
-            if (token != null && jwtUtil.validateToken(token)) {
-                String email = jwtUtil.extractUsername(token);  // Lấy email từ token
-                System.out.println("Email người dùng từ token: " + email);
-                return userRepository.findByEmail(email)  // Lấy user từ email
-                        .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng từ token"));
-            } else {
-                throw new RuntimeException("Token không hợp lệ hoặc không có token");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Không xác thực được người dùng từ JWT", e);
-        }
-    }
-
-
-
-
-    private BigDecimal extractAmount(String msg) {
-        Matcher m = Pattern.compile("\\+(\\d+(?:,\\d{3})*)").matcher(msg);
-        return m.find() ? new BigDecimal(m.group(1).replace(",", "")) : BigDecimal.ZERO;
-    }
-
-    private String extractNote(String msg) {
-        Matcher m = Pattern.compile("(BOOKING\\s?\\d+)").matcher(msg.toUpperCase());
-        return m.find() ? m.group(1).replace(" ", "").trim() : "";
-    }
-
-    @Override
-    public BookingQRResponse generateVietQrForBooking(Integer bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
+    public PaymentReturnUrl createQr(CreatePaymentRequest req) {
+        Booking booking = bookingRepository.findById(req.getBookingId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy booking"));
 
-        String bankCode = "MB"; // MB = MBBank
-        String accountNumber = "0123317466666";
-        String accountName = "NGUYEN VAN PHONG";
+        Long totalValue = booking.getTotal();
+        if (totalValue == null || totalValue <= 0) {
+            throw new IllegalArgumentException("Giá trị tổng tiền trong booking không hợp lệ");
+        }
+
+        BigDecimal amount = BigDecimal.valueOf(totalValue);
 
         String note = booking.getNote();
-        BigDecimal amount = BigDecimal.valueOf(booking.getTotal());
+        if (note == null || note.isBlank()) {
+            note = "BOOKING";
+        }
+
+        String encodedAccountName = URLEncoder.encode(vietQrProperties.getAccountName(), StandardCharsets.UTF_8);
+        String encodedNote = URLEncoder.encode(note, StandardCharsets.UTF_8);
 
         String qrUrl = String.format(
                 "https://img.vietqr.io/image/%s-%s-qr_only.png?amount=%d&addInfo=%s&accountName=%s",
-                bankCode,
-                accountNumber,
+                vietQrProperties.getBankId(),
+                vietQrProperties.getAccountNumber(),
                 amount.longValue(),
-                note,
-                URLEncoder.encode(accountName, StandardCharsets.UTF_8)
+                encodedNote,
+                encodedAccountName
         );
 
-        return new BookingQRResponse(qrUrl, note, amount);
+        return new PaymentReturnUrl(qrUrl, note, amount);
+    }
+
+
+    @Override
+    @Transactional
+    public String confirmPayment() {
+        // Lấy danh sách email mới nhất
+        List<String> messages = oauthGmail.listLatestEmails(1);
+        for (String msg : messages) {
+            System.out.println("Email content: " + msg);
+        }
+
+        // Phân tích các giao dịch từ nội dung email
+        List<Transaction> transactions = parseTransactions(messages);
+        if (transactions == null || transactions.isEmpty()) {
+            throw new RuntimeException("No transactions found");
+        }
+
+        // Lấy người dùng hiện tại
+        Users currentUser = getCurrentUser();
+
+        for (Transaction tx : transactions) {
+            Integer bookingId = tx.getId();
+
+            // Tìm kiếm booking tương ứng
+            Booking booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> new RuntimeException("Booking not found for id: " + bookingId));
+
+            BigDecimal total = BigDecimal.valueOf(booking.getTotal());
+            BigDecimal amount = BigDecimal.valueOf(tx.getAmount());
+
+            if (total.compareTo(amount) != 0) {
+                throw new RuntimeException("Amount mismatch for booking ID: " + bookingId);
+            }
+
+
+            // Tạo đối tượng Payment mới, transactionNo lấy từ nội dung note (description)
+            Payment payment = Payment.builder()
+                    .booking(booking)
+                    .payer(currentUser)
+                    .amount(BigDecimal.valueOf(tx.getAmount()))
+                    .paidDate(LocalDate.now())
+                    .transactionNo(generateRandom6Digits())
+                    .build();
+
+            paymentRepository.save(payment);
+
+            // Cập nhật trạng thái thanh toán booking
+            booking.setPaymentStatus(PaymentStatus.COMPLETED);
+            bookingRepository.save(booking);
+        }
+
+        return "Confirmed Successfully";
+    }
+    public String generateRandom6Digits() {
+        Random random = new Random();
+        int number = 100000 + random.nextInt(900000); // sinh số từ 100000 đến 999999
+        return String.valueOf(number);
+    }
+
+    private List<Transaction> parseTransactions(List<String> messages) {
+        List<Transaction> transactions = new ArrayList<>();
+
+        for (String message : messages) {
+            // Lấy số tiền sau "GD: "
+            Pattern amountPattern = Pattern.compile("GD:\\s*([+-][\\d,]+)VND");
+            Matcher amountMatcher = amountPattern.matcher(message);
+            if (!amountMatcher.find()) continue;
+
+            String rawAmount = amountMatcher.group(1).replace(",", "");
+            Double amount;
+            try {
+                amount = Double.parseDouble(rawAmount);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+
+            // Lấy số bookingId sau "BOOKING"
+            Pattern bookingIdPattern = Pattern.compile("BOOKING(\\d+)");
+            Matcher bookingIdMatcher = bookingIdPattern.matcher(message);
+            if (!bookingIdMatcher.find()) continue;
+
+            String rawIdStr = bookingIdMatcher.group(1);
+
+            Integer rawId;
+            try {
+                rawId = Integer.valueOf(rawIdStr);
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid booking id format: " + rawIdStr);
+            }
+
+            // Lấy nguyên nội dung message làm note (bạn có thể chỉnh sửa nếu cần lấy đoạn cụ thể hơn)
+            String note = message;
+
+            // Tạo Transaction với bookingId, amount, và note
+            transactions.add(new Transaction(rawId, amount, note));
+        }
+
+        return transactions;
+    }
+
+
+
+    private Users getCurrentUser() {
+        String token = jwtUtil.resolveToken(request);
+        if (token == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Token không hợp lệ hoặc đã hết hạn");
+        }
+        String email = jwtUtil.extractUsername(token);
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email: " + email));
     }
 }

@@ -1,5 +1,6 @@
 package org.example.operatormanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.operatormanagementsystem.enumeration.PaymentStatus;

@@ -95,7 +95,8 @@
             for (Payment p : payments) {
                 sb.append("- Ngày: ").append(p.getPaidDate())
                         .append(" | Số tiền: ").append(p.getAmount()).append(" VNĐ")
-                        .append(" | Trạng thái: ").append(p.getStatus())
+                        .append(" | Trạng thái: ").append(p.getBooking().getPaymentStatus()
+                        )
                         .append("\n");
             }
             return sb.toString();

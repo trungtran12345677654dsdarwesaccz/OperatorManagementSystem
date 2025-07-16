@@ -1,7 +1,9 @@
 package org.example.operatormanagementsystem.ManageHungBranch.service;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.operatormanagementsystem.ManageHungBranch.dto.CreateStorageUnitDTO;
 import org.example.operatormanagementsystem.ManageHungBranch.dto.StorageUnitDTO;
 import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.entity.Manager;
@@ -16,7 +18,6 @@ import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,31 +53,27 @@ public class StorageUnitService {
     /**
      * Tạo mới storage unit
      */
-    public StorageUnitDTO createStorageUnit(StorageUnitDTO storageUnitDTO) {
-        log.info("Tạo mới storage unit: {}", storageUnitDTO.getName());
-
+    public StorageUnitDTO createStorageUnit(CreateStorageUnitDTO createStorageUnitDTO) {
         StorageUnit storageUnit = StorageUnit.builder()
-                .name(storageUnitDTO.getName())
-                .address(storageUnitDTO.getAddress())
-                .phone(storageUnitDTO.getPhone())
-                .status(storageUnitDTO.getStatus())
-                .note(storageUnitDTO.getNote())
+                .name(createStorageUnitDTO.getName())
+                .address(createStorageUnitDTO.getAddress())
+                .phone(createStorageUnitDTO.getPhone())
+                .status(createStorageUnitDTO.getStatus())
+                .note(createStorageUnitDTO.getNote())
                 .createdAt(LocalDateTime.now())
-                .image(storageUnitDTO.getImage())
+                .image(createStorageUnitDTO.getImage())
+                .slotCount(createStorageUnitDTO.getSlotCount())
                 .build();
-
         // Gán manager nếu có
-        if (storageUnitDTO.getManagerId() != null) {
-            Manager manager = managerRepository.findById(storageUnitDTO.getManagerId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy manager với ID: " + storageUnitDTO.getManagerId()));
+        if (createStorageUnitDTO.getManagerId() != null) {
+            Manager manager = managerRepository.findById(createStorageUnitDTO.getManagerId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy manager với ID: " + createStorageUnitDTO.getManagerId()));
             storageUnit.setManager(manager);
         }
-
         StorageUnit savedStorageUnit = storageUnitRepository.save(storageUnit);
-        log.info("Đã tạo storage unit với ID: {}", savedStorageUnit.getStorageId());
-
         return convertToDTO(savedStorageUnit);
     }
+
 
     /**
      * Cập nhật storage unit
@@ -97,9 +94,10 @@ public class StorageUnitService {
         if (storageUnitDTO.getPhone() != null) {
             existingStorageUnit.setPhone(storageUnitDTO.getPhone());
         }
-        if (storageUnitDTO.getStatus() != null) {
+        if (storageUnitDTO.getStatus() != null && !storageUnitDTO.getStatus().isEmpty()) {
             existingStorageUnit.setStatus(storageUnitDTO.getStatus());
         }
+
         if (storageUnitDTO.getNote() != null) {
             existingStorageUnit.setNote(storageUnitDTO.getNote());
         }
@@ -107,6 +105,10 @@ public class StorageUnitService {
         if (storageUnitDTO.getImage() != null) {
             existingStorageUnit.setImage(storageUnitDTO.getImage());
         }
+        if (storageUnitDTO.getSlotCount() != null) {
+            existingStorageUnit.setSlotCount(storageUnitDTO.getSlotCount());
+        }
+
 
         // Cập nhật manager nếu có
         if (storageUnitDTO.getManagerId() != null) {

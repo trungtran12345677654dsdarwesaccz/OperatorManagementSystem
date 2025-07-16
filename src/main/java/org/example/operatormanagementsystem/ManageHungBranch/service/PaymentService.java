@@ -58,15 +58,7 @@ public class PaymentService {
         paymentRepository.deleteById(paymentId);
     }
 
-    public List<PaymentDTO> getOverduePayments() {
-        return paymentRepository.findOverduePayments()
-                .stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
 
-    public List<PaymentDTO> getPendingPayments() {
-        return paymentRepository.findByStatus("PENDING")
-                .stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
 
     private PaymentDTO convertToDTO(Payment payment) {
         PaymentDTO.PaymentDTOBuilder builder = PaymentDTO.builder()
@@ -74,8 +66,6 @@ public class PaymentService {
                 .bookingId(payment.getBooking() != null ? payment.getBooking().getBookingId() : null)
                 .amount(payment.getAmount())
                 .paidDate(payment.getPaidDate())
-                .status(payment.getStatus() == PaymentStatus.COMPLETED ? "Đã thanh toán" : "Chưa thanh toán")
-                .note(payment.getNote())
                 .transactionNo(payment.getTransactionNo());
 
         // Thông tin người thanh toán
@@ -110,24 +100,9 @@ public class PaymentService {
                 .paymentId(dto.getPaymentId())
                 .amount(dto.getAmount())
                 .paidDate(dto.getPaidDate())
-                .status(convertStatus(dto.getStatus()))
-                .note(dto.getNote())
                 .transactionNo(dto.getTransactionNo())
                 .payer(payer)
                 .build();
-    }
-    private PaymentStatus convertStatus(String status) {
-        if (status == null) return null;
-        switch (status.trim().toLowerCase()) {
-            case "đã thanh toán":
-            case "completed":
-                return PaymentStatus.COMPLETED;
-            case "chưa thanh toán":
-            case "incompleted":
-                return PaymentStatus.INCOMPLETED;
-            default:
-                throw new IllegalArgumentException("Trạng thái không hợp lệ: " + status);
-        }
     }
 
 
@@ -139,8 +114,6 @@ public class PaymentService {
         }
         payment.setAmount(dto.getAmount());
         payment.setPaidDate(dto.getPaidDate());
-        payment.setStatus(convertStatus(dto.getStatus()));
-        payment.setNote(dto.getNote());
 
         payment.setTransactionNo(dto.getTransactionNo());
     }
