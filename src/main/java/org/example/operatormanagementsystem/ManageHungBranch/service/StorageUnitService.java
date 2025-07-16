@@ -94,9 +94,10 @@ public class StorageUnitService {
         if (storageUnitDTO.getPhone() != null) {
             existingStorageUnit.setPhone(storageUnitDTO.getPhone());
         }
-        if (storageUnitDTO.getStatus() != null) {
+        if (storageUnitDTO.getStatus() != null && !storageUnitDTO.getStatus().isEmpty()) {
             existingStorageUnit.setStatus(storageUnitDTO.getStatus());
         }
+
         if (storageUnitDTO.getNote() != null) {
             existingStorageUnit.setNote(storageUnitDTO.getNote());
         }
@@ -104,6 +105,10 @@ public class StorageUnitService {
         if (storageUnitDTO.getImage() != null) {
             existingStorageUnit.setImage(storageUnitDTO.getImage());
         }
+        if (storageUnitDTO.getSlotCount() != null) {
+            existingStorageUnit.setSlotCount(storageUnitDTO.getSlotCount());
+        }
+
 
         // Cập nhật manager nếu có
         if (storageUnitDTO.getManagerId() != null) {

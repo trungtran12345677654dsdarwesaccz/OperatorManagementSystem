@@ -8,5 +8,13 @@ import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.respo
 @EqualsAndHashCode(callSuper = true)
 public class BookingDetailResponse extends BookingResponse {
     private Integer slotIndex;
+    private String pickupLocation;
+    private String deliveryLocation;
+    private String pickupLocationName;
+    private String deliveryLocationName;
+    private Integer operatorStaffId;
+    private String operatorStaffName;      // Tên nhân viên vận hành
+    private Integer transportUnitId;
+    private String transportUnitName;      // Tên đơn vị vận chuyển
 }
 
