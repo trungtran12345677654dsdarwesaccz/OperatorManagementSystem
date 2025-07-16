@@ -117,8 +117,8 @@
                             .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
-                            .requestMatchers("/api/payment").hasAnyRole("CUSTOMER")
-                            .requestMatchers("/api/payment/confirm-payment").permitAll()
+                            .requestMatchers("/api/payment/**").hasAnyRole("CUSTOMER")
+
 
 
 

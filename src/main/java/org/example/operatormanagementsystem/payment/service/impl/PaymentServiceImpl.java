@@ -18,6 +18,7 @@ import org.example.operatormanagementsystem.payment.service.PaymentService;
 import org.example.operatormanagementsystem.payment.utils.VietQrProperties;
 import org.example.operatormanagementsystem.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -26,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,66 +78,67 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     @Override
+    @Transactional
     public String confirmPayment() {
+        // Lấy danh sách email mới nhất
         List<String> messages = oauthGmail.listLatestEmails(1);
         for (String msg : messages) {
             System.out.println("Email content: " + msg);
         }
+
+        // Phân tích các giao dịch từ nội dung email
         List<Transaction> transactions = parseTransactions(messages);
         if (transactions == null || transactions.isEmpty()) {
             throw new RuntimeException("No transactions found");
         }
 
+        // Lấy người dùng hiện tại
         Users currentUser = getCurrentUser();
 
         for (Transaction tx : transactions) {
-            Integer bookingId;
-            try {
-                bookingId = Integer.valueOf(tx.getId());
-            } catch (NumberFormatException e) {
-                throw new RuntimeException("Invalid booking id format: " + tx.getId());
-            }
+            Integer bookingId = tx.getId();
 
+            // Tìm kiếm booking tương ứng
             Booking booking = bookingRepository.findById(bookingId)
                     .orElseThrow(() -> new RuntimeException("Booking not found for id: " + bookingId));
 
-            if (booking.getTotal() == null || booking.getTotal().compareTo(BigDecimal.valueOf(tx.getAmount())) != 0) {
-                throw new RuntimeException("Amount mismatch for transaction ID: " + tx.getId());
+            BigDecimal total = BigDecimal.valueOf(booking.getTotal());
+            BigDecimal amount = BigDecimal.valueOf(tx.getAmount());
+
+            if (total.compareTo(amount) != 0) {
+                throw new RuntimeException("Amount mismatch for booking ID: " + bookingId);
             }
 
-            if (!payment.getPayer().getId().equals(currentUser.getId())) {
-                throw new RuntimeException("User mismatch for transaction ID: " + tx.getId());
-            }
 
-            // Tạo mới đối tượng Payment
+            // Tạo đối tượng Payment mới, transactionNo lấy từ nội dung note (description)
             Payment payment = Payment.builder()
                     .booking(booking)
                     .payer(currentUser)
                     .amount(BigDecimal.valueOf(tx.getAmount()))
                     .paidDate(LocalDate.now())
-                    .transactionNo(tx.getDescription())
+                    .transactionNo(generateRandom6Digits())
                     .build();
 
             paymentRepository.save(payment);
 
-
-
-            booking.setPaymentStatus(PaymentStatus.COMPLETED); // hoặc COMPLETED tùy enum của bạn
+            // Cập nhật trạng thái thanh toán booking
+            booking.setPaymentStatus(PaymentStatus.COMPLETED);
             bookingRepository.save(booking);
-
-
-
         }
 
         return "Confirmed Successfully";
     }
-
+    public String generateRandom6Digits() {
+        Random random = new Random();
+        int number = 100000 + random.nextInt(900000); // sinh số từ 100000 đến 999999
+        return String.valueOf(number);
+    }
 
     private List<Transaction> parseTransactions(List<String> messages) {
         List<Transaction> transactions = new ArrayList<>();
 
         for (String message : messages) {
-            // 1. Lấy số tiền sau "GD: "
+            // Lấy số tiền sau "GD: "
             Pattern amountPattern = Pattern.compile("GD:\\s*([+-][\\d,]+)VND");
             Matcher amountMatcher = amountPattern.matcher(message);
             if (!amountMatcher.find()) continue;
@@ -148,7 +151,7 @@ public class PaymentServiceImpl implements PaymentService {
                 continue;
             }
 
-            // 2. Lấy số sau "BOOKING"
+            // Lấy số bookingId sau "BOOKING"
             Pattern bookingIdPattern = Pattern.compile("BOOKING(\\d+)");
             Matcher bookingIdMatcher = bookingIdPattern.matcher(message);
             if (!bookingIdMatcher.find()) continue;
@@ -159,16 +162,18 @@ public class PaymentServiceImpl implements PaymentService {
             try {
                 rawId = Integer.valueOf(rawIdStr);
             } catch (NumberFormatException e) {
-                throw new RuntimeException("Invalid id format: " + rawIdStr);
+                throw new RuntimeException("Invalid booking id format: " + rawIdStr);
             }
 
-            transactions.add(new Transaction(rawId, amount, "SMS"));
+            // Lấy nguyên nội dung message làm note (bạn có thể chỉnh sửa nếu cần lấy đoạn cụ thể hơn)
+            String note = message;
+
+            // Tạo Transaction với bookingId, amount, và note
+            transactions.add(new Transaction(rawId, amount, note));
         }
 
         return transactions;
     }
-
-
 
 
 
