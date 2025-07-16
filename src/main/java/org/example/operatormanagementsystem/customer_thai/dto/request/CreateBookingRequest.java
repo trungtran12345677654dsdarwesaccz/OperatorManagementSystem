@@ -43,4 +43,6 @@ public class CreateBookingRequest {
     
     // Thêm danh sách items
     private java.util.List<org.example.operatormanagementsystem.customer_thai.dto.request.ItemsRequest> items;
+
+    private Integer vehicleQuantity;
 } 

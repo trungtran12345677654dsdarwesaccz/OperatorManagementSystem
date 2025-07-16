@@ -49,8 +49,8 @@ public class    BookingCustomerController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/bookings")
-    public ResponseEntity<List<BookingCustomerResponse>> getAllMyBookings() {
+    @GetMapping("/bookings/customer")
+    public ResponseEntity<List<BookingCustomerResponse>> getBookingsByCustomerId() {
         List<BookingCustomerResponse> bookings = bookingCustomerService.getAllMyBookings();
         return ResponseEntity.ok(bookings);
     }
@@ -138,6 +138,8 @@ public class    BookingCustomerController {
                         .licensePlate(transport.getLicensePlate())
                         .status(transport.getStatus())
                         .image(transport.getImageTransportUnit())
+                        .capacityPerVehicle(transport.getCapacityPerVehicle())
+                        .numberOfVehicles(transport.getNumberOfVehicles())
                         .build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(transportUnitInfos);
@@ -176,6 +178,18 @@ public class    BookingCustomerController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/transport-units/{transportUnitId}/checkvehicle")
+    public ResponseEntity<?> checkVehicleAvailability(
+            @PathVariable Integer transportUnitId,
+            @RequestParam Integer vehicleQuantity) {
+        boolean available = bookingCustomerService.checkVehicleAvailability(transportUnitId, vehicleQuantity);
+        if (available) {
+            return ResponseEntity.ok(java.util.Map.of("available", true));
+        } else {
+            return ResponseEntity.ok(java.util.Map.of("available", false, "message", "Không đủ số lượng xe"));
+        }
+    }
+
     // DTO classes for the new endpoints
     @lombok.Data
     @lombok.Builder
@@ -198,6 +212,8 @@ public class    BookingCustomerController {
         private String licensePlate;
         private org.example.operatormanagementsystem.enumeration.UserStatus status;
         private String image;
+        private Double capacityPerVehicle;
+        private Integer numberOfVehicles;
     }
 
     @lombok.Data

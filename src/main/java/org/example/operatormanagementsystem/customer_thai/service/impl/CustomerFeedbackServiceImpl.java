@@ -165,6 +165,14 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<FeedbackResponse> getAllFeedbacksByCustomerId(Integer customerId) {
+        List<Feedback> feedbacks = feedbackRepository.findAllByCustomerId(customerId);
+        return feedbacks.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     private StorageSummaryResponse mapToStorageSummaryResponse(StorageUnit storageUnit) {
         // Lấy feedback trực tiếp cho storage (không qua booking)
         List<Feedback> directFeedbacks = feedbackRepository.findByStorageIdWithCustomerInfo(storageUnit.getStorageId());

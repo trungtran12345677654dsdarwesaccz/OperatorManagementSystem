@@ -31,24 +31,6 @@ public class CustomerFeedbackController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/storage/{storageId}")
-    public ResponseEntity<FeedbackResponse> createFeedbackForStorage(@PathVariable Integer storageId, @Valid @RequestBody CreateFeedbackRequest request) {
-        Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
-        request.setStorageId(storageId);
-        request.setBookingId(null); 
-        FeedbackResponse response = feedbackService.createFeedback(request, customerId);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/transport/{transportId}")
-    public ResponseEntity<FeedbackResponse> createFeedbackForTransport(@PathVariable Integer transportId, @Valid @RequestBody CreateFeedbackRequest request) {
-        Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
-        request.setTransportId(transportId);
-        request.setBookingId(null); 
-        FeedbackResponse response = feedbackService.createFeedback(request, customerId);
-        return ResponseEntity.ok(response);
-    }
-
     @PutMapping("/{feedbackId}")
     public ResponseEntity<FeedbackResponse> updateFeedback(
             @PathVariable Integer feedbackId,
@@ -91,5 +73,13 @@ public class CustomerFeedbackController {
     public ResponseEntity<List<TransportSummaryResponse>> getAllTransportWithFeedbacks() {
         List<TransportSummaryResponse> transportUnits = feedbackService.getAllTransportWithFeedbacks();
         return ResponseEntity.ok(transportUnits);
+    }
+
+    // API mới: Lấy tất cả feedback của customer đang đăng nhập
+    @GetMapping("/myfeedbacks")
+    public ResponseEntity<List<FeedbackResponse>> getMyFeedbacks() {
+        Integer customerId = customerInfoService.getCurrentCustomerUser().getCustomer().getCustomerId();
+        List<FeedbackResponse> feedbacks = feedbackService.getAllFeedbacksByCustomerId(customerId);
+        return ResponseEntity.ok(feedbacks);
     }
 } 

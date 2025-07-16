@@ -20,9 +20,9 @@ public interface CustomerFeedbackService {
     
     FeedbackResponse dislikeFeedback(Integer feedbackId, Integer customerId);
     
-    // API mới để lấy tất cả storage với feedback
     List<StorageSummaryResponse> getAllStorageWithFeedbacks();
     
-    // API mới để lấy tất cả transport với feedback
     List<TransportSummaryResponse> getAllTransportWithFeedbacks();
+
+    List<FeedbackResponse> getAllFeedbacksByCustomerId(Integer customerId);
 } 

@@ -44,4 +44,6 @@ public class BookingCustomerResponse {
     
     // Thêm danh sách items
     private java.util.List<org.example.operatormanagementsystem.customer_thai.dto.response.ItemsResponse> items;
+
+    private Integer vehicleQuantity;
 } 

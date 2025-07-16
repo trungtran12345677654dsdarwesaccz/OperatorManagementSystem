@@ -75,6 +75,9 @@ public class Booking {
     @Column(name = "home_type", length = 100)
     private String homeType; // Loại nhà: chung cư, nhà riêng, văn phòng, etc.
 
+    @Column(name = "vehicle_quantity")
+    private Integer vehicleQuantity;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Items> items;
 

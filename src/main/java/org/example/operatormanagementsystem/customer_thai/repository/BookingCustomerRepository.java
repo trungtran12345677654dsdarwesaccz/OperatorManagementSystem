@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository("bookingRepository_thai")
 public interface BookingCustomerRepository extends JpaRepository<Booking, Integer> {
@@ -24,4 +26,7 @@ public interface BookingCustomerRepository extends JpaRepository<Booking, Intege
     Optional<Booking> findByStorageUnit_StorageIdAndSlotIndex(Integer storageId, Integer slotIndex);
 
     Optional<Booking> findTopByCustomer_Users_EmailOrderByCreatedAtDesc(String email);
+
+    @Query("SELECT COALESCE(SUM(b.vehicleQuantity), 0) FROM Booking b WHERE b.transportUnit.transportId = :transportUnitId")
+    int getTotalBookedVehicles(@Param("transportUnitId") Integer transportUnitId);
 } 
