@@ -116,7 +116,7 @@
                             .requestMatchers("/api/storage-units").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
-                            .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+                            .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/payment/**").hasAnyRole("CUSTOMER")
 
 

@@ -183,6 +183,13 @@
             <version>1.37.0</version>
         </dependency>
 
+        <!-- Google Cloud Vision API -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-vision</artifactId>
+            <version>3.41.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
