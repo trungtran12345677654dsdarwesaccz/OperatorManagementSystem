@@ -73,4 +73,9 @@ public interface BookingCustomerService {
     void deleteBookingItem(Integer bookingId, Integer itemId);
 
     SlotStatusResponse getSlotStatusByStorageId(Integer storageId);
+
+    /**
+     * Kiểm tra số lượng xe còn lại của transport unit
+     */
+    boolean checkVehicleAvailability(Integer transportUnitId, Integer vehicleQuantity);
 } 

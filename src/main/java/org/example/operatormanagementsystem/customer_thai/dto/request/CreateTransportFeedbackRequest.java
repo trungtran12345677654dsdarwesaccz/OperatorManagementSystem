@@ -6,26 +6,17 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.operatormanagementsystem.enumeration.TypeFeedback;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateFeedbackRequest {
-    
+public class CreateTransportFeedbackRequest {
     @NotNull(message = "Booking ID is required")
     private Integer bookingId;
-    
     @NotBlank(message = "Feedback content is required")
     private String content;
-    
-    @NotNull(message = "Feedback type is required")
-    private TypeFeedback type;
-
     private Integer star;
-    private Integer likes;
-    private Integer dislikes;
-    private Integer storageId;
+    @NotNull(message = "Transport ID is required")
     private Integer transportId;
 } 

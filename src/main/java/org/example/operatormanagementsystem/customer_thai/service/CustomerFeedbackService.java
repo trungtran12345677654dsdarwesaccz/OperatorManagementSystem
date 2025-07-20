@@ -1,7 +1,8 @@
 package org.example.operatormanagementsystem.customer_thai.service;
 
-import org.example.operatormanagementsystem.customer_thai.dto.request.CreateFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.request.UpdateFeedbackRequest;
+import org.example.operatormanagementsystem.customer_thai.dto.request.CreateStorageFeedbackRequest;
+import org.example.operatormanagementsystem.customer_thai.dto.request.CreateTransportFeedbackRequest;
 import org.example.operatormanagementsystem.customer_thai.dto.response.FeedbackResponse;
 import org.example.operatormanagementsystem.customer_thai.dto.response.StorageSummaryResponse;
 import org.example.operatormanagementsystem.customer_thai.dto.response.TransportSummaryResponse;
@@ -10,7 +11,8 @@ import java.util.List;
 
 public interface CustomerFeedbackService {
     
-    FeedbackResponse createFeedback(CreateFeedbackRequest request, Integer customerId);
+    FeedbackResponse createFeedbackStorage(CreateStorageFeedbackRequest request, Integer customerId);
+    FeedbackResponse createFeedbackTransport(CreateTransportFeedbackRequest request, Integer customerId);
     
     FeedbackResponse updateFeedback(Integer feedbackId, UpdateFeedbackRequest request, Integer customerId);
     
@@ -20,9 +22,9 @@ public interface CustomerFeedbackService {
     
     FeedbackResponse dislikeFeedback(Integer feedbackId, Integer customerId);
     
-    // API mới để lấy tất cả storage với feedback
     List<StorageSummaryResponse> getAllStorageWithFeedbacks();
     
-    // API mới để lấy tất cả transport với feedback
     List<TransportSummaryResponse> getAllTransportWithFeedbacks();
+
+    List<FeedbackResponse> getAllFeedbacksByCustomerId(Integer customerId);
 } 

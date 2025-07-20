@@ -32,4 +32,8 @@ public interface CustomerFeedbackRepository extends JpaRepository<Feedback, Inte
     // Lấy feedback trực tiếp cho transport unit theo ID với customer info
     @Query("SELECT f FROM Feedback f LEFT JOIN FETCH f.customer c LEFT JOIN FETCH c.users WHERE f.transportUnit.transportId = :transportId")
     List<Feedback> findByTransportIdWithCustomerInfo(@Param("transportId") Integer transportId);
+    
+    // Lấy tất cả feedback theo customer_id
+    @Query("SELECT f FROM Feedback f LEFT JOIN FETCH f.customer c LEFT JOIN FETCH c.users WHERE f.customer.customerId = :customerId ORDER BY f.createdAt DESC")
+    List<Feedback> findAllByCustomerId(@Param("customerId") Integer customerId);
 } 

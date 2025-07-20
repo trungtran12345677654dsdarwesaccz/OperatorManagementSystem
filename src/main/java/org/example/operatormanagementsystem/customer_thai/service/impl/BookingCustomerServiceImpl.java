@@ -82,12 +82,13 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .promotion(promotion)
                 .homeType(request.getHomeType())
                 .slotIndex(request.getSlotIndex())
+                .vehicleQuantity(request.getVehicleQuantity())
                 .build();
 
         Booking savedBooking = bookingCustomerRepository.save(booking);
 
         if (savedBooking.getNote() == null || savedBooking.getNote().isBlank()) {
-            String note = "BOOKING_" + savedBooking.getBookingId();
+            String note = "BOOKING" + savedBooking.getBookingId();
             savedBooking.setNote(note);
             bookingCustomerRepository.save(savedBooking); // update lại note
         }
@@ -231,6 +232,8 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .promotionDescription(booking.getPromotion() != null ? booking.getPromotion().getDescription() : null)
                 .homeType(booking.getHomeType())
                 .items(itemsResponses)
+                .slotIndex(booking.getSlotIndex())
+                .vehicleQuantity(booking.getVehicleQuantity())
                 .build();
     }
 
@@ -453,4 +456,12 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .build();
     }
 
+    @Override
+    public boolean checkVehicleAvailability(Integer transportUnitId, Integer vehicleQuantity) {
+        TransportUnit transportUnit = transportUnitRepository.findById(transportUnitId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn vị vận chuyển"));
+        int totalVehicles = transportUnit.getNumberOfVehicles() != null ? transportUnit.getNumberOfVehicles() : 0;
+        int bookedVehicles = bookingCustomerRepository.getTotalBookedVehicles(transportUnitId);
+        return (bookedVehicles + vehicleQuantity) <= totalVehicles;
+    }
 } 
