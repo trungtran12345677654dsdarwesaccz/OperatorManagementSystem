@@ -2,6 +2,7 @@ package org.example.operatormanagementsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.operatormanagementsystem.enumeration.DiscountType;
 
 import java.util.Date;
 import java.util.Set;
@@ -37,11 +38,16 @@ public class Promotion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id", nullable = true)
-    private Manager manager; // Thay thế OperatorStaff bằng Manager
+    private Manager manager;
 
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Booking> bookings;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", nullable = false)
+    private DiscountType discountType;
+    @Column(name = "discount_value")
+    private Double discountValue;
 
     @PrePersist
     protected void onCreate() {

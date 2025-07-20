@@ -46,6 +46,7 @@ public class PromotionServiceImpl implements PromotionService {
         return PromotionResponse.builder()
                 .id(promotion.getId())
                 .name(promotion.getName())
+                .description(promotion.getDescription())
                 .startDate(promotion.getStartDate())
                 .endDate(promotion.getEndDate())
                 .status("success")
@@ -139,6 +140,7 @@ public class PromotionServiceImpl implements PromotionService {
                 .map(p -> PromotionResponse.builder()
                         .id(p.getId())
                         .name(p.getName())
+                        .description(p.getDescription())
                         .startDate(p.getStartDate())
                         .endDate(p.getEndDate())
                         .status(p.getStatus())
@@ -157,6 +159,8 @@ public class PromotionServiceImpl implements PromotionService {
         long active = promotionRepository.countByStatus("ACTIVE");
         long upcoming = promotionRepository.countByStatus("UPCOMING");
         long expired = promotionRepository.countByStatus("EXPIRED");
+        long canceled = promotionRepository.countByStatus("CANCELED");
+        long pending = promotionRepository.countByStatus("PENDING");
 
         long bookingCount = bookingRepository.countByPromotionIsNotNull();
         Double revenue = bookingRepository.sumTotalByPromotionNotNull();

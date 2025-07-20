@@ -102,6 +102,7 @@
                             .requestMatchers("/api/payment/generate-vietqr/{bookingId}").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                             .requestMatchers("/api/promotions/**").hasRole("MANAGER")
+                            .requestMatchers("/api/report-performance/**").hasRole("MANAGER")
                             .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
                             .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
                             .requestMatchers("/api/dashboard/staff/**").hasAnyRole("MANAGER", "STAFF")

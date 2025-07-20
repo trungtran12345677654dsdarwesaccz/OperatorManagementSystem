@@ -1,10 +1,12 @@
 package org.example.operatormanagementsystem.managestaff_yen.repository;
 
 
+import org.example.operatormanagementsystem.entity.OperatorStaff;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.example.operatormanagementsystem.entity.Feedback;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FeedbackPromotionRepository extends JpaRepository<Feedback, Long> {
@@ -26,4 +28,6 @@ public interface FeedbackPromotionRepository extends JpaRepository<Feedback, Lon
     ORDER BY COUNT(f) DESC
 """)
     List<Object[]> countPositiveFeedbackGroupedByPromotion();
+
+    int countByOperatorStaffAndStarGreaterThanEqualAndCreatedAtBetween(OperatorStaff staff, int star, LocalDateTime from, LocalDateTime to);
 }
