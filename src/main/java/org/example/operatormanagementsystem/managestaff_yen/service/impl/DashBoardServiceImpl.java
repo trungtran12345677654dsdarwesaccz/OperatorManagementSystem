@@ -3,6 +3,7 @@ package org.example.operatormanagementsystem.managestaff_yen.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.entity.IssueLog;
 import org.example.operatormanagementsystem.entity.Payment;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.ChartFilterRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.TopOperatorFilterRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.*;
@@ -42,7 +43,7 @@ public class DashBoardServiceImpl implements DashboardService {
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        long activePromotions = promotionRepository.countByStatus("ACTIVE");
+        long activePromotions = promotionRepository.countByStatus(PromotionStatus.ACTIVE);
 
         long totalDelivered = bookingRepository.countByDate(today);
         long onTimeDelivered = bookingRepository.countByDateAndStatus(today, "ONTIME");

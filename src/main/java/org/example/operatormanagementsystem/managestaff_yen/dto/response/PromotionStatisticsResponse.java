@@ -12,6 +12,8 @@ public class PromotionStatisticsResponse {
     private long activePromotions;
     private long upcomingPromotions;
     private long expiredPromotions;
+    private long canceledPromotions;
+    private long pendingPromotions;
     private long totalPromotionBookings;
     private double totalPromotionRevenue;
     private long positiveFeedbackCount;

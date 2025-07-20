@@ -5,6 +5,7 @@ import org.example.operatormanagementsystem.customer_thai.dto.response.Promotion
 import org.example.operatormanagementsystem.customer_thai.repository.PromotionRepository;
 import org.example.operatormanagementsystem.customer_thai.service.PromotionService;
 import org.example.operatormanagementsystem.entity.Promotion;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public List<PromotionBookingResponse> getActivePromotions() {
-        List<Promotion> promotions = promotionRepository.findByStatus("ACTIVE");
+        List<Promotion> promotions = promotionRepository.findByStatus(PromotionStatus.ACTIVE);
         return promotions.stream()
                 .map(this::mapToPromotionResponse)
                 .collect(Collectors.toList());
@@ -43,4 +44,4 @@ public class PromotionServiceImpl implements PromotionService {
                 .status(promotion.getStatus())
                 .build();
     }
-} 
+}

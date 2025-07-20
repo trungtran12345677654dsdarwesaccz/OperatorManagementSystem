@@ -3,6 +3,7 @@ package org.example.operatormanagementsystem.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.operatormanagementsystem.enumeration.DiscountType;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
 
 import java.util.Date;
 import java.util.Set;
@@ -33,8 +34,10 @@ public class Promotion {
     @Column(name = "end_date")
     private Date endDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
-    private String status;
+    private PromotionStatus status;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id", nullable = true)

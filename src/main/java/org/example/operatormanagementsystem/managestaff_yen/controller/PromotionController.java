@@ -1,5 +1,7 @@
 package org.example.operatormanagementsystem.managestaff_yen.controller;
 
+import org.example.operatormanagementsystem.enumeration.DiscountType;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.UpdatePromotionRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.CancelPromotionRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.AddPromotionRequest;
@@ -23,9 +25,11 @@ public class PromotionController {
     @GetMapping
     public List<PromotionResponse> getAllPromotions(
             @RequestParam(value = "keyword", required = false) String keyword,
-            @RequestParam(value = "status", required = false) String status
+            @RequestParam(value = "status", required = false) PromotionStatus status, // ✅ sửa tại đây
+            @RequestParam(value = "discountType", required = false) DiscountType discountType,
+            @RequestParam(value = "discountValue", required = false) Double discountValue
     ) {
-        return promotionService.searchPromotions(keyword, status);
+        return promotionService.searchPromotions(keyword, status, discountType, discountValue);
     }
 
     @PostMapping("/update-dates")
@@ -60,7 +64,7 @@ public class PromotionController {
 
     @GetMapping("/statistics/chart/revenue")
     public List<ChartDataPointResponse> getPromotionRevenue(
-            @RequestParam String rangeType, // day, month, year
+            @RequestParam String rangeType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
@@ -69,7 +73,7 @@ public class PromotionController {
 
     @GetMapping("/statistics/chart/bookings")
     public List<ChartDataPointResponse> getPromotionBookingCount(
-            @RequestParam String rangeType, // day, month, year
+            @RequestParam String rangeType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {

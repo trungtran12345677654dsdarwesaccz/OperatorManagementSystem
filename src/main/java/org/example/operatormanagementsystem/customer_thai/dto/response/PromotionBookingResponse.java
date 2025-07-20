@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
 
 import java.util.Date;
 
@@ -17,5 +18,5 @@ public class PromotionBookingResponse {
     private String description;
     private Date startDate;
     private Date endDate;
-    private String status;
+    private PromotionStatus status;
 } 

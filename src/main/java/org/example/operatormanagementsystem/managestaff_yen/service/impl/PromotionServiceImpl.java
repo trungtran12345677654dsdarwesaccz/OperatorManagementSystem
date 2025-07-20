@@ -2,9 +2,9 @@ package org.example.operatormanagementsystem.managestaff_yen.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.entity.Promotion;
-import org.example.operatormanagementsystem.managestaff_yen.dto.request.AddPromotionRequest;
-import org.example.operatormanagementsystem.managestaff_yen.dto.request.CancelPromotionRequest;
-import org.example.operatormanagementsystem.managestaff_yen.dto.request.UpdatePromotionRequest;
+import org.example.operatormanagementsystem.enumeration.DiscountType;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
+import org.example.operatormanagementsystem.managestaff_yen.dto.request.*;
 import org.example.operatormanagementsystem.managestaff_yen.dto.response.*;
 import org.example.operatormanagementsystem.managestaff_yen.repository.BookingPromotionRepository;
 import org.example.operatormanagementsystem.managestaff_yen.repository.FeedbackPromotionRepository;
@@ -36,111 +36,122 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public PromotionResponse addPromotion(AddPromotionRequest request) {
-        Promotion promotion = new Promotion();
-        promotion.setName(request.getName());
-        promotion.setStartDate(request.getStartDate());
-        promotion.setEndDate(request.getEndDate());
-        promotion.setStatus(request.getStatus() != null ? request.getStatus() : "active");
+        Promotion promotion = Promotion.builder()
+                .name(request.getName())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .status(Optional.ofNullable(request.getStatus()).orElse(PromotionStatus.ACTIVE))
+                .discountType(request.getDiscountType())
+                .discountValue(request.getDiscountValue())
+                .description(request.getDescription())
+                .build();
+
         promotion = promotionRepository.save(promotion);
 
         return PromotionResponse.builder()
                 .id(promotion.getId())
                 .name(promotion.getName())
                 .description(promotion.getDescription())
+                .discountType(promotion.getDiscountType())
+                .discountValue(promotion.getDiscountValue())
                 .startDate(promotion.getStartDate())
                 .endDate(promotion.getEndDate())
-                .status("success")
+                .status(PromotionStatus.ACTIVE)
                 .message("Promotion added successfully")
                 .build();
     }
 
     @Override
     public PromotionResponse updatePromotion(UpdatePromotionRequest request) {
-        Optional<Promotion> opt = promotionRepository.findById(request.getId());
-        if (opt.isPresent()) {
-            Promotion promotion = opt.get();
-            promotion.setName(request.getName());
-            if (request.getStatus() != null) {
-                promotion.setStatus(request.getStatus());
-            }
-            promotionRepository.save(promotion);
-            return PromotionResponse.builder()
-                    .id(promotion.getId())
-                    .status("success")
-                    .message("Promotion updated successfully")
-                    .build();
-        }
-        return PromotionResponse.builder()
-                .status("error")
-                .message("Promotion not found")
-                .build();
+        return promotionRepository.findById(request.getId())
+                .map(promotion -> {
+                    promotion.setName(request.getName());
+                    promotion.setDescription(request.getDescription());
+                    promotion.setStartDate(request.getStartDate());
+                    promotion.setEndDate(request.getEndDate());
+
+                    if (request.getStatus() != null) promotion.setStatus(request.getStatus());
+                    if (request.getDiscountType() != null) promotion.setDiscountType(request.getDiscountType());
+                    if (request.getDiscountValue() != null) promotion.setDiscountValue(request.getDiscountValue());
+
+                    promotionRepository.save(promotion);
+                    return PromotionResponse.builder()
+                            .id(promotion.getId())
+                            .status(PromotionStatus.ACTIVE)
+                            .message("Promotion updated successfully")
+                            .build();
+                })
+                .orElse(PromotionResponse.builder()
+                        .status(PromotionStatus.PENDING) // Sử dụng PENDING cho trường hợp không tìm thấy
+                        .message("Promotion not found")
+                        .build());
     }
 
     @Override
     public PromotionResponse updatePromotionDates(UpdatePromotionRequest request) {
-        Optional<Promotion> opt = promotionRepository.findById(request.getId());
-        if (opt.isPresent()) {
-            Promotion promotion = opt.get();
-            promotion.setStartDate(request.getStartDate());
-            promotion.setEndDate(request.getEndDate());
-            promotionRepository.save(promotion);
-            return PromotionResponse.builder()
-                    .id(promotion.getId())
-                    .status("success")
-                    .message("Promotion dates updated successfully")
-                    .build();
-        }
-        return PromotionResponse.builder()
-                .status("error")
-                .message("Promotion not found")
-                .build();
+        return promotionRepository.findById(request.getId())
+                .map(promotion -> {
+                    promotion.setStartDate(request.getStartDate());
+                    promotion.setEndDate(request.getEndDate());
+                    promotionRepository.save(promotion);
+                    return PromotionResponse.builder()
+                            .id(promotion.getId())
+                            .status(PromotionStatus.ACTIVE)
+                            .message("Promotion dates updated successfully")
+                            .build();
+                })
+                .orElse(PromotionResponse.builder()
+                        .status(PromotionStatus.PENDING) // Sử dụng PENDING cho trường hợp không tìm thấy
+                        .message("Promotion not found")
+                        .build());
     }
 
     @Override
     public PromotionResponse updateDescription(UpdatePromotionRequest request) {
-        Optional<Promotion> opt = promotionRepository.findById(request.getId());
-        if (opt.isPresent()) {
-            Promotion promotion = opt.get();
-            promotion.setDescription(request.getDescription());
-            promotionRepository.save(promotion);
-            return PromotionResponse.builder()
-                    .id(promotion.getId())
-                    .status("success")
-                    .message("Promotion description updated successfully")
-                    .build();
-        }
-        return PromotionResponse.builder()
-                .status("error")
-                .message("Promotion not found")
-                .build();
+        return promotionRepository.findById(request.getId())
+                .map(promotion -> {
+                    promotion.setDescription(request.getDescription());
+                    promotionRepository.save(promotion);
+                    return PromotionResponse.builder()
+                            .id(promotion.getId())
+                            .status(PromotionStatus.ACTIVE)
+                            .message("Promotion description updated successfully")
+                            .build();
+                })
+                .orElse(PromotionResponse.builder()
+                        .status(PromotionStatus.PENDING) // Sử dụng PENDING cho trường hợp không tìm thấy
+                        .message("Promotion not found")
+                        .build());
     }
 
     @Override
     public PromotionResponse cancelPromotion(CancelPromotionRequest request) {
-        Optional<Promotion> opt = promotionRepository.findById(request.getId());
-        if (opt.isPresent()) {
-            Promotion promotion = opt.get();
-            promotion.setStatus("cancelled");
-            promotionRepository.save(promotion);
-            return PromotionResponse.builder()
-                    .id(promotion.getId())
-                    .status("success")
-                    .message("Promotion cancelled successfully")
-                    .build();
-        }
-        return PromotionResponse.builder()
-                .status("error")
-                .message("Promotion not found")
-                .build();
+        return promotionRepository.findById(request.getId())
+                .map(promotion -> {
+                    promotion.setStatus(PromotionStatus.CANCELED);
+                    promotionRepository.save(promotion);
+                    return PromotionResponse.builder()
+                            .id(promotion.getId())
+                            .status(PromotionStatus.CANCELED)
+                            .message("Promotion cancelled successfully")
+                            .build();
+                })
+                .orElse(PromotionResponse.builder()
+                        .status(PromotionStatus.PENDING) // Sử dụng PENDING cho trường hợp không tìm thấy
+                        .message("Promotion not found")
+                        .build());
     }
 
     @Override
-    public List<PromotionResponse> searchPromotions(String keyword, String status) {
-        return promotionRepository.searchByKeywordAndStatus(keyword, status).stream()
+    public List<PromotionResponse> searchPromotions(String keyword, PromotionStatus status, DiscountType discountType, Double discountValue) {
+        return promotionRepository.searchByKeywordAndStatus(keyword, status, discountType, discountValue)
+                .stream()
                 .map(p -> PromotionResponse.builder()
                         .id(p.getId())
                         .name(p.getName())
                         .description(p.getDescription())
+                        .discountType(p.getDiscountType())
+                        .discountValue(p.getDiscountValue())
                         .startDate(p.getStartDate())
                         .endDate(p.getEndDate())
                         .status(p.getStatus())
@@ -150,30 +161,21 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public List<PromotionResponse> getAllPromotions() {
-        return searchPromotions(null, null);
+        return searchPromotions(null, null, null, null);
     }
 
     @Override
     public PromotionStatisticsResponse getPromotionOverview() {
-        long total = promotionRepository.count();
-        long active = promotionRepository.countByStatus("ACTIVE");
-        long upcoming = promotionRepository.countByStatus("UPCOMING");
-        long expired = promotionRepository.countByStatus("EXPIRED");
-        long canceled = promotionRepository.countByStatus("CANCELED");
-        long pending = promotionRepository.countByStatus("PENDING");
-
-        long bookingCount = bookingRepository.countByPromotionIsNotNull();
-        Double revenue = bookingRepository.sumTotalByPromotionNotNull();
-        long feedbackCount = feedbackRepository.countPositiveFeedbackWithPromotion();
-
         return new PromotionStatisticsResponse(
-                total,
-                active,
-                upcoming,
-                expired,
-                bookingCount,
-                revenue != null ? revenue : 0,
-                feedbackCount
+                promotionRepository.count(),
+                promotionRepository.countByStatus(PromotionStatus.ACTIVE),
+                promotionRepository.countByStatus(PromotionStatus.UPCOMING),
+                promotionRepository.countByStatus(PromotionStatus.EXPIRED),
+                promotionRepository.countByStatus(PromotionStatus.CANCELED),
+                promotionRepository.countByStatus(PromotionStatus.PENDING),
+                bookingRepository.countByPromotionIsNotNull(),
+                Optional.ofNullable(bookingRepository.sumTotalByPromotionNotNull()).orElse(0.0),
+                feedbackRepository.countPositiveFeedbackWithPromotion()
         );
     }
 
@@ -181,98 +183,54 @@ public class PromotionServiceImpl implements PromotionService {
     public List<ChartDataPointResponse> getPromotionRevenue(String rangeType, LocalDate from, LocalDate to) {
         String pattern = mapRangeTypeToPattern(rangeType);
         List<Object[]> results = bookingRepository.sumPromotionRevenue(pattern, from, to);
-        List<ChartDataPointResponse> data = new ArrayList<>();
-
-        for (Object[] row : results) {
-            String rawDate = (String) row[0];
-            LocalDate date;
-
-            try {
-                switch (rangeType) {
-                    case "day" -> {
-                        date = LocalDate.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                    }
-                    case "month" -> {
-                        String[] parts = rawDate.split("-");
-                        int year = Integer.parseInt(parts[0]);
-                        int month = Integer.parseInt(parts[1]);
-                        date = LocalDate.of(year, month, 1);
-                    }
-                    case "year" -> {
-                        int year = Integer.parseInt(rawDate);
-                        date = LocalDate.of(year, 1, 1);
-                    }
-                    default -> throw new IllegalArgumentException("Invalid rangeType: " + rangeType);
-                }
-
-                Long value = row[1] != null ? ((Number) row[1]).longValue() : 0L;
-                data.add(new ChartDataPointResponse(date, value.intValue()));
-            } catch (Exception e) {
-                System.err.println(">>> Error parsing date string: " + rawDate + " for rangeType: " + rangeType);
-                e.printStackTrace();
-            }
-        }
-
-        return data;
+        return parseChartData(results, rangeType);
     }
-
 
     @Override
     public List<ChartDataPointResponse> getPromotionBookingCount(String rangeType, LocalDate from, LocalDate to) {
         String pattern = mapRangeTypeToPattern(rangeType);
         List<Object[]> results = bookingRepository.countBookingsWithPromotion(pattern, from, to);
+        return parseChartData(results, rangeType);
+    }
+
+    private List<ChartDataPointResponse> parseChartData(List<Object[]> results, String rangeType) {
         List<ChartDataPointResponse> data = new ArrayList<>();
-
         for (Object[] row : results) {
-            String rawDate = row[0] != null ? row[0].toString() : null;
-            if (rawDate == null) continue;
-
-            LocalDate date;
             try {
-                switch (rangeType) {
-                    case "day" -> date = LocalDate.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                String rawDate = row[0] != null ? row[0].toString() : null;
+                if (rawDate == null) continue;
+
+                LocalDate date = switch (rangeType) {
+                    case "day" -> LocalDate.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                     case "month" -> {
                         String[] parts = rawDate.split("-");
-                        int year = Integer.parseInt(parts[0]);
-                        int month = Integer.parseInt(parts[1]);
-                        date = LocalDate.of(year, month, 1);
+                        yield LocalDate.of(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), 1);
                     }
-                    case "year" -> {
-                        int year = Integer.parseInt(rawDate);
-                        date = LocalDate.of(year, 1, 1);
-                    }
+                    case "year" -> LocalDate.of(Integer.parseInt(rawDate), 1, 1);
                     default -> throw new IllegalArgumentException("Invalid rangeType: " + rangeType);
-                }
-                Long count = row[1] != null ? ((Number) row[1]).longValue() : 0L;
-                data.add(new ChartDataPointResponse(date, count.intValue()));
+                };
+
+                int value = row[1] != null ? ((Number) row[1]).intValue() : 0;
+                data.add(new ChartDataPointResponse(date, value));
             } catch (Exception e) {
-                System.err.printf("Loi parse date: %s, rangeType: %s%n", rawDate, rangeType);
+                System.err.printf("Lỗi parse dữ liệu: %s (%s)%n", row[0], rangeType);
             }
         }
-
         return data;
     }
 
-
     @Override
     public List<PieChartSegmentResponse> getPromotionStatusRatio() {
-        List<PieChartSegmentResponse> list = new ArrayList<>();
-        list.add(new PieChartSegmentResponse("ACTIVE", promotionRepository.countByStatus("ACTIVE")));
-        list.add(new PieChartSegmentResponse("UPCOMING", promotionRepository.countByStatus("UPCOMING")));
-        list.add(new PieChartSegmentResponse("EXPIRED", promotionRepository.countByStatus("EXPIRED")));
-        return list;
+        return Arrays.stream(PromotionStatus.values())
+                .map(status -> new PieChartSegmentResponse(status.name(), promotionRepository.countByStatus(status)))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<BarChartDataResponse> getPositiveFeedbackByPromotion() {
-        List<Object[]> result = feedbackRepository.countPositiveFeedbackGroupedByPromotion();
-        List<BarChartDataResponse> data = new ArrayList<>();
-        for (Object[] row : result) {
-            String name = (String) row[0];
-            Long count = (Long) row[1];
-            data.add(new BarChartDataResponse(name, count.intValue()));
-        }
-        return data;
+        return feedbackRepository.countPositiveFeedbackGroupedByPromotion()
+                .stream()
+                .map(row -> new BarChartDataResponse((String) row[0], ((Number) row[1]).intValue()))
+                .collect(Collectors.toList());
     }
-
 }

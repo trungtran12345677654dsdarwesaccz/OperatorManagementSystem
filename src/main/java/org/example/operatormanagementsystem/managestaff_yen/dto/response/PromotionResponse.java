@@ -1,6 +1,8 @@
 package org.example.operatormanagementsystem.managestaff_yen.dto.response;
 
 import lombok.Builder;
+import org.example.operatormanagementsystem.enumeration.DiscountType;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
 
 import java.util.Date;
 
@@ -11,8 +13,10 @@ public class PromotionResponse {
     private String description;
     private Date startDate;
     private Date endDate;
-    private String status;
+    private PromotionStatus status;
     private String message;
+    private DiscountType discountType;
+    private Double discountValue;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -30,9 +34,15 @@ public class PromotionResponse {
     public Date getEndDate() { return endDate; }
     public void setEndDate(Date endDate) { this.endDate = endDate; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public PromotionStatus getStatus() { return status; }
+    public void setStatus(PromotionStatus status) { this.status = status; }
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+
+    public DiscountType getDiscountType() { return discountType; }
+    public void setDiscountType(DiscountType discountType) { this.discountType = discountType; }
+
+    public Double getDiscountValue() { return discountValue; }
+    public void setDiscountValue(Double discountValue) { this.discountValue = discountValue; }
 }

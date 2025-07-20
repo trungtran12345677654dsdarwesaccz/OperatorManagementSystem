@@ -1,6 +1,8 @@
 
 package org.example.operatormanagementsystem.managestaff_yen.service;
 
+import org.example.operatormanagementsystem.enumeration.DiscountType;
+import org.example.operatormanagementsystem.enumeration.PromotionStatus;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.UpdatePromotionRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.CancelPromotionRequest;
 import org.example.operatormanagementsystem.managestaff_yen.dto.request.AddPromotionRequest;
@@ -15,9 +17,10 @@ public interface PromotionService {
     PromotionResponse updatePromotion(UpdatePromotionRequest request);
     PromotionResponse cancelPromotion(CancelPromotionRequest request);
 
-    List<PromotionResponse> searchPromotions(String keyword, String status);
+    List<PromotionResponse> searchPromotions(String keyword, PromotionStatus status, DiscountType discountType, Double discountValue);
+
     default List<PromotionResponse> searchPromotions(String keyword) {
-        return searchPromotions(keyword, null);
+        return searchPromotions(keyword, null, null, null);
     }
 
     PromotionResponse addPromotion(AddPromotionRequest request);
