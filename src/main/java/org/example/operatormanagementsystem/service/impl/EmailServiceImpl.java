@@ -4,7 +4,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.config.JwtUtil;
-import org.example.operatormanagementsystem.dto.request.LoginRequest;
 import org.example.operatormanagementsystem.dto.request.VerifyOTPRequest;
 import org.example.operatormanagementsystem.dto.response.AuthLoginResponse;
 import org.example.operatormanagementsystem.entity.*;
@@ -13,8 +12,6 @@ import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.example.operatormanagementsystem.repository.*;
 import org.example.operatormanagementsystem.service.EmailService;
 import org.example.operatormanagementsystem.service.UserActivityLogService;
-import org.example.operatormanagementsystem.template.EmailTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -30,7 +27,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
@@ -326,6 +322,11 @@ private final UserUsageStatRepository usageStatRepository;
         System.out.println("DEBUG: sendHtmlEmail - Email sent successfully to '" + recipientEmail + "' with subject: " + subject);
     }
 
+    @Override
+    public void sendStorageUnitApprovalNotification(String recipientEmail, String name, ApprovalStatus status, String managerNote) {
+
+    }
+
 
     @Async
     @Override
@@ -365,4 +366,40 @@ private final UserUsageStatRepository usageStatRepository;
 
         System.out.println("DEBUG: sendTransportUnitApprovalNotification - Email sent successfully to '" + recipientEmail + "' for Transport Unit '" + transportUnitName + "' with status: " + status.name());
     }
+    @Async
+    @Override
+    public void sendStorageUnitApprovalNotification(
+            String recipientEmail,
+            String userName,
+            String storageUnitName,
+            ApprovalStatus status,
+            String managerNote
+    ) throws MessagingException {
+        // Bạn có thể thêm storageUnitName nếu cần, hoặc truyền thêm vào params nếu interface khai báo thêm
+        String subject;
+        String htmlBody;
+
+        String displayUserName = (userName != null && !userName.trim().isEmpty()) ? userName : "Bạn";
+
+        switch (status) {
+            case APPROVED:
+                subject = "[OperatorManagementSystem] Kho lưu trữ của bạn đã được duyệt";
+                break;
+            case REJECTED:
+                subject = "[OperatorManagementSystem] Kho lưu trữ của bạn đã bị từ chối";
+                break;
+            default:
+                subject = "[OperatorManagementSystem] Cập nhật trạng thái Kho lưu trữ";
+                break;
+        }
+
+        htmlBody = "Chào " + displayUserName + ",\n\n" +
+                "Kho lưu trữ của bạn đã được " + status.name() + ".\n" +
+                "Ghi chú: " + (managerNote != null && !managerNote.isEmpty() ? managerNote : "Không có ghi chú.") + "\n\n" +
+                "Trân trọng,\nHệ thống OperatorManagementSystem.";
+
+        sendHtmlEmail(recipientEmail, subject, htmlBody);
+
+    }
+
 }

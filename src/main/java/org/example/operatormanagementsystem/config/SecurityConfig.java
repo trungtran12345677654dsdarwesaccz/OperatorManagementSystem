@@ -65,7 +65,7 @@
                 "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
                 "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
                 "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**",
-                "/api/auth/customer/login"
+                "/api/auth/customer/login", "//api/onboarding/**"
         };
 
         private static final String[] GET_PUBLIC_ENDPOINTS = {
@@ -97,6 +97,8 @@
                                     "/api/onboarding/**",
                                     "/api/auth/reset-password",
                                     "/api/auth/login/verify-otp").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/onboarding/storage-unit-via-email").permitAll()
+
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .requestMatchers("/api/payment/sms-callback").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/payment/generate-vietqr/{bookingId}").hasAnyRole("CUSTOMER")
@@ -114,7 +116,9 @@
                             .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAuthority("ROLE_STAFF")
-                            .requestMatchers("/api/storage-units").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/storage-units").hasAuthority("ROLE_STAFF")
+                            .requestMatchers("/api/storage-unit-approvals/**").hasRole("MANAGER")
+                            .requestMatchers("/api/storage-units/**").hasAuthority("ROLE_STAFF")
                             .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER")
