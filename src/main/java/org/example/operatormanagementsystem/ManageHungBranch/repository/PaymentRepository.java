@@ -14,8 +14,14 @@ import java.util.List;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
+<<<<<<< HEAD
 
 
+=======
+    // Tìm theo trạng thái
+    List<Payment> findByStatus(String status);
+    List<Payment> findByStatusIn(List<String> statuses); // Thêm để hỗ trợ tương lai
+>>>>>>> origin/phong
 
     List<Payment> findTop3ByBooking_Customer_Users_EmailOrderByPaidDateDesc(String email);
 
@@ -24,11 +30,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     @Query("SELECT p FROM Payment p WHERE p.paidDate BETWEEN :fromDate AND :toDate")
     List<Payment> findByDateRange(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 
-
-
-
-
-    // Custom search method (cần implement bằng Specification hoặc @Query phức tạp)
+    // Custom search method
     @Query("""
     SELECT p FROM Payment p
     WHERE 
@@ -40,5 +42,15 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
 """)
     Page<Payment> searchPayments(@Param("search") PaymentSearchDTO search, Pageable pageable);
 
+<<<<<<< HEAD
     Payment findByTransactionNo(String transactionNo);
+=======
+    // Thống kê payment theo trạng thái
+    @Query("SELECT p.status, COUNT(p) FROM Payment p GROUP BY p.status")
+    List<Object[]> getPaymentStatsByStatus();
+
+    // Tổng số tiền theo trạng thái
+    @Query("SELECT p.status, SUM(p.amount) FROM Payment p GROUP BY p.status")
+    List<Object[]> getTotalAmountByStatus();
+>>>>>>> origin/phong
 }

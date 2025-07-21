@@ -13,7 +13,17 @@ import org.example.operatormanagementsystem.dashboardstaff.dto.response.RecentAc
 import org.example.operatormanagementsystem.dashboardstaff.dto.response.TeamRankingResponse;
 import org.example.operatormanagementsystem.dashboardstaff.dto.response.AchievementResponse;
 import org.example.operatormanagementsystem.dashboardstaff.service.DashboardStaffService;
+<<<<<<< HEAD
 import org.example.operatormanagementsystem.entity.*;
+=======
+import org.example.operatormanagementsystem.entity.Booking;
+import org.example.operatormanagementsystem.entity.Feedback;
+import org.example.operatormanagementsystem.entity.OperatorStaff;
+import org.example.operatormanagementsystem.entity.Position;
+import org.example.operatormanagementsystem.entity.Revenue;
+import org.example.operatormanagementsystem.entity.TransportUnit;
+import org.example.operatormanagementsystem.entity.Users;
+>>>>>>> origin/phong
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.BookingRepository;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.repository.CustomerRepository;
 import org.example.operatormanagementsystem.repository.UserRepository;
@@ -26,10 +36,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+<<<<<<< HEAD
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 
+=======
+>>>>>>> origin/phong
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
@@ -38,7 +51,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+<<<<<<< HEAD
 import java.util.OptionalInt;
+=======
+>>>>>>> origin/phong
 
 @Service
 @RequiredArgsConstructor
@@ -55,9 +71,12 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     private final TransportUnitRepository transportUnitRepository;
     private final OperatorStaffRepository operatorStaffRepository;
     private final FeedbackRepository feedbackRepository;
+<<<<<<< HEAD
 
     @PersistenceContext
     private EntityManager entityManager;
+=======
+>>>>>>> origin/phong
 
     @Override
     public void addPosition(DashboardStaffRequest request) {
@@ -191,9 +210,15 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             monthlyData.forEach((month, unitMap) -> {
                 MonthlyRevenueResponse response = new MonthlyRevenueResponse();
                 response.setMonth(month);
+<<<<<<< HEAD
                 response.setChuyenNha24H(unitMap.getOrDefault("chuyenNha24H", BigDecimal.ZERO));
                 response.setDvChuyenNhaSaiGon(unitMap.getOrDefault("dvChuyenNhaSaiGon", BigDecimal.ZERO));
                 response.setChuyenNhaMinhAnh(unitMap.getOrDefault("chuyenNhaMinhAnh", BigDecimal.ZERO));
+=======
+                response.setChuyenNha24H(unitMap.getOrDefault("Chuyển Nhà 24H", BigDecimal.ZERO));
+                response.setDvChuyenNhaSaiGon(unitMap.getOrDefault("DV Chuyển Nhà Sài Gòn", BigDecimal.ZERO));
+                response.setChuyenNhaMinhAnh(unitMap.getOrDefault("Chuyển Nhà Minh Anh", BigDecimal.ZERO));
+>>>>>>> origin/phong
                 result.add(response);
             });
 
@@ -238,10 +263,14 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                         .count());
                 response.setHuy((int) bookingList.stream().filter(b -> "CANCELLED".equals(b.getStatus())).count());
                 response.setTre((int) bookingList.stream()
+<<<<<<< HEAD
                         .filter(b -> "COMPLETED".equals(b.getStatus())
                                 && b.getDeliveryDate() != null
                                 && b.getCreatedAt() != null
                                 && b.getCreatedAt().toLocalDate().isAfter(b.getDeliveryDate().toLocalDate()))
+=======
+                        .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getDeliveryDate() != null && b.getDeliveryDate().toLocalDate().isAfter(LocalDate.now()))
+>>>>>>> origin/phong
                         .count());
                 result.add(response);
             });
@@ -285,6 +314,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                     DetailDataResponse response = new DetailDataResponse();
                     response.setMonth(month);
                     response.setUnit(unitName);
+<<<<<<< HEAD
                     int onTime = 0, cancelled = 0, late = 0, trips = 0;
                     for (Booking b : bookingList) {
                         if ("CANCELLED".equals(b.getStatus())) {
@@ -306,6 +336,21 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                     response.setRevenue(DECIMAL_FORMAT.format(bookingList.stream()
                             .map(b -> new BigDecimal(b.getTotal()))
                             .reduce(BigDecimal.ZERO, BigDecimal::add)));
+=======
+                    response.setTrips(bookingList.size());
+                    response.setRevenue(DECIMAL_FORMAT.format(bookingList.stream()
+                            .map(b -> new BigDecimal(b.getTotal()))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)));
+                    response.setOnTime((int) bookingList.stream()
+                            .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isAfter(LocalDate.now()))
+                            .count());
+                    response.setCancelled((int) bookingList.stream()
+                            .filter(b -> "CANCELLED".equals(b.getStatus()))
+                            .count());
+                    response.setLate((int) bookingList.stream()
+                            .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getDeliveryDate() != null && b.getDeliveryDate().toLocalDate().isAfter(LocalDate.now()))
+                            .count());
+>>>>>>> origin/phong
                     result.add(response);
                 });
             });
@@ -325,6 +370,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     @Override
     public TransportDataResponse getTransportData(String year, String unit) {
         try {
+<<<<<<< HEAD
             List<Booking> allBookings = bookingRepository.findAll();
             List<Revenue> allRevenues = revenueRepository.findAll();
 
@@ -427,6 +473,26 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
 
             List<Revenue> prevRevenues = allRevenues.stream()
                     .filter(r -> isGrowth && !r.getDate().isBefore(finalPrevStartDate) && !r.getDate().isAfter(finalPrevEndDate))
+=======
+            List<Booking> bookings = bookingRepository.findAll();
+            List<Revenue> revenues = revenueRepository.findAll();
+            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, 1, 1) : LocalDate.of(Integer.parseInt(year), 1, 1);
+            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), 12, 31);
+
+            bookings = bookings.stream()
+                    .filter(b -> {
+                        LocalDate bookingDate = b.getDeliveryDate() != null ? b.getDeliveryDate().toLocalDate() : null;
+                        return bookingDate != null && !bookingDate.isBefore(startDate) && !bookingDate.isAfter(endDate);
+                    })
+                    .filter(b -> unit.equals("Tất cả") || b.getTransportUnit().getNameCompany().equals(unit))
+                    .collect(Collectors.toList());
+
+            revenues = revenues.stream()
+                    .filter(r -> {
+                        LocalDate revenueDate = r.getDate();
+                        return !revenueDate.isBefore(startDate) && !revenueDate.isAfter(endDate);
+                    })
+>>>>>>> origin/phong
                     .filter(r -> unit.equals("Tất cả") ||
                             (r.getBeneficiaryType().equals("TRANSPORT_UNIT") &&
                                     transportUnitRepository.findById(Integer.parseInt(r.getBeneficiaryId().toString()))
@@ -434,6 +500,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                                             .orElse(false)))
                     .collect(Collectors.toList());
 
+<<<<<<< HEAD
             System.out.println("Current year: " + selectedYear + ", Bookings: " + bookings.size() + ", Revenue: " + revenues.size());
             System.out.println("Prev year: " + (selectedYear-1) + ", Bookings: " + prevBookings.size() + ", Revenue: " + prevRevenues.size());
 
@@ -536,6 +603,62 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             System.out.println("Revenue Growth: " + response.getRevenueGrowth() + "%");
             System.out.println("Delivery Rate Growth: " + response.getDeliveryRateGrowth() + "%");
             System.out.println("Volume Growth: " + response.getVolumeGrowth() + "%");
+=======
+            TransportDataResponse response = new TransportDataResponse();
+            response.setTotalShipments(bookings.size());
+            response.setRevenue(DECIMAL_FORMAT.format(revenues.stream()
+                    .map(r -> r.getAmount() != null ? r.getAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)));
+            response.setDeliveryRate(bookings.isEmpty() ? 0 : (double) bookings.stream()
+                    .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getTransports() != null && b.getTransports().stream().anyMatch(t -> "ON_TIME".equals(t.getStatus())))
+                    .count() / bookings.size() * 100);
+            response.setTotalVolume(bookings.stream()
+                    .flatMap(b -> b.getItems().stream())
+                    .mapToDouble(item -> item.getWeight() != null ? item.getWeight().doubleValue() : 0)
+                    .sum() / 1000);
+
+            LocalDate prevStartDate = startDate.minusYears(1);
+            LocalDate prevEndDate = endDate.minusYears(1);
+            List<Booking> prevBookings = bookingRepository.findAll().stream()
+                    .filter(b -> {
+                        LocalDate bookingDate = b.getDeliveryDate() != null ? b.getDeliveryDate().toLocalDate() : null;
+                        return bookingDate != null && !bookingDate.isBefore(prevStartDate) && !bookingDate.isAfter(prevEndDate);
+                    })
+                    .filter(b -> unit.equals("Tất cả") || b.getTransportUnit().getNameCompany().equals(unit))
+                    .collect(Collectors.toList());
+            List<Revenue> prevRevenues = revenueRepository.findAll().stream()
+                    .filter(r -> {
+                        LocalDate revenueDate = r.getDate();
+                        return !revenueDate.isBefore(prevStartDate) && !revenueDate.isAfter(prevEndDate);
+                    })
+                    .filter(r -> unit.equals("Tất cả") ||
+                            (r.getBeneficiaryType().equals("TRANSPORT_UNIT") &&
+                                    transportUnitRepository.findById(Integer.parseInt(r.getBeneficiaryId().toString()))
+                                            .map(tu -> tu.getNameCompany().equals(unit))
+                                            .orElse(false)))
+                    .collect(Collectors.toList());
+
+            response.setShipmentGrowth(prevBookings.isEmpty() ? 0 : ((double) bookings.size() - prevBookings.size()) / prevBookings.size() * 100);
+            response.setRevenueGrowth(prevRevenues.isEmpty() || prevRevenues.stream().map(Revenue::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue() == 0 ? 0 : revenues.stream()
+                    .map(Revenue::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .subtract(prevRevenues.stream().map(Revenue::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add))
+                    .divide(prevRevenues.stream().map(Revenue::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add), 2, BigDecimal.ROUND_HALF_UP)
+                    .doubleValue() * 100);
+            response.setDeliveryRateGrowth(prevBookings.isEmpty() ? 0 : response.getDeliveryRate() - ((double) prevBookings.stream()
+                    .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getTransports() != null && b.getTransports().stream().anyMatch(t -> "ON_TIME".equals(t.getStatus())))
+                    .count() / prevBookings.size() * 100));
+            response.setVolumeGrowth(prevBookings.isEmpty() || prevBookings.stream()
+                    .flatMap(b -> b.getItems().stream())
+                    .mapToDouble(item -> item.getWeight() != null ? item.getWeight().doubleValue() : 0)
+                    .sum() / 1000 == 0 ? 0 : (response.getTotalVolume() - prevBookings.stream()
+                    .flatMap(b -> b.getItems().stream())
+                    .mapToDouble(item -> item.getWeight() != null ? item.getWeight().doubleValue() : 0)
+                    .sum() / 1000) / (prevBookings.stream()
+                    .flatMap(b -> b.getItems().stream())
+                    .mapToDouble(item -> item.getWeight() != null ? item.getWeight().doubleValue() : 0)
+                    .sum() / 1000) * 100);
+>>>>>>> origin/phong
 
             return response;
         } catch (Exception e) {
@@ -548,6 +671,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     public List<RankingDataResponse> getRankingData(String period, String metric) {
         try {
             List<OperatorStaff> staffList = operatorStaffRepository.findAll();
+<<<<<<< HEAD
             System.out.println("=== StaffList size: " + staffList.size() + " ===");
             for (OperatorStaff s : staffList) {
                 System.out.println("OperatorId: " + s.getOperatorId()
@@ -557,6 +681,8 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             List<Booking> allBookings = bookingRepository.findAll();
             List<Revenue> allRevenues = revenueRepository.findAll();
             List<TransportUnit> allUnits = transportUnitRepository.findAll();
+=======
+>>>>>>> origin/phong
             LocalDate startDate;
             LocalDate endDate = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
 
@@ -565,6 +691,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                     startDate = endDate.minusWeeks(1);
                     break;
                 case "month":
+<<<<<<< HEAD
                     startDate = endDate.withDayOfMonth(1);
                     endDate = endDate.withDayOfMonth(endDate.lengthOfMonth());
                     break;
@@ -758,6 +885,8 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                     startDate = endDate.minusWeeks(1);
                     break;
                 case "month":
+=======
+>>>>>>> origin/phong
                     startDate = endDate.minusMonths(1);
                     break;
                 case "quarter":
@@ -766,6 +895,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                 case "year":
                     startDate = endDate.minusYears(1);
                     break;
+<<<<<<< HEAD
                 case "all":
                     startDate = LocalDate.of(2000, 1, 1);
                     endDate = LocalDate.of(2100, 12, 31);
@@ -945,11 +1075,111 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                 response.setMembers(members);
                 response.setChange(formattedChange);
                 response.setTrend(trend);
+=======
+                default:
+                    startDate = LocalDate.of(2000, 1, 1);
+            }
+
+            List<RankingDataResponse> result = new ArrayList<>();
+            for (OperatorStaff staff : staffList) {
+                List<Booking> bookings = bookingRepository.findByOperatorStaff(staff).stream()
+                        .filter(b -> b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isBefore(startDate) && !b.getDeliveryDate().toLocalDate().isAfter(endDate))
+                        .collect(Collectors.toList());
+                List<Revenue> revenues = revenueRepository.findAll().stream()
+                        .filter(r -> r.getBeneficiaryType().equals("OPERATOR_STAFF") &&
+                                r.getBeneficiaryId().equals(staff.getOperatorId()) &&
+                                !r.getDate().isBefore(startDate) && !r.getDate().isAfter(endDate))
+                        .collect(Collectors.toList());
+                List<Feedback> feedbacks = feedbackRepository.findByOperatorStaff(staff).stream()
+                        .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(startDate) && !f.getCreatedAt().toLocalDate().isAfter(endDate))
+                        .collect(Collectors.toList());
+
+                RankingDataResponse response = new RankingDataResponse();
+                response.setName(staff.getUsers() != null ? staff.getUsers().getFullName() : "Unknown");
+                response.setUnit(bookings.isEmpty() ? "Unknown Unit" : bookings.get(0).getTransportUnit().getNameCompany());
+                response.setRevenue(DECIMAL_FORMAT.format(revenues.stream()
+                        .map(r -> r.getAmount() != null ? r.getAmount() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)));
+                response.setTrips(bookings.size());
+                response.setSuccessRate(bookings.isEmpty() ? 0 : (double) bookings.stream()
+                        .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getTransports() != null && b.getTransports().stream().anyMatch(t -> "ON_TIME".equals(t.getStatus())))
+                        .count() / bookings.size() * 100);
+
+                String fullName = staff.getUsers() != null ? staff.getUsers().getFullName() : "";
+                String avatar = "";
+                if (fullName != null && !fullName.trim().isEmpty()) {
+                    avatar = Arrays.stream(fullName.split(" "))
+                            .filter(w -> !w.isEmpty())
+                            .map(w -> w.substring(0, 1))
+                            .collect(Collectors.joining())
+                            .toUpperCase();
+                    avatar = avatar.substring(0, Math.min(2, avatar.length()));
+                }
+                response.setAvatar(avatar);
+
+                LocalDate prevStartDate = startDate.minusDays(java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1);
+                LocalDate prevEndDate = startDate.minusDays(1);
+
+                List<Booking> prevBookings = bookingRepository.findByOperatorStaff(staff).stream()
+                        .filter(b -> b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isBefore(prevStartDate) && !b.getDeliveryDate().toLocalDate().isAfter(prevEndDate))
+                        .collect(Collectors.toList());
+                List<Revenue> prevRevenues = revenueRepository.findAll().stream()
+                        .filter(r -> r.getBeneficiaryType().equals("OPERATOR_STAFF") &&
+                                r.getBeneficiaryId().equals(staff.getOperatorId()) &&
+                                !r.getDate().isBefore(prevStartDate) && !r.getDate().isAfter(prevEndDate))
+                        .collect(Collectors.toList());
+                List<Feedback> prevFeedbacks = feedbackRepository.findByOperatorStaff(staff).stream()
+                        .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(prevStartDate) && !f.getCreatedAt().toLocalDate().isAfter(prevEndDate))
+                        .collect(Collectors.toList());
+
+                double prevValue = 0;
+                switch (metric) {
+                    case "revenue":
+                        prevValue = prevRevenues.stream()
+                                .map(r -> r.getAmount() != null ? r.getAmount() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue();
+                        break;
+                    case "trips":
+                        prevValue = prevBookings.size();
+                        break;
+                    case "success_rate":
+                        prevValue = prevBookings.isEmpty() ? 0 : (double) prevBookings.stream()
+                                .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getTransports() != null && b.getTransports().stream().anyMatch(t -> "ON_TIME".equals(t.getStatus())))
+                                .count() / prevBookings.size() * 100;
+                        break;
+                    case "customer_rating":
+                        prevValue = prevFeedbacks.isEmpty() ? 0 : prevFeedbacks.stream().mapToDouble(Feedback::getStar).average().orElse(0);
+                        break;
+                }
+
+                double currentValue = 0;
+                switch (metric) {
+                    case "revenue":
+                        currentValue = revenues.stream()
+                                .map(r -> r.getAmount() != null ? r.getAmount() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue();
+                        break;
+                    case "trips":
+                        currentValue = bookings.size();
+                        break;
+                    case "success_rate":
+                        currentValue = response.getSuccessRate();
+                        break;
+                    case "customer_rating":
+                        currentValue = feedbacks.isEmpty() ? 0 : feedbacks.stream().mapToDouble(Feedback::getStar).average().orElse(0);
+                        break;
+                }
+
+                double change = prevValue == 0 ? 0 : (currentValue - prevValue) / prevValue * 100;
+                response.setChange(String.format("%.1f%%", Math.abs(change)));
+                response.setTrend(change >= 0 ? "up" : "down");
+>>>>>>> origin/phong
 
                 result.add(response);
             }
 
             result.sort((a, b) -> {
+<<<<<<< HEAD
                 switch (metric.toLowerCase()) {
                     case "revenue":
                         try {
@@ -994,6 +1224,217 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
 
         } catch (Exception e) {
             System.err.println("Error in getTeamRanking: " + e.getMessage());
+=======
+                double ratingA = 0;
+                double ratingB = 0;
+                if (metric.equals("customer_rating")) {
+                    Optional<OperatorStaff> staffA = staffList.stream()
+                            .filter(s -> s.getUsers() != null && a.getName().equals(s.getUsers().getFullName()))
+                            .findFirst();
+                    if (staffA.isPresent()) {
+                        ratingA = feedbackRepository.findByOperatorStaff(staffA.get()).stream()
+                                .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(startDate) && !f.getCreatedAt().toLocalDate().isAfter(endDate))
+                                .mapToDouble(Feedback::getStar)
+                                .average().orElse(0);
+                    }
+
+                    Optional<OperatorStaff> staffB = staffList.stream()
+                            .filter(s -> s.getUsers() != null && b.getName().equals(s.getUsers().getFullName()))
+                            .findFirst();
+                    if (staffB.isPresent()) {
+                        ratingB = feedbackRepository.findByOperatorStaff(staffB.get()).stream()
+                                .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(startDate) && !f.getCreatedAt().toLocalDate().isAfter(endDate))
+                                .mapToDouble(Feedback::getStar)
+                                .average().orElse(0);
+                    }
+                }
+
+                return switch (metric) {
+                    case "revenue" -> BigDecimal.valueOf(Double.parseDouble(b.getRevenue().replace(" đ", "").replace(",", "")))
+                            .compareTo(BigDecimal.valueOf(Double.parseDouble(a.getRevenue().replace(" đ", "").replace(",", ""))));
+                    case "trips" -> Integer.compare(b.getTrips(), a.getTrips());
+                    case "success_rate" -> Double.compare(b.getSuccessRate(), a.getSuccessRate());
+                    case "customer_rating" -> Double.compare(ratingB, ratingA);
+                    default -> 0;
+                };
+            });
+
+            for (int i = 0; i < result.size(); i++) {
+                result.get(i).setRank(i + 1);
+            }
+
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    public List<TeamRankingResponse> getTeamRanking(String period, String metric) {
+        try {
+            List<TransportUnit> units = transportUnitRepository.findAll();
+            LocalDate startDate;
+            LocalDate endDate = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+            switch (period) {
+                case "week":
+                    startDate = endDate.minusWeeks(1);
+                    break;
+                case "month":
+                    startDate = endDate.minusMonths(1);
+                    break;
+                case "quarter":
+                    startDate = endDate.minusMonths(3);
+                    break;
+                case "year":
+                    startDate = endDate.minusYears(1);
+                    break;
+                default:
+                    startDate = LocalDate.of(2000, 1, 1);
+            }
+
+            List<TeamRankingResponse> result = new ArrayList<>();
+            for (TransportUnit unit : units) {
+                List<Booking> bookings = bookingRepository.findByTransportUnit(unit).stream()
+                        .filter(b -> b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isBefore(startDate) && !b.getDeliveryDate().toLocalDate().isAfter(endDate))
+                        .collect(Collectors.toList());
+                List<Revenue> revenues = revenueRepository.findAll().stream()
+                        .filter(r -> r.getBeneficiaryType().equals("TRANSPORT_UNIT") &&
+                                r.getBeneficiaryId().equals(unit.getTransportId()) &&
+                                !r.getDate().isBefore(startDate) && !r.getDate().isAfter(endDate))
+                        .collect(Collectors.toList());
+                List<OperatorStaff> staffList = bookings.stream()
+                        .map(Booking::getOperatorStaff)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                TeamRankingResponse response = new TeamRankingResponse();
+                response.setName(unit.getNameCompany());
+                response.setTotalRevenue(DECIMAL_FORMAT.format(revenues.stream()
+                        .map(r -> r.getAmount() != null ? r.getAmount() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)));
+                response.setTotalTrips(bookings.size());
+                response.setAvgSuccessRate(bookings.isEmpty() ? 0 : (double) bookings.stream()
+                        .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getTransports() != null && b.getTransports().stream().anyMatch(t -> "ON_TIME".equals(t.getStatus())))
+                        .count() / bookings.size() * 100);
+                response.setMembers(staffList.size());
+
+                LocalDate prevStartDate = startDate.minusDays(java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1);
+                LocalDate prevEndDate = startDate.minusDays(1);
+
+                List<Booking> prevBookings = bookingRepository.findByTransportUnit(unit).stream()
+                        .filter(b -> b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isBefore(prevStartDate) && !b.getDeliveryDate().toLocalDate().isAfter(prevEndDate))
+                        .collect(Collectors.toList());
+                List<Revenue> prevRevenues = revenueRepository.findAll().stream()
+                        .filter(r -> r.getBeneficiaryType().equals("TRANSPORT_UNIT") &&
+                                r.getBeneficiaryId().equals(unit.getTransportId()) &&
+                                !r.getDate().isBefore(prevStartDate) && !r.getDate().isAfter(prevEndDate))
+                        .collect(Collectors.toList());
+                List<Feedback> prevFeedbacks = staffList.stream()
+                        .flatMap(staff -> feedbackRepository.findByOperatorStaff(staff).stream())
+                        .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(prevStartDate) && !f.getCreatedAt().toLocalDate().isAfter(prevEndDate))
+                        .collect(Collectors.toList());
+
+                double prevValue = 0;
+                switch (metric) {
+                    case "revenue":
+                        prevValue = prevRevenues.stream().map(Revenue::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue();
+                        break;
+                    case "trips":
+                        prevValue = prevBookings.size();
+                        break;
+                    case "success_rate":
+                        prevValue = prevBookings.isEmpty() ? 0 : (double) prevBookings.stream()
+                                .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getTransports() != null && b.getTransports().stream().anyMatch(t -> "ON_TIME".equals(t.getStatus())))
+                                .count() / prevBookings.size() * 100;
+                        break;
+                    case "customer_rating":
+                        prevValue = prevFeedbacks.isEmpty() ? 0 : prevFeedbacks.stream().mapToDouble(Feedback::getStar).average().orElse(0);
+                        break;
+                }
+                double currentValue = 0;
+                switch (metric) {
+                    case "revenue":
+                        currentValue = revenues.stream().map(Revenue::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue();
+                        break;
+                    case "trips":
+                        currentValue = bookings.size();
+                        break;
+                    case "success_rate":
+                        currentValue = response.getAvgSuccessRate();
+                        break;
+                    case "customer_rating":
+                        currentValue = staffList.isEmpty() ? 0 : staffList.stream()
+                                .mapToDouble(s -> feedbackRepository.findByOperatorStaff(s).stream()
+                                        .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(startDate) && !f.getCreatedAt().toLocalDate().isAfter(endDate))
+                                        .mapToDouble(Feedback::getStar)
+                                        .average().orElse(0))
+                                .average().orElse(0);
+                        break;
+                }
+                double change = prevValue == 0 ? 0 : (currentValue - prevValue) / prevValue * 100;
+                response.setChange(String.format("%.1f%%", Math.abs(change)));
+                response.setTrend(change >= 0 ? "up" : "down");
+
+                result.add(response);
+            }
+
+            result.sort((a, b) -> {
+                double ratingA = 0;
+                double ratingB = 0;
+                if (metric.equals("customer_rating")) {
+                    Optional<TransportUnit> unitA = transportUnitRepository.findAll().stream()
+                            .filter(t -> t.getNameCompany().equals(a.getName()))
+                            .findFirst();
+                    if (unitA.isPresent()) {
+                        List<Booking> bookingsA = bookingRepository.findByTransportUnit(unitA.get());
+                        ratingA = bookingsA.stream()
+                                .map(Booking::getOperatorStaff)
+                                .filter(Objects::nonNull)
+                                .distinct()
+                                .mapToDouble(s -> feedbackRepository.findByOperatorStaff(s).stream()
+                                        .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(startDate) && !f.getCreatedAt().toLocalDate().isAfter(endDate))
+                                        .mapToDouble(Feedback::getStar)
+                                        .average().orElse(0))
+                                .average().orElse(0);
+                    }
+
+                    Optional<TransportUnit> unitB = transportUnitRepository.findAll().stream()
+                            .filter(t -> t.getNameCompany().equals(b.getName()))
+                            .findFirst();
+                    if (unitB.isPresent()) {
+                        List<Booking> bookingsB = bookingRepository.findByTransportUnit(unitB.get());
+                        ratingB = bookingsB.stream()
+                                .map(Booking::getOperatorStaff)
+                                .filter(Objects::nonNull)
+                                .distinct()
+                                .mapToDouble(s -> feedbackRepository.findByOperatorStaff(s).stream()
+                                        .filter(f -> !f.getCreatedAt().toLocalDate().isBefore(startDate) && !f.getCreatedAt().toLocalDate().isAfter(endDate))
+                                        .mapToDouble(Feedback::getStar)
+                                        .average().orElse(0))
+                                .average().orElse(0);
+                    }
+                }
+
+                return switch (metric) {
+                    case "revenue" -> BigDecimal.valueOf(Double.parseDouble(b.getTotalRevenue().replace(" đ", "").replace(",", "")))
+                            .compareTo(BigDecimal.valueOf(Double.parseDouble(a.getTotalRevenue().replace(" đ", "").replace(",", ""))));
+                    case "trips" -> Integer.compare(b.getTotalTrips(), a.getTotalTrips());
+                    case "success_rate" -> Double.compare(b.getAvgSuccessRate(), a.getAvgSuccessRate());
+                    case "customer_rating" -> Double.compare(ratingB, ratingA);
+                    default -> 0;
+                };
+            });
+
+            for (int i = 0; i < result.size(); i++) {
+                result.get(i).setRank(i + 1);
+            }
+
+            return result;
+        } catch (Exception e) {
+>>>>>>> origin/phong
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -1058,6 +1499,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             }
 
             if (topSuccessRateStaff != null) {
+<<<<<<< HEAD
                 OperatorStaff topRevenueStaff = staffList.stream()
                         .max(Comparator.comparing(s -> revenueRepository.findAll().stream()
                                 .filter(r -> "OPERATOR_STAFF".equals(r.getBeneficiaryType())
@@ -1086,6 +1528,19 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                     revenueAchievement.setName(topRevenueStaff.getUsers().getFullName());
                     result.add(revenueAchievement);
                 }
+=======
+                List<Booking> bookings = bookingRepository.findByOperatorStaff(topSuccessRateStaff).stream()
+                        .filter(b -> b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isBefore(startDate) && !b.getDeliveryDate().toLocalDate().isAfter(endDate))
+                        .collect(Collectors.toList());
+                double successRate = bookings.isEmpty() ? 0 : (double) bookings.stream()
+                        .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getTransports() != null && b.getTransports().stream().anyMatch(t -> "ON_TIME".equals(t.getStatus())) && b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isAfter(LocalDate.now()))
+                        .count() / bookings.size() * 100;
+                AchievementResponse successRateAchievement = new AchievementResponse();
+                successRateAchievement.setValue(String.format("%.1f%%", successRate));
+                successRateAchievement.setLabel("Tỷ lệ thành công cao nhất");
+                successRateAchievement.setName(topSuccessRateStaff.getUsers().getFullName());
+                result.add(successRateAchievement);
+>>>>>>> origin/phong
             }
 
             if (topGrowthUnit != null) {
