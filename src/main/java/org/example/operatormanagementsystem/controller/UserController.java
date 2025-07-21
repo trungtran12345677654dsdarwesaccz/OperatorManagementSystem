@@ -2,14 +2,20 @@ package org.example.operatormanagementsystem.controller;
 
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserCreateRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserUpdateRequest;
+import org.example.operatormanagementsystem.dto.request.UserFilterRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.response.UserSearchResponse;
+import org.example.operatormanagementsystem.dto.response.PageResponse;
 import org.example.operatormanagementsystem.managercustomer.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/users")
@@ -64,5 +70,20 @@ public class UserController {
     @PutMapping("/{id}/status")
     public void changeStatus(@PathVariable int id) {
         userService.blockCustomer(id);
+    }
+    @GetMapping("/profile")
+    public ResponseEntity<UserSearchResponse> getCurrentUserProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserSearchResponse user = userService.findUserResponseByEmail(email);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(user);
+    }
+    //api get all staff
+    @GetMapping("/staff")
+    public List<UserSearchResponse> getAllStaff() {
+        return userService.findAllStaffResponse();
     }
 }

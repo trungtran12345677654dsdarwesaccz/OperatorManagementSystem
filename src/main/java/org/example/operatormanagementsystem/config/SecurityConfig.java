@@ -117,8 +117,8 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
                         .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                         .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
-
-
+                        .requestMatchers("/api/user/staff").hasRole("MANAGER")
+                        .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF","CUSTOMER")
 
 
 

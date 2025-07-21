@@ -1,5 +1,7 @@
 package org.example.operatormanagementsystem.managercustomer.service;
 
+import org.example.operatormanagementsystem.dto.request.UserFilterRequest;
+import org.example.operatormanagementsystem.dto.response.PageResponse;
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.base.BaseService;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserCreateRequest;
@@ -19,4 +21,7 @@ public interface UserService extends BaseService<Users, Integer> {
     UserSearchResponse findUserResponseById(int id);
     UserSearchResponse createUser(UserCreateRequest request);
     UserSearchResponse updateUser(Integer id, UserUpdateRequest request);
+    UserSearchResponse findUserResponseByEmail(String email);
+    PageResponse<UserSearchResponse> getUsersWithFilters(UserFilterRequest filterRequest);
+    List<UserSearchResponse> findAllStaffResponse();
 }
