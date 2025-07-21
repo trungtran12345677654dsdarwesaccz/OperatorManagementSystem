@@ -123,7 +123,8 @@
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/payment/**").hasAnyRole("CUSTOMER")
-
+                            .requestMatchers("/api/user/staff").hasRole("MANAGER")
+                            .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF","CUSTOMER")
 
 
 
