@@ -27,6 +27,6 @@ public class ExportTokenToJson {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writerWithDefaultPrettyPrinter().writeValue(new File("StoredCredential.json"), tokenJson);
 
-        System.out.println("✅ Token đã được xuất ra StoredCredential.json");
+        System.out.println(" Token đã được xuất ra StoredCredential.json");
     }
 }

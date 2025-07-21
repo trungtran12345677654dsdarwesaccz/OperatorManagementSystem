@@ -194,7 +194,6 @@
             return null;
         }
         private static final String[] BLACKLIST_KEYWORDS = {
-                "tiền", "vay", "cho mượn", "chuyển khoản", "momo", "mbbank", "vietcombank",
                 "yêu", "crush", "bạn trai", "tình cảm", "thất tình", "cô đơn",
                 "phim", "ca sĩ", "idol", "nhạc", "tấu hài", "TikTok",
                 "trời mưa", "nắng", "lạnh", "nhiệt độ", "thời tiết",
