@@ -119,7 +119,7 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
                         .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/user/staff").hasRole("MANAGER")
                         .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF","CUSTOMER")
-                        .requestMatchers("/api/revenues", "/api/revenues/", "/api/revenues/**").hasAnyRole( "MANAGER")
+                        .requestMatchers("/api/revenues", "/api/revenues/", "/api/revenues/**").hasRole( "MANAGER")
 
 
 
