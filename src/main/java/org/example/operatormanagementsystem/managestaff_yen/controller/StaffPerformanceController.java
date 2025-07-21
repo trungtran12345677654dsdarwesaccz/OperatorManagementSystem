@@ -25,12 +25,25 @@ public class StaffPerformanceController {
     }
 
     @PostMapping("/send-emails")
-    public ResponseEntity<Void> sendEmails() {
-        staffPerformanceService.sendPerformanceEmails();
+    public ResponseEntity<Void> sendEmails() throws MessagingException {
+        List<StaffPerformanceResponse> allStaffs = staffPerformanceService.calculateAll();
+
+        for (StaffPerformanceResponse staff : allStaffs) {
+            String level = staff.getPerformanceLevel();
+            if ("EXCELLENT".equalsIgnoreCase(level)) {
+                emailReportService.sendPerformancePraiseEmail(
+                        staff.getEmail(), staff.getFullName(), staff.getPerformanceScore()
+                );
+            } else if ("POOR".equalsIgnoreCase(level)) {
+                emailReportService.sendWarningEmail( staff.getEmail(), staff.getFullName(), staff.getPerformanceScore());
+            }
+        }
+
         return ResponseEntity.ok().build();
     }
 
-   // ✅ Gửi email theo danh sách được chọn từ FE
+
+
     @PostMapping("/send-selected-emails")
    public ResponseEntity<Void> sendSelectedEmails(@RequestBody List<StaffPerformanceResponse> selectedStaffs)
           throws MessagingException {
@@ -40,7 +53,7 @@ public class StaffPerformanceController {
             emailReportService.sendPerformancePraiseEmail(
                        staff.getEmail(), staff.getFullName(), staff.getPerformanceScore());
             } else if ("POOR".equalsIgnoreCase(staff.getPerformanceLevel())) {
-               emailReportService.sendWarningEmail(staff);
+               emailReportService.sendWarningEmail(staff.getEmail(), staff.getFullName(), staff.getPerformanceScore());
           }
      }
 

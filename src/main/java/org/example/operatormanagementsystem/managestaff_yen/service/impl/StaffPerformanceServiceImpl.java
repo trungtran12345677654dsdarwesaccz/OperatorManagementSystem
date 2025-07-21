@@ -69,7 +69,11 @@ public class StaffPerformanceServiceImpl implements StaffPerformanceService {
                             response.getPerformanceScore()
                     );
                 } else if ("POOR".equals(response.getPerformanceLevel())) {
-                    emailService.sendWarningEmail(response);
+                    emailService.sendPerformancePraiseEmail(
+                            response.getEmail(),
+                            response.getFullName(),
+                            response.getPerformanceScore()
+                    );
                 }
             } catch (MessagingException e) {
                 System.err.println("Email sending failed for: " + response.getFullName() + " - " + e.getMessage());

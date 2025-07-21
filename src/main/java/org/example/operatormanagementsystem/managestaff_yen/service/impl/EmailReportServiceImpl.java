@@ -36,24 +36,26 @@ public class EmailReportServiceImpl implements EmailReportService {
 
     @Async
     @Override
-    public void sendWarningEmail(StaffPerformanceResponse response) throws MessagingException {
-        String recipientEmail = response.getFullName() + "@example.com"; // Có thể thay bằng field email nếu có sẵn
-        String subject = "[OperatorManagementSystem] Cảnh báo về hiệu suất làm việc";
-        String htmlBody = "<html>" +
-                "<body style=\"font-family: Arial, sans-serif;\">" +
-                "<h2 style=\"color: #d9534f;\">Xin chào " + response.getFullName() + ",</h2>" +
-                "<p>Hiệu suất làm việc của bạn trong tháng vừa qua <strong>chưa đạt yêu cầu</strong>.</p>" +
-                "<p><strong>Điểm hiệu suất:</strong> " + response.getPerformanceScore() + "</p>" +
-                "<p>Chúng tôi khuyến nghị bạn cải thiện chất lượng công việc trong thời gian tới.</p>" +
-                "<br>" +
-                "<p>Trân trọng,<br>Ban quản lý</p>" +
-                "</body>" +
-                "</html>";
+    public void sendWarningEmail(String recipientEmail, String fullName, int performanceScore) throws MessagingException {
+            String subject = "[OperatorManagementSystem] Cảnh báo về hiệu suất làm việc";
+            String htmlBody = "<html>" +
+                    "<body style=\"font-family: Arial, sans-serif;\">" +
+                    "<h2 style=\"color: #d9534f;\">Xin chào " + fullName + "!</h2>" +
+                    "<p>Hiệu suất làm việc của bạn trong tháng này <strong>chưa đạt yêu cầu</strong>.</p>" +
+                    "<p><strong>Điểm hiệu suất:</strong> " + performanceScore + "</p>" +
+                    "<p>Chúng tôi mong rằng bạn sẽ cải thiện chất lượng công việc trong thời gian tới để đạt được kết quả tốt hơn.</p>" +
+                    "<p>Nếu cần hỗ trợ hoặc phản hồi, hãy liên hệ với quản lý trực tiếp.</p>" +
+                    "<br>" +
+                    "<p>Trân trọng,<br>Ban quản lý</p>" +
+                    "</body>" +
+                    "</html>";
 
-        sendHtmlEmail(recipientEmail, subject, htmlBody);
-    }
+            sendHtmlEmail(recipientEmail, subject, htmlBody);
+        }
 
-    private void sendHtmlEmail(String to, String subject, String htmlBody) throws MessagingException {
+
+
+        private void sendHtmlEmail(String to, String subject, String htmlBody) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
