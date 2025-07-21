@@ -15,7 +15,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-// neu muon chay local chay modify run config modifu option add vm option cho nhap -Dspring.profiles.active=server or local
+
 public class AuthorizeAndExportToken {
 
     public static void main(String[] args) throws Exception {
@@ -25,7 +25,7 @@ public class AuthorizeAndExportToken {
 
         // 2. Xác định profile (server hoặc local)
         String profile = System.getProperty("spring.profiles.active", "local").trim().toLowerCase();
-        System.out.println("🔧 Đang chạy với profile: " + profile);
+        System.out.println(" Đang chạy với profile: " + profile);
 
         // 3. Đường dẫn file credentials và stored token
         String credentialsPath = "src/main/resources/credentials"
@@ -36,8 +36,8 @@ public class AuthorizeAndExportToken {
                 + (profile.equals("server") ? "-server" : "")
                 + ".json";
 
-        System.out.println("📄 Đang sử dụng file credentials: " + credentialsPath);
-        System.out.println("💾 Token sẽ được lưu vào: " + storedTokenPath);
+        System.out.println(" Đang sử dụng file credentials: " + credentialsPath);
+        System.out.println(" Token sẽ được lưu vào: " + storedTokenPath);
 
         // 4. Load credentials
         FileInputStream credentialsStream = new FileInputStream(credentialsPath);
@@ -51,11 +51,18 @@ public class AuthorizeAndExportToken {
                 List.of("https://www.googleapis.com/auth/gmail.readonly")
         ).setAccessType("offline").build();
 
-        // 6. Mở trình duyệt local để xác thực
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
-        Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+        // 6. Load lại token nếu đã tồn tại
+        Credential credential = flow.loadCredential("user");
 
-        // 7. Tạo file StoredCredential
+        if (credential == null || credential.getAccessToken() == null) {
+            System.out.println("⚠ Token chưa tồn tại hoặc hết hạn → xác thực OAuth mới");
+            LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
+            credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+        } else {
+            System.out.println(" Token đã tồn tại → không cần xác thực lại");
+        }
+
+        // 7. Export token ra file JSON (nếu chưa có)
         Map<String, Object> tokenJson = new HashMap<>();
         tokenJson.put("access_token", credential.getAccessToken());
         tokenJson.put("refresh_token", credential.getRefreshToken());
@@ -63,10 +70,9 @@ public class AuthorizeAndExportToken {
         tokenJson.put("client_secret", clientSecrets.getDetails().getClientSecret());
         tokenJson.put("type", "authorized_user");
 
-        // 8. Ghi ra file
         ObjectMapper mapper = new ObjectMapper();
         mapper.writerWithDefaultPrettyPrinter().writeValue(new File(storedTokenPath), tokenJson);
 
-        System.out.println("✅ Token đã được export thành công!");
+        System.out.println(" Token đã được export thành công!");
     }
 }

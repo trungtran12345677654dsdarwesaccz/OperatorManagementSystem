@@ -1,4 +1,4 @@
-package org.example.operatormanagementsystem.listProfileTrungTran.dto.base;
+package org.example.operatormanagementsystem.base;
 
 import java.util.List;
 import java.util.Optional;

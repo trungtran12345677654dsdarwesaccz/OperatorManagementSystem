@@ -1,7 +1,6 @@
 package org.example.operatormanagementsystem.managercustomer.service;
-
-import org.example.operatormanagementsystem.listProfileTrungTran.dto.base.BaseRepository;
-import org.example.operatormanagementsystem.listProfileTrungTran.dto.base.BaseServiceImpl;
+import org.example.operatormanagementsystem.base.BaseRepository;
+import org.example.operatormanagementsystem.base.BaseServiceImpl;
 import org.example.operatormanagementsystem.managercustomer.repository.ManagerUserRepository;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserCreateRequest;
 import org.example.operatormanagementsystem.managercustomer.dto.request.UserUpdateRequest;
