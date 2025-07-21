@@ -1,12 +1,8 @@
 package org.example.operatormanagementsystem.ManageHungBranch.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -14,11 +10,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StorageUnitDTO {
+public class UpdateStorageUnitDTO {
 
-    private Integer storageId;
-
-    @NotBlank(message = "Tên kho không được để trống")
     @Size(max = 100, message = "Tên kho không được vượt quá 100 ký tự")
     private String name;
 
@@ -26,8 +19,6 @@ public class StorageUnitDTO {
     private String address;
 
     private Integer managerId;
-
-    private String managerName; // Tên của manager để hiển thị
 
     @Size(max = 20, message = "Số điện thoại không được vượt quá 20 ký tự")
     private String phone;
@@ -42,9 +33,6 @@ public class StorageUnitDTO {
     private String image;
 
     private Integer slotCount;
-    private List<Integer> bookedSlots;   // chỉ số các ô đã full
+    private List<Integer> bookedSlots;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private LocalDateTime createdAt;
 }
-
