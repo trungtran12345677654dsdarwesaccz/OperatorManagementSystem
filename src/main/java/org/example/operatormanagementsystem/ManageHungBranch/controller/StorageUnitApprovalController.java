@@ -93,7 +93,7 @@ public class StorageUnitApprovalController {
             if (request == null) {
                 request = StorageUnitApprovalProcessRequest.builder()
                         .status(org.example.operatormanagementsystem.enumeration.ApprovalStatus.APPROVED)
-                        .managerNote("Approved by manager.")
+                        .managerNote("Đã được chấp thuận bởi quản lý.")
                         .build();
             } else {
                 request.setStatus(org.example.operatormanagementsystem.enumeration.ApprovalStatus.APPROVED);
@@ -126,7 +126,7 @@ public class StorageUnitApprovalController {
             if (request == null) {
                 request = StorageUnitApprovalProcessRequest.builder()
                         .status(org.example.operatormanagementsystem.enumeration.ApprovalStatus.REJECTED)
-                        .managerNote("Rejected by manager.")
+                        .managerNote("Đã bị từ chối bởi quản lý.")
                         .build();
             } else {
                 request.setStatus(org.example.operatormanagementsystem.enumeration.ApprovalStatus.REJECTED);
