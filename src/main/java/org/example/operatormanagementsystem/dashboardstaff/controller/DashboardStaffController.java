@@ -1,11 +1,17 @@
 package org.example.operatormanagementsystem.dashboardstaff.controller;
 
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.dashboardstaff.dto.request.DashboardStaffRequest;
 import org.example.operatormanagementsystem.dashboardstaff.dto.response.DashboardStaffResponse;
+import org.example.operatormanagementsystem.dashboardstaff.dto.response.MonthlyRevenueResponse;
+import org.example.operatormanagementsystem.dashboardstaff.dto.response.PerformanceDataResponse;
+import org.example.operatormanagementsystem.dashboardstaff.dto.response.DetailDataResponse;
+import org.example.operatormanagementsystem.dashboardstaff.dto.response.TransportDataResponse;
+import org.example.operatormanagementsystem.dashboardstaff.dto.response.RankingDataResponse;
 import org.example.operatormanagementsystem.dashboardstaff.dto.response.RecentActivityResponse;
+import org.example.operatormanagementsystem.dashboardstaff.dto.response.TeamRankingResponse;
+import org.example.operatormanagementsystem.dashboardstaff.dto.response.AchievementResponse;
 import org.example.operatormanagementsystem.dashboardstaff.service.DashboardStaffService;
 import org.example.operatormanagementsystem.entity.Position;
 import org.example.operatormanagementsystem.entity.Users;
@@ -23,87 +29,181 @@ import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/dashboard/staff")
+@RequiredArgsConstructor
 public class DashboardStaffController {
 
-    private static final Logger logger = Logger.getLogger(DashboardStaffController.class.getName());
     private final DashboardStaffService dashboardStaffService;
     private final UserRepository userRepository;
     private final PositionRepository positionRepository;
 
-    public DashboardStaffController(DashboardStaffService dashboardStaffService,
-                                    UserRepository userRepository,
-                                    PositionRepository positionRepository) {
-        this.dashboardStaffService = dashboardStaffService;
-        this.userRepository = userRepository;
-        this.positionRepository = positionRepository;
-    }
-
     @PostMapping("/positions")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Thêm hoặc cập nhật chức vụ thành công"),
-            @ApiResponse(responseCode = "400", description = "Lỗi khi thêm/cập nhật chức vụ, ví dụ: trạng thái không hợp lệ hoặc người dùng không tồn tại"),
-            @ApiResponse(responseCode = "401", description = "Không được phép truy cập"),
-            @ApiResponse(responseCode = "403", description = "Không có quyền thực hiện hành động"),
-            @ApiResponse(responseCode = "500", description = "Lỗi server")
-    })
+    @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
     public ResponseEntity<String> addPosition(@Valid @RequestBody DashboardStaffRequest request) {
         try {
-            logger.info("Adding/updating position: " + request.getTitle() + " for user ID: " + request.getUserId());
             dashboardStaffService.addPosition(request);
             return ResponseEntity.ok("Thêm hoặc cập nhật chức vụ thành công!");
         } catch (RuntimeException e) {
-            logger.severe("Error adding/updating position: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Lỗi khi thêm/cập nhật chức vụ: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi server khi thêm/cập nhật chức vụ: " + e.getMessage());
         }
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<DashboardStaffResponse> getDashboardStats() {
         try {
-            logger.info("Fetching dashboard stats for user: " + SecurityContextHolder.getContext().getAuthentication().getName());
             DashboardStaffResponse stats = dashboardStaffService.getDashboardStats();
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
-            logger.severe("Error fetching stats: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new DashboardStaffResponse());
         }
     }
 
     @GetMapping("/activities")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<List<RecentActivityResponse>> getRecentActivities() {
         try {
-            logger.info("Fetching recent activities");
             List<RecentActivityResponse> activities = dashboardStaffService.getRecentActivities();
             return activities.isEmpty()
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(activities);
         } catch (Exception e) {
-            logger.severe("Error fetching activities: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
         }
     }
 
     @GetMapping("/positions")
-    @PreAuthorize("hasRole('ROLE_STAFF')")
+    @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<List<Position>> getUserPositions() {
         try {
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             String username = principal instanceof UserDetails ? ((UserDetails) principal).getUsername() : principal.toString();
-            logger.info("Fetching positions for user: " + username);
-
             Users user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + username));
-
             List<Position> positions = positionRepository.findByUserId(user.getId());
             return positions.isEmpty()
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(positions);
         } catch (Exception e) {
-            logger.severe("Error fetching user positions: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+        }
+    }
+
+    @GetMapping("/monthly-revenue")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<List<MonthlyRevenueResponse>> getMonthlyRevenue(
+            @RequestParam(required = false, defaultValue = "Tất cả") String year,
+            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+        try {
+            List<MonthlyRevenueResponse> revenue = dashboardStaffService.getMonthlyRevenue(year, unit);
+            return revenue.isEmpty()
+                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+                    : ResponseEntity.ok(revenue);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+        }
+    }
+
+    @GetMapping("/performance-data")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<List<PerformanceDataResponse>> getPerformanceData(
+            @RequestParam(required = false, defaultValue = "Tất cả") String year,
+            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+        try {
+            List<PerformanceDataResponse> performance = dashboardStaffService.getPerformanceData(year, unit);
+            return performance.isEmpty()
+                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+                    : ResponseEntity.ok(performance);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+        }
+    }
+
+    @GetMapping("/detail-data")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<List<DetailDataResponse>> getDetailData(
+            @RequestParam(required = false, defaultValue = "Tất cả") String year,
+            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+        try {
+            List<DetailDataResponse> detail = dashboardStaffService.getDetailData(year, unit);
+            return detail.isEmpty()
+                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+                    : ResponseEntity.ok(detail);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+        }
+    }
+
+    @GetMapping("/transport-data")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<TransportDataResponse> getTransportData(
+            @RequestParam(required = false, defaultValue = "Tất cả") String year,
+            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+        try {
+            TransportDataResponse transport = dashboardStaffService.getTransportData(year, unit);
+            return transport == null
+                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+                    : ResponseEntity.ok(transport);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new TransportDataResponse());
+        }
+    }
+
+    @GetMapping("/ranking-data")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<List<RankingDataResponse>> getRankingData(
+            @RequestParam(required = false, defaultValue = "month") String period,
+            @RequestParam(required = false, defaultValue = "revenue") String metric) {
+        try {
+            List<RankingDataResponse> ranking = dashboardStaffService.getRankingData(period, metric);
+            return ranking.isEmpty()
+                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+                    : ResponseEntity.ok(ranking);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+        }
+    }
+
+    @GetMapping("/team-ranking")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<List<TeamRankingResponse>> getTeamRanking(
+            @RequestParam(required = false, defaultValue = "month") String period,
+            @RequestParam(required = false, defaultValue = "revenue") String metric) {
+        try {
+            List<TeamRankingResponse> teamRanking = dashboardStaffService.getTeamRanking(period, metric);
+            return teamRanking.isEmpty()
+                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+                    : ResponseEntity.ok(teamRanking);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+        }
+    }
+
+    @GetMapping("/achievements")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<List<AchievementResponse>> getAchievements() {
+        try {
+            List<AchievementResponse> achievements = dashboardStaffService.getAchievements();
+            return achievements.isEmpty()
+                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+                    : ResponseEntity.ok(achievements);
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
         }
     }
