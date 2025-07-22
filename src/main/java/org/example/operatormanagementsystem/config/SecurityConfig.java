@@ -127,7 +127,7 @@
                             .requestMatchers("/api/payment/").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/user/staff").hasRole("MANAGER")
                             .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF","CUSTOMER")
-
+                            .requestMatchers("/api/revenues", "/api/revenues/", "/api/revenues/**").hasRole( "MANAGER")
 
 
 
