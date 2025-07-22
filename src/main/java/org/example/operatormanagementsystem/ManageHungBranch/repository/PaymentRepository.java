@@ -16,7 +16,7 @@ import java.util.List;
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
 
 
-
+    List<Payment> findByStatus(String status);
     List<Payment> findTop3ByBooking_Customer_Users_EmailOrderByPaidDateDesc(String email);
 
 

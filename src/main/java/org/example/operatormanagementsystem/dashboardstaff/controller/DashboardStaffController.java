@@ -39,7 +39,6 @@ public class DashboardStaffController {
     }
 
     @PostMapping("/positions")
-    @PreAuthorize("hasAnyRole('ROLE_STAFF', 'ROLE_MANAGER')")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Thêm hoặc cập nhật chức vụ thành công"),
             @ApiResponse(responseCode = "400", description = "Lỗi khi thêm/cập nhật chức vụ, ví dụ: trạng thái không hợp lệ hoặc người dùng không tồn tại"),
