@@ -22,6 +22,7 @@ public interface UserService extends BaseService<Users, Integer> {
     UserSearchResponse createUser(UserCreateRequest request);
     UserSearchResponse updateUser(Integer id, UserUpdateRequest request);
     UserSearchResponse findUserResponseByEmail(String email);
+    Users findUsersResponseByEmail(String email);
     PageResponse<UserSearchResponse> getUsersWithFilters(UserFilterRequest filterRequest);
     List<UserSearchResponse> findAllStaffResponse();
 }

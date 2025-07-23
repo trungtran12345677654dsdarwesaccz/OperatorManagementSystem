@@ -68,11 +68,6 @@ public class TimeOffController {
             @PathVariable Integer requestId,
             @Valid @RequestBody TimeOffApprovalRequest request) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        UserSearchResponse user = userService.findUserResponseByEmail(email);
-        
-        // Ensure the request ID matches the path variable
         request.setRequestId(requestId);
         
         TimeOffStatusResponse response = timeOffService.approveTimeOffRequest(request);

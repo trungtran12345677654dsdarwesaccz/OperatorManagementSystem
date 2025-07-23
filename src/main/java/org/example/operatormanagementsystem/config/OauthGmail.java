@@ -42,7 +42,6 @@ public class OauthGmail {
             try {
                 transport = GoogleNetHttpTransport.newTrustedTransport();
             } catch (GeneralSecurityException | java.io.IOException e) {
-                logger.error("Failed to create HTTP transport", e);
                 throw new RuntimeException(e);
             }
         }
@@ -63,7 +62,6 @@ public class OauthGmail {
                     .setApplicationName("Gmail Java AutoAuth")
                     .build();
         } catch (Exception e) {
-            logger.error("Failed to build Gmail service", e);
             throw new RuntimeException(e);
         }
     }
@@ -107,13 +105,11 @@ public class OauthGmail {
                     return " " + (subject != null ? subject : "") + "\n " + from + "\n Nội dung:\n" + bodyText;
 
                 } catch (Exception e) {
-                    logger.error("Failed to get full message or parse message", e);
                     return null;
                 }
             }).filter(s -> s != null).collect(Collectors.toList());
 
         } catch (Exception e) {
-            logger.error("Failed to list latest emails", e);
             return List.of();
         }
     }
@@ -142,7 +138,6 @@ public class OauthGmail {
             byte[] decodedBytes = Base64.getUrlDecoder().decode(encoded);
             return new String(decodedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            logger.error("Failed to decode base64 content", e);
             return "(Không đọc được nội dung)";
         }
     }

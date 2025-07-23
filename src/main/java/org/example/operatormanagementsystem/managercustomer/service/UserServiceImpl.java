@@ -243,6 +243,12 @@ public class UserServiceImpl extends BaseServiceImpl<Users, Integer> implements 
         if (user == null) return null;
         return convertToUserSearchResponse(user);
     }
+    @Override
+    public Users findUsersResponseByEmail(String email) {
+        Users user = managerUserRepository.findByEmail(email);
+        if (user == null) return null;
+        return user;
+    }
 
     @Override
     public List<UserSearchResponse> findAllStaffResponse() {

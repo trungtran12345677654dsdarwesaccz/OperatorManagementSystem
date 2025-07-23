@@ -52,7 +52,7 @@ public class TimeOffRequest {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by")
-    private Manager reviewedBy;
+    private Users reviewedBy;
     
     @PrePersist
     protected void onCreate() {

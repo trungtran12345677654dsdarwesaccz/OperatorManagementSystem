@@ -90,9 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 2. Phân tích giao dịch từ email
         List<Transaction> transactions = parseTransactions(messages);
-        if (transactions == null || transactions.isEmpty()) {
-            throw new RuntimeException("No transactions found");
-        }
+
 
         for (Transaction tx : transactions) {
             Integer bookingId = tx.getId();

@@ -66,12 +66,6 @@ public class TimeOffServiceImpl implements TimeOffService {
         log.info("Created time-off request with ID: {} for operator: {}",
                 savedRequest.getRequestId(), request.getOperatorId());
 
-        // Send notification to managers about new time-off request
-        try {
-            scheduleNotificationService.notifyNewTimeOffRequest(savedRequest);
-        } catch (Exception e) {
-            log.error("Failed to send new time-off request notification: {}", e.getMessage(), e);
-        }
 
         TimeOffStatusResponse response = mapToTimeOffStatusResponse(savedRequest);
         response.setHasConflicts(hasConflicts);
@@ -82,37 +76,31 @@ public class TimeOffServiceImpl implements TimeOffService {
 
     @Override
     public TimeOffStatusResponse approveTimeOffRequest(TimeOffApprovalRequest request) {
-
-        TimeOffRequest timeOffRequest = timeOffRequestRepository.findById(request.getRequestId())
-                .orElseThrow(() -> new RuntimeException("Time-off request not found with ID: " + request.getRequestId()));
-
-        if (timeOffRequest.getStatus() != TimeOffStatus.PENDING) {
-            throw new RuntimeException("Only pending requests can be approved");
-        }
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        UserSearchResponse user = userService.findUserResponseByEmail(email);
-
-        Manager manager = managerRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Manager not found with ID: " + user.getId()));
-
-        timeOffRequest.setStatus(TimeOffStatus.APPROVED);
-        timeOffRequest.setManagerComments(request.getManagerComments());
-        timeOffRequest.setReviewedBy(manager);
-        timeOffRequest.setReviewedDate(LocalDateTime.now());
-
-        TimeOffRequest savedRequest = timeOffRequestRepository.save(timeOffRequest);
-
-
-        // Send notification to operator about approval
         try {
-            scheduleNotificationService.notifyTimeOffStatusChange(savedRequest, TimeOffStatus.PENDING, TimeOffStatus.APPROVED);
-        } catch (Exception e) {
-            log.error("Failed to send time-off approval notification: {}", e.getMessage(), e);
-        }
+            TimeOffRequest timeOffRequest = timeOffRequestRepository.findById(request.getRequestId())
+                    .orElseThrow(() -> new RuntimeException("Time-off request not found with ID: " + request.getRequestId()));
 
-        return mapToTimeOffStatusResponse(savedRequest);
+            if (timeOffRequest.getStatus() != TimeOffStatus.PENDING) {
+                throw new RuntimeException("Only pending requests can be approved");
+            }
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            Users user = userService.findUsersResponseByEmail(email);
+
+            timeOffRequest.setStatus(TimeOffStatus.APPROVED);
+            timeOffRequest.setManagerComments(request.getManagerComments());
+            timeOffRequest.setReviewedBy(user);
+            timeOffRequest.setReviewedDate(LocalDateTime.now());
+
+            TimeOffRequest savedRequest = timeOffRequestRepository.save(timeOffRequest);
+
+            return mapToTimeOffStatusResponse(savedRequest);
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Time-off request cannot be approved" + e.getMessage());
+        }
     }
+
 
     @Override
     public TimeOffStatusResponse rejectTimeOffRequest(TimeOffApprovalRequest request) {
@@ -126,25 +114,14 @@ public class TimeOffServiceImpl implements TimeOffService {
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        UserSearchResponse user = userService.findUserResponseByEmail(email);
-
-        Manager manager = managerRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Manager not found with ID: "));
+        Users user = userService.findUsersResponseByEmail(email);
 
         timeOffRequest.setStatus(TimeOffStatus.REJECTED);
         timeOffRequest.setManagerComments(request.getManagerComments());
-        timeOffRequest.setReviewedBy(manager);
+        timeOffRequest.setReviewedBy(user);
         timeOffRequest.setReviewedDate(LocalDateTime.now());
 
         TimeOffRequest savedRequest = timeOffRequestRepository.save(timeOffRequest);
-
-        // Send notification to operator about rejection
-        try {
-            scheduleNotificationService.notifyTimeOffStatusChange(savedRequest, TimeOffStatus.PENDING, TimeOffStatus.REJECTED);
-        } catch (Exception e) {
-            log.error("Failed to send time-off rejection notification: {}", e.getMessage(), e);
-        }
-
         return mapToTimeOffStatusResponse(savedRequest);
     }
 
@@ -352,9 +329,9 @@ public class TimeOffServiceImpl implements TimeOffService {
                 .managerComments(request.getManagerComments())
                 .requestDate(request.getRequestDate())
                 .reviewedDate(request.getReviewedDate())
-                .reviewedByName(request.getReviewedBy() != null && request.getReviewedBy().getUsers() != null ?
-                        request.getReviewedBy().getUsers().getFullName() : null)
-                .reviewedById(request.getReviewedBy() != null ? request.getReviewedBy().getManagerId() : null)
+                .reviewedByName(request.getReviewedBy() != null && request.getReviewedBy() != null ?
+                        request.getReviewedBy().getFullName() : null)
+                .reviewedById(request.getReviewedBy() != null ? request.getReviewedBy().getId() : null)
                 .totalDays(totalDays)
                 .hasConflicts(false) // Will be set separately when needed
                 .conflictDetails(null) // Will be set separately when needed
