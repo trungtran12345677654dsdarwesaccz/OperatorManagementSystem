@@ -109,6 +109,13 @@ public class    BookingCustomerController {
         return ResponseEntity.noContent().build();
     }
 
+    // API cho phép customer hủy booking
+    @PatchMapping("/bookings/{bookingId}/cancel")
+    public ResponseEntity<BookingCustomerResponse> cancelBooking(@PathVariable Integer bookingId) {
+        BookingCustomerResponse response = bookingCustomerService.cancelBooking(bookingId);
+        return ResponseEntity.ok(response);
+    }
+
     // New endpoints to get available options for booking
     @GetMapping("/storage-units")
     public ResponseEntity<List<StorageUnitInfo>> getAvailableStorageUnits() {

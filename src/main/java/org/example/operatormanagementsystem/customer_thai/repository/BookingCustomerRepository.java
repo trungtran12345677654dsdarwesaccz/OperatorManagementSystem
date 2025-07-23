@@ -29,4 +29,7 @@ public interface BookingCustomerRepository extends JpaRepository<Booking, Intege
 
     @Query("SELECT COALESCE(SUM(b.vehicleQuantity), 0) FROM Booking b WHERE b.transportUnit.transportId = :transportUnitId")
     int getTotalBookedVehicles(@Param("transportUnitId") Integer transportUnitId);
+
+    @EntityGraph(attributePaths = {"storageUnit", "customer", "feedbacks"})
+    List<Booking> findByTransportUnit_TransportId(Integer transportUnitId);
 } 

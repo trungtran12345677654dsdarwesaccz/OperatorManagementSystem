@@ -79,6 +79,12 @@ public class Booking {
     @Column(name = "vehicle_quantity")
     private Integer vehicleQuantity;
 
+    @Column(name = "new_slot")
+    private Integer newSlot;
+
+    @Column(name = "new_vehicle")
+    private Integer newVehicle;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Items> items;
 

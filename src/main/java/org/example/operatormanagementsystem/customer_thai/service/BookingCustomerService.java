@@ -78,4 +78,9 @@ public interface BookingCustomerService {
      * Kiểm tra số lượng xe còn lại của transport unit
      */
     boolean checkVehicleAvailability(Integer transportUnitId, Integer vehicleQuantity);
+
+    /**
+     * Đổi trạng thái booking sang CANCELED cho customer hiện tại
+     */
+    BookingCustomerResponse cancelBooking(Integer bookingId);
 } 

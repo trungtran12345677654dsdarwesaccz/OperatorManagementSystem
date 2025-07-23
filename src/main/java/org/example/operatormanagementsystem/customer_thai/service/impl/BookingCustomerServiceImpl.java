@@ -190,6 +190,33 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         }
     }
 
+    @Override
+    @Transactional
+    public BookingCustomerResponse cancelBooking(Integer bookingId) {
+        Users currentUser = customerInfoService.getCurrentCustomerUser();
+        if (currentUser.getCustomer() == null) {
+            throw new RuntimeException("Could not find customer profile for the current user.");
+        }
+        Integer customerId = currentUser.getCustomer().getCustomerId();
+        Booking booking = bookingCustomerRepository.findByBookingIdAndCustomer_CustomerId(bookingId, customerId)
+                .orElseThrow(() -> new RuntimeException("Booking not found or you do not have permission to cancel it."));
+        if ("CANCELED".equals(booking.getStatus())) {
+            throw new RuntimeException("Booking is already canceled.");
+        }
+        String oldStatus = booking.getStatus();
+        booking.setStatus("CANCELED");
+        booking.setNewSlot(null);
+        booking.setNewVehicle(null);
+        Booking savedBooking = bookingCustomerRepository.save(booking);
+        notificationEventService.createBookingStatusNotification(
+            booking.getCustomer(),
+            booking.getBookingId().toString(),
+            oldStatus,
+            "CANCELED"
+        );
+        return mapToBookingResponse(savedBooking);
+    }
+
     private BookingCustomerResponse mapToBookingResponse(Booking booking) {
         // Convert items to response
         java.util.List<org.example.operatormanagementsystem.customer_thai.dto.response.ItemsResponse> itemsResponses = null;
@@ -234,6 +261,8 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .items(itemsResponses)
                 .slotIndex(booking.getSlotIndex())
                 .vehicleQuantity(booking.getVehicleQuantity())
+                .newSlot(booking.getNewSlot())
+                .newVehicle(booking.getNewVehicle())
                 .build();
     }
 
@@ -433,15 +462,34 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         for (int i = 1; i <= totalSlots; i++) { // slotIndex từ 1 đến n
             Booking b = slotBookingMap.get(i);
             if (b != null) {
-                slots.add(SlotStatusResponse.SlotInfo.builder()
-                        .slotIndex(i)
-                        .booked(true)
-                        .bookingId(b.getBookingId())
-                        .customerName(b.getCustomer().getUsers().getFullName())
-                        .build());
+                // Nếu slotIndex != newSlot và newSlot == null thì trả về slotIndex=null, booked=false, bookingId=null, customerName=null
+                if ((b.getNewSlot() == null && !iEquals(b.getSlotIndex(), b.getNewSlot()))) {
+                    slots.add(SlotStatusResponse.SlotInfo.builder()
+                            .slotIndex(null)
+                            .booked(false)
+                            .bookingId(null)
+                            .customerName(null)
+                            .build());
+                } else if (b.getNewSlot() != null && iEquals(b.getSlotIndex(), b.getNewSlot())) {
+                    // Nếu slotIndex == newSlot và newSlot != null thì trả về dữ liệu booking như cũ
+                    slots.add(SlotStatusResponse.SlotInfo.builder()
+                            .slotIndex(i)
+                            .booked(true)
+                            .bookingId(b.getBookingId())
+                            .customerName(b.getCustomer().getUsers().getFullName())
+                            .build());
+                } else {
+                    // Trường hợp còn lại (slotIndex == newSlot == null hoặc khác), trả về slotIndex=null
+                    slots.add(SlotStatusResponse.SlotInfo.builder()
+                            .slotIndex(null)
+                            .booked(false)
+                            .bookingId(null)
+                            .customerName(null)
+                            .build());
+                }
             } else {
                 slots.add(SlotStatusResponse.SlotInfo.builder()
-                        .slotIndex(i)
+                        .slotIndex(null)
                         .booked(false)
                         .bookingId(null)
                         .customerName(null)
@@ -456,12 +504,28 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .build();
     }
 
+    // Helper method so sánh Integer (có thể null)
+    private boolean iEquals(Integer a, Integer b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.equals(b);
+    }
+
     @Override
     public boolean checkVehicleAvailability(Integer transportUnitId, Integer vehicleQuantity) {
         TransportUnit transportUnit = transportUnitRepository.findById(transportUnitId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn vị vận chuyển"));
         int totalVehicles = transportUnit.getNumberOfVehicles() != null ? transportUnit.getNumberOfVehicles() : 0;
-        int bookedVehicles = bookingCustomerRepository.getTotalBookedVehicles(transportUnitId);
+        // Lấy tất cả booking của transportUnit này
+        java.util.List<Booking> bookings = bookingCustomerRepository.findByTransportUnit_TransportId(transportUnitId);
+        int bookedVehicles = 0;
+        for (Booking booking : bookings) {
+            // Chỉ cộng số xe của các booking mà newVehicle != null và newVehicle == vehicleQuantity
+            if (booking.getNewVehicle() != null && booking.getNewVehicle().equals(booking.getVehicleQuantity())) {
+                bookedVehicles += booking.getVehicleQuantity() != null ? booking.getVehicleQuantity() : 0;
+            }
+            // Nếu newVehicle == null thì bỏ qua, không cộng vào
+        }
         return (bookedVehicles + vehicleQuantity) <= totalVehicles;
     }
 } 
