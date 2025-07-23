@@ -102,11 +102,11 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
 
     @Query(
             value = """
-                SELECT 
-                    SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / COUNT(*)
-                FROM transport_unit_approval
-                WHERE status IN ('APPROVED', 'REJECTED')
-            """,
+        SELECT 
+            COALESCE(SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) * 1.0 / NULLIF(COUNT(*), 0), 0)
+        FROM transport_unit_approval
+        WHERE status IN ('APPROVED', 'REJECTED')
+    """,
             nativeQuery = true
     )
     double countApprovalRate();
@@ -114,11 +114,11 @@ public interface TransportUnitApprovalRepository extends JpaRepository<Transport
 
     @Query(
             value = """
-                SELECT 
-                    AVG(TIMESTAMPDIFF(SECOND, requested_at, processed_at)) / 3600
-                FROM transport_unit_approval
-                WHERE status IN ('APPROVED', 'REJECTED') AND processed_at IS NOT NULL
-            """,
+        SELECT 
+            COALESCE(AVG(TIMESTAMPDIFF(SECOND, requested_at, processed_at)) / 3600, 0)
+        FROM transport_unit_approval
+        WHERE status IN ('APPROVED', 'REJECTED') AND processed_at IS NOT NULL
+    """,
             nativeQuery = true
     )
     double calculateAvgProcessingTime();
