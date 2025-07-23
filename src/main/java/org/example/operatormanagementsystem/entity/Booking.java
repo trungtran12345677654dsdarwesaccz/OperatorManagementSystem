@@ -70,13 +70,13 @@ public class Booking {
     @Column(name = "note", length = 255)
     private String note;
 
-    @Column(name="slot_index", nullable=false)
+    @Column(name="slot_index", nullable=true)
     private Integer slotIndex;
 
     @Column(name = "home_type", length = 100)
     private String homeType;
 
-    @Column(name = "vehicle_quantity")
+    @Column(name = "vehicle_quantity",nullable = true)
     private Integer vehicleQuantity;
 
     @Column(name = "new_slot")

@@ -83,6 +83,8 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
                 .homeType(request.getHomeType())
                 .slotIndex(request.getSlotIndex())
                 .vehicleQuantity(request.getVehicleQuantity())
+                .newVehicle(request.getVehicleQuantity()) // Khởi tạo newVehicle = vehicleQuantity
+                .newSlot(request.getSlotIndex()) // Khởi tạo newSlot = slotIndex
                 .build();
 
         Booking savedBooking = bookingCustomerRepository.save(booking);
@@ -205,8 +207,8 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         }
         String oldStatus = booking.getStatus();
         booking.setStatus("CANCELED");
-        booking.setNewSlot(null);
-        booking.setNewVehicle(null);
+        booking.setSlotIndex(null);
+        booking.setVehicleQuantity(null);
         Booking savedBooking = bookingCustomerRepository.save(booking);
         notificationEventService.createBookingStatusNotification(
             booking.getCustomer(),
@@ -453,41 +455,27 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         int totalSlots = storage.getSlotCount();
         List<Booking> bookings = bookingCustomerRepository.findByStorageUnit_StorageId(storageId);
         java.util.Map<Integer, Booking> slotBookingMap = new java.util.HashMap<>();
+        
+        // Chỉ thêm vào map những booking có slotIndex != null
         for (Booking b : bookings) {
             if (b.getSlotIndex() != null) {
                 slotBookingMap.put(b.getSlotIndex(), b);
             }
         }
+
         java.util.List<SlotStatusResponse.SlotInfo> slots = new java.util.ArrayList<>();
         for (int i = 1; i <= totalSlots; i++) { // slotIndex từ 1 đến n
             Booking b = slotBookingMap.get(i);
             if (b != null) {
-                // Nếu slotIndex != newSlot và newSlot == null thì trả về slotIndex=null, booked=false, bookingId=null, customerName=null
-                if ((b.getNewSlot() == null && !iEquals(b.getSlotIndex(), b.getNewSlot()))) {
-                    slots.add(SlotStatusResponse.SlotInfo.builder()
-                            .slotIndex(null)
-                            .booked(false)
-                            .bookingId(null)
-                            .customerName(null)
-                            .build());
-                } else if (b.getNewSlot() != null && iEquals(b.getSlotIndex(), b.getNewSlot())) {
-                    // Nếu slotIndex == newSlot và newSlot != null thì trả về dữ liệu booking như cũ
-                    slots.add(SlotStatusResponse.SlotInfo.builder()
-                            .slotIndex(i)
-                            .booked(true)
-                            .bookingId(b.getBookingId())
-                            .customerName(b.getCustomer().getUsers().getFullName())
-                            .build());
-                } else {
-                    // Trường hợp còn lại (slotIndex == newSlot == null hoặc khác), trả về slotIndex=null
-                    slots.add(SlotStatusResponse.SlotInfo.builder()
-                            .slotIndex(null)
-                            .booked(false)
-                            .bookingId(null)
-                            .customerName(null)
-                            .build());
-                }
+                // Nếu có booking cho slot này, trả về thông tin đầy đủ
+                slots.add(SlotStatusResponse.SlotInfo.builder()
+                        .slotIndex(i)
+                        .booked(true)
+                        .bookingId(b.getBookingId())
+                        .customerName(b.getCustomer().getUsers().getFullName())
+                        .build());
             } else {
+                // Không có booking cho slot này, trả về slot trống
                 slots.add(SlotStatusResponse.SlotInfo.builder()
                         .slotIndex(null)
                         .booked(false)
@@ -520,12 +508,51 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         java.util.List<Booking> bookings = bookingCustomerRepository.findByTransportUnit_TransportId(transportUnitId);
         int bookedVehicles = 0;
         for (Booking booking : bookings) {
-            // Chỉ cộng số xe của các booking mà newVehicle != null và newVehicle == vehicleQuantity
-            if (booking.getNewVehicle() != null && booking.getNewVehicle().equals(booking.getVehicleQuantity())) {
-                bookedVehicles += booking.getVehicleQuantity() != null ? booking.getVehicleQuantity() : 0;
+            // Bỏ qua booking nếu vehicleQuantity của booking đó là null
+            if (booking.getVehicleQuantity() == null) {
+                continue;
             }
-            // Nếu newVehicle == null thì bỏ qua, không cộng vào
+            // Tính vào tổng số xe đã đặt
+            bookedVehicles += booking.getVehicleQuantity();
         }
         return (bookedVehicles + vehicleQuantity) <= totalVehicles;
+    }
+    
+    @Override
+    @Transactional
+    public BookingCustomerResponse completeBooking(Integer bookingId) {
+        Users currentUser = customerInfoService.getCurrentCustomerUser();
+        if (currentUser.getCustomer() == null) {
+            throw new RuntimeException("Could not find customer profile for the current user.");
+        }
+        Integer customerId = currentUser.getCustomer().getCustomerId();
+        
+        Booking booking = bookingCustomerRepository.findByBookingIdAndCustomer_CustomerId(bookingId, customerId)
+                .orElseThrow(() -> new RuntimeException("Booking not found or you do not have permission to complete it."));
+        
+        if ("COMPLETED".equals(booking.getStatus())) {
+            throw new RuntimeException("Booking is already completed.");
+        }
+        
+        String oldStatus = booking.getStatus();
+        booking.setStatus("COMPLETED");
+        
+        // Giải phóng tài nguyên (slotIndex và vehicleQuantity)
+        booking.setSlotIndex(null);
+        booking.setVehicleQuantity(null);
+        booking.setNewSlot(null);
+        booking.setNewVehicle(null);
+        
+        Booking savedBooking = bookingCustomerRepository.save(booking);
+        
+        // Gửi thông báo
+        notificationEventService.createBookingStatusNotification(
+            booking.getCustomer(),
+            booking.getBookingId().toString(),
+            oldStatus,
+            "COMPLETED"
+        );
+        
+        return mapToBookingResponse(savedBooking);
     }
 } 
