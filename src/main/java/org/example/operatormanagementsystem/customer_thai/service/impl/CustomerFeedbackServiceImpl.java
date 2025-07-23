@@ -11,6 +11,7 @@ import org.example.operatormanagementsystem.customer_thai.repository.BookingCust
 import org.example.operatormanagementsystem.customer_thai.repository.CustomerFeedbackRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.StorageUnitRepository;
 import org.example.operatormanagementsystem.customer_thai.repository.C_TransportUnitRepository;
+import org.example.operatormanagementsystem.customer_thai.repository.FeedbackLikeDislikeRepository;
 import org.example.operatormanagementsystem.customer_thai.service.CustomerFeedbackService;
 import org.example.operatormanagementsystem.customer_thai.service.NotificationEventService;
 import org.example.operatormanagementsystem.entity.Booking;
@@ -19,6 +20,7 @@ import org.example.operatormanagementsystem.entity.Feedback;
 import org.example.operatormanagementsystem.entity.StorageUnit;
 import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.entity.Users;
+import org.example.operatormanagementsystem.entity.FeedbackLikeDislike;
 import org.example.operatormanagementsystem.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +44,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
     private final NotificationEventService notificationEventService;
     private final StorageUnitRepository storageUnitRepository;
     private final C_TransportUnitRepository CTransportUnitRepository;
+    private final FeedbackLikeDislikeRepository feedbackLikeDislikeRepository;
 
     @Override
     public FeedbackResponse createFeedbackStorage(CreateStorageFeedbackRequest request, Integer customerId) {
@@ -67,7 +71,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
         Feedback saved = feedbackRepository.save(feedback);
 
         notificationEventService.createFeedbackNotification(user.getCustomer(), saved.getFeedbackId().toString(), "STORAGE");
-        return mapToResponse(saved);
+        return mapToResponse(saved, customerId);
     }
 
     @Override
@@ -95,7 +99,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
         Feedback saved = feedbackRepository.save(feedback);
 
         notificationEventService.createFeedbackNotification(user.getCustomer(), saved.getFeedbackId().toString(), "TRANSPORTATION");
-        return mapToResponse(saved);
+        return mapToResponse(saved, customerId);
     }
 
     @Override
@@ -122,7 +126,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
         Feedback updatedFeedback = feedbackRepository.save(feedback);
         logger.info("[FEEDBACK_SERVICE] Feedback updated successfully: {}", updatedFeedback.getFeedbackId());
 
-        return mapToResponse(updatedFeedback);
+        return mapToResponse(updatedFeedback, customerId);
     }
 
     @Override
@@ -152,14 +156,44 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                     return new RuntimeException("Feedback not found");
                 });
 
-        Integer currentLikes = feedback.getLikes() != null ? feedback.getLikes() : 0;
-        feedback.setLikes(currentLikes + 1);
-        logger.info("[FEEDBACK_SERVICE] Incrementing likes from {} to {}", currentLikes, feedback.getLikes());
+        Users user = userRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        Optional<FeedbackLikeDislike> likeDislikeOpt = feedbackLikeDislikeRepository.findByFeedbackAndUser(feedback, user);
+        boolean shouldIncreaseLike = false;
+        if (likeDislikeOpt.isPresent()) {
+            FeedbackLikeDislike likeDislike = likeDislikeOpt.get();
+            if (Boolean.TRUE.equals(likeDislike.getIsLike())) {
+                // Đã like rồi, không tăng nữa
+                logger.info("[FEEDBACK_SERVICE] User already liked this feedback.");
+            } else {
+                // Chuyển từ dislike sang like
+                likeDislike.setIsLike(true);
+                likeDislike.setIsDislike(false);
+                feedbackLikeDislikeRepository.save(likeDislike);
+                shouldIncreaseLike = true;
+                // Nếu trước đó là dislike, giảm số dislike
+                Integer currentDislikes = feedback.getDislikes() != null ? feedback.getDislikes() : 0;
+                if (currentDislikes > 0) feedback.setDislikes(currentDislikes - 1);
+            }
+        } else {
+            // Chưa từng tương tác, tạo mới
+            FeedbackLikeDislike newLike = FeedbackLikeDislike.builder()
+                    .feedback(feedback)
+                    .user(user)
+                    .isLike(true)
+                    .isDislike(false)
+                    .build();
+            feedbackLikeDislikeRepository.save(newLike);
+            shouldIncreaseLike = true;
+        }
+        if (shouldIncreaseLike) {
+            Integer currentLikes = feedback.getLikes() != null ? feedback.getLikes() : 0;
+            feedback.setLikes(currentLikes + 1);
+        }
         Feedback updatedFeedback = feedbackRepository.save(feedback);
         logger.info("[FEEDBACK_SERVICE] Feedback liked successfully");
-
-        return mapToResponse(updatedFeedback);
+        return mapToResponse(updatedFeedback, customerId);
     }
 
     @Override
@@ -172,14 +206,44 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                     return new RuntimeException("Feedback not found");
                 });
 
-        Integer currentLikes = feedback.getLikes() != null ? feedback.getLikes() : 0;
-        feedback.setLikes(Math.max(0, currentLikes - 1)); // Không cho phép âm
-        logger.info("[FEEDBACK_SERVICE] Decrementing likes from {} to {}", currentLikes, feedback.getLikes());
+        Users user = userRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        Optional<FeedbackLikeDislike> likeDislikeOpt = feedbackLikeDislikeRepository.findByFeedbackAndUser(feedback, user);
+        boolean shouldIncreaseDislike = false;
+        if (likeDislikeOpt.isPresent()) {
+            FeedbackLikeDislike likeDislike = likeDislikeOpt.get();
+            if (Boolean.TRUE.equals(likeDislike.getIsDislike())) {
+                // Đã dislike rồi, không tăng nữa
+                logger.info("[FEEDBACK_SERVICE] User already disliked this feedback.");
+            } else {
+                // Chuyển từ like sang dislike
+                likeDislike.setIsLike(false);
+                likeDislike.setIsDislike(true);
+                feedbackLikeDislikeRepository.save(likeDislike);
+                shouldIncreaseDislike = true;
+                // Nếu trước đó là like, giảm số like
+                Integer currentLikes = feedback.getLikes() != null ? feedback.getLikes() : 0;
+                if (currentLikes > 0) feedback.setLikes(currentLikes - 1);
+            }
+        } else {
+            // Chưa từng tương tác, tạo mới
+            FeedbackLikeDislike newDislike = FeedbackLikeDislike.builder()
+                    .feedback(feedback)
+                    .user(user)
+                    .isLike(false)
+                    .isDislike(true)
+                    .build();
+            feedbackLikeDislikeRepository.save(newDislike);
+            shouldIncreaseDislike = true;
+        }
+        if (shouldIncreaseDislike) {
+            Integer currentDislikes = feedback.getDislikes() != null ? feedback.getDislikes() : 0;
+            feedback.setDislikes(currentDislikes + 1);
+        }
         Feedback updatedFeedback = feedbackRepository.save(feedback);
         logger.info("[FEEDBACK_SERVICE] Feedback disliked successfully");
-
-        return mapToResponse(updatedFeedback);
+        return mapToResponse(updatedFeedback, customerId);
     }
 
     @Override
@@ -204,7 +268,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
     public List<FeedbackResponse> getAllFeedbacksByCustomerId(Integer customerId) {
         List<Feedback> feedbacks = feedbackRepository.findAllByCustomerId(customerId);
         return feedbacks.stream()
-                .map(this::mapToResponse)
+                .map(f -> mapToResponse(f, customerId))
                 .collect(Collectors.toList());
     }
 
@@ -231,7 +295,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
 
         // Map feedback sang DTO
         List<FeedbackResponse> feedbackResponses = directFeedbacks.stream()
-                .map(this::mapToResponse)
+                .map(f -> mapToResponse(f, f.getCustomer() != null && f.getCustomer().getUsers() != null ? f.getCustomer().getUsers().getId() : null))
                 .collect(Collectors.toList());
 
         return StorageSummaryResponse.builder()
@@ -278,7 +342,7 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
 
         // Map feedback sang DTO
         List<FeedbackResponse> feedbackResponses = directFeedbacks.stream()
-                .map(this::mapToResponse)
+                .map(f -> mapToResponse(f, f.getCustomer() != null && f.getCustomer().getUsers() != null ? f.getCustomer().getUsers().getId() : null))
                 .collect(Collectors.toList());
 
         return TransportSummaryResponse.builder()
@@ -303,7 +367,19 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                 .build();
     }
 
-    private FeedbackResponse mapToResponse(Feedback feedback) {
+    private FeedbackResponse mapToResponse(Feedback feedback, Integer currentUserId) {
+        Boolean isLike = false;
+        Boolean isDislike = false;
+        if (currentUserId != null) {
+            Optional<Users> userOpt = userRepository.findById(currentUserId);
+            if (userOpt.isPresent()) {
+                Optional<FeedbackLikeDislike> likeDislike = feedbackLikeDislikeRepository.findByFeedbackAndUser(feedback, userOpt.get());
+                if (likeDislike.isPresent()) {
+                    isLike = Boolean.TRUE.equals(likeDislike.get().getIsLike());
+                    isDislike = Boolean.TRUE.equals(likeDislike.get().getIsDislike());
+                }
+            }
+        }
         return FeedbackResponse.builder()
                 .feedbackId(feedback.getFeedbackId())
                 .bookingId(feedback.getBooking() != null ? feedback.getBooking().getBookingId() : null)
@@ -326,6 +402,8 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                     feedback.getCustomer().getUsers().getFullName() : null)
                 .customerImage(feedback.getCustomer() != null && feedback.getCustomer().getUsers() != null ?
                     feedback.getCustomer().getUsers().getImg() : null)
+                .isLike(isLike)
+                .isDislike(isDislike)
                 .build();
     }
 }

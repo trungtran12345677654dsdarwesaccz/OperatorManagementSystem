@@ -123,6 +123,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             // Cập nhật trạng thái thanh toán booking
             booking.setPaymentStatus(PaymentStatus.COMPLETED);
+            booking.setStatus("SHIPPING");
             bookingRepository.save(booking);
         }
 

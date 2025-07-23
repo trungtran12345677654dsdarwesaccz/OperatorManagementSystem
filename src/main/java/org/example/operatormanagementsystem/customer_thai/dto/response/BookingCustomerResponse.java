@@ -46,4 +46,6 @@ public class BookingCustomerResponse {
     private java.util.List<org.example.operatormanagementsystem.customer_thai.dto.response.ItemsResponse> items;
 
     private Integer vehicleQuantity;
+    private Integer newSlot;
+    private Integer newVehicle;
 } 

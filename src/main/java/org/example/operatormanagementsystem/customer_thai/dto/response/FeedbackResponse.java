@@ -30,4 +30,6 @@ public class FeedbackResponse {
     // Customer info
     private String customerFullName;
     private String customerImage;
+    private Boolean isLike;
+    private Boolean isDislike;
 } 

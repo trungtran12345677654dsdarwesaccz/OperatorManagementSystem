@@ -42,6 +42,8 @@ public class PromotionServiceImpl implements PromotionService {
                 .startDate(promotion.getStartDate())
                 .endDate(promotion.getEndDate())
                 .status(promotion.getStatus())
+                .discountType(promotion.getDiscountType())
+                .discountValue(promotion.getDiscountValue())
                 .build();
     }
 }
