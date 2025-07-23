@@ -23,6 +23,7 @@ public interface UserRepository extends JpaRepository<Users, Integer> {
     Page<Users> findByStatus(UserStatus status, Pageable pageable);
 
     Optional<Users> findById(int id);
+    Optional<Users> findByFullName(String fullName); // Thêm dòng này
 
     @Query("SELECT u FROM Users u WHERE u.status = 'PENDING_APPROVAL' " +
             "AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) " +

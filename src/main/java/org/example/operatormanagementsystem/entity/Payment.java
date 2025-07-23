@@ -30,8 +30,14 @@ public class Payment {
     @Column(name = "paid_date")
     private LocalDate paidDate;
 
+    @Column(length = 50)
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus status;
+
+    @Column(length = 255)
+    private String note;
 
     @Column(name = "transaction_no", length = 100)
-    private String transactionNo;
+    private String transactionNo; // Mã giao dịch VNPay trả về
 
 }

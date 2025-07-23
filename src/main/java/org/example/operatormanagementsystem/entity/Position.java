@@ -34,8 +34,6 @@ public class Position {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "base_salary", precision = 18, scale = 2, nullable = false)
-    private BigDecimal baseSalary;
 
     @Column(name = "status", length = 30, nullable = false)
     private String status;
