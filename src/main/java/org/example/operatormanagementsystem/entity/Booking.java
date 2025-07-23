@@ -74,7 +74,7 @@ public class Booking {
     private Integer slotIndex;
 
     @Column(name = "home_type", length = 100)
-    private String homeType; // Loại nhà: chung cư, nhà riêng, văn phòng, etc.
+    private String homeType;
 
     @Column(name = "vehicle_quantity")
     private Integer vehicleQuantity;
