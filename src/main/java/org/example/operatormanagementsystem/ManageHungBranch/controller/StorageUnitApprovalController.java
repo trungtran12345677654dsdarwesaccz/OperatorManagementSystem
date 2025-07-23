@@ -5,6 +5,7 @@ import org.example.operatormanagementsystem.ManageHungBranch.dto.request.Storage
 import org.example.operatormanagementsystem.ManageHungBranch.dto.response.StorageUnitApprovalResponse;
 import org.example.operatormanagementsystem.ManageHungBranch.service.StorageUnitApprovalService;
 import org.example.operatormanagementsystem.entity.Users;
+import org.example.operatormanagementsystem.enumeration.ApprovalStatus;
 import org.example.operatormanagementsystem.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -78,6 +79,7 @@ public class StorageUnitApprovalController {
     @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StorageUnitApprovalResponse> approveApproval(
             @PathVariable Integer id,
+//            @RequestBody StorageUnitApprovalProcessRequest request) {
             @RequestBody(required = false) StorageUnitApprovalProcessRequest request) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -89,6 +91,8 @@ public class StorageUnitApprovalController {
             Users currentUser = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Logged in user not found in DB."));
             Integer managerUserId = currentUser.getId();
+            request.setStatus(ApprovalStatus.APPROVED);
+
 
             if (request == null) {
                 request = StorageUnitApprovalProcessRequest.builder()
@@ -111,6 +115,7 @@ public class StorageUnitApprovalController {
     @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StorageUnitApprovalResponse> rejectApproval(
             @PathVariable Integer id,
+//            @RequestBody StorageUnitApprovalProcessRequest request) {
             @RequestBody(required = false) StorageUnitApprovalProcessRequest request) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -122,6 +127,7 @@ public class StorageUnitApprovalController {
             Users currentUser = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Logged in user not found in DB."));
             Integer managerUserId = currentUser.getId();
+            request.setStatus(ApprovalStatus.REJECTED);
 
             if (request == null) {
                 request = StorageUnitApprovalProcessRequest.builder()
