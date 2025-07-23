@@ -191,9 +191,9 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             monthlyData.forEach((month, unitMap) -> {
                 MonthlyRevenueResponse response = new MonthlyRevenueResponse();
                 response.setMonth(month);
-                response.setChuyenNha24H(unitMap.getOrDefault("chuyenNha24H", BigDecimal.ZERO));
-                response.setDvChuyenNhaSaiGon(unitMap.getOrDefault("dvChuyenNhaSaiGon", BigDecimal.ZERO));
-                response.setChuyenNhaMinhAnh(unitMap.getOrDefault("chuyenNhaMinhAnh", BigDecimal.ZERO));
+                response.setChuyenNha24H(unitMap.getOrDefault("Chuyển Nhà 24H", BigDecimal.ZERO));
+                response.setDvChuyenNhaSaiGon(unitMap.getOrDefault("DV Chuyển Nhà SG", BigDecimal.ZERO));
+                response.setChuyenNhaMinhAnh(unitMap.getOrDefault("Chuyển Nhà Minh Anh", BigDecimal.ZERO));
                 result.add(response);
             });
 
@@ -231,12 +231,18 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
 
             List<PerformanceDataResponse> result = new ArrayList<>();
             monthlyBookings.forEach((month, bookingList) -> {
+                // Thêm log debug
+                System.out.println("=== DEBUG: Tháng " + month + " ===");
+                bookingList.forEach(b -> System.out.println("BookingId: " + b.getBookingId() + ", Status: " + b.getStatus()));
+                long huyCount = bookingList.stream().filter(b -> "CANCELED".equals(b.getStatus())).count();
+                System.out.println("Số booking huỷ (CANCELED) tháng " + month + ": " + huyCount);
+
                 PerformanceDataResponse response = new PerformanceDataResponse();
                 response.setMonth(month);
                 response.setDungHan((int) bookingList.stream()
                         .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isAfter(LocalDate.now()))
                         .count());
-                response.setHuy((int) bookingList.stream().filter(b -> "CANCELLED".equals(b.getStatus())).count());
+                response.setHuy((int) huyCount);
                 response.setTre((int) bookingList.stream()
                         .filter(b -> "COMPLETED".equals(b.getStatus())
                                 && b.getDeliveryDate() != null
@@ -287,7 +293,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                     response.setUnit(unitName);
                     int onTime = 0, cancelled = 0, late = 0, trips = 0;
                     for (Booking b : bookingList) {
-                        if ("CANCELLED".equals(b.getStatus())) {
+                        if ("CANCELED".equals(b.getStatus())) {
                             cancelled++;
                             trips++;
                         } else if ("COMPLETED".equals(b.getStatus()) && b.getDeliveryDate() != null && b.getCreatedAt() != null) {
