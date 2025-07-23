@@ -21,4 +21,10 @@ public class StorageUnitApprovalResponse {
     private LocalDateTime requestedAt;
     private LocalDateTime processedAt;
     private String managerNote;
+
+    private String address;
+    private String phone;
+    private Integer slotCount;
+    private String imageUrl;
+    private String emailError;
 }

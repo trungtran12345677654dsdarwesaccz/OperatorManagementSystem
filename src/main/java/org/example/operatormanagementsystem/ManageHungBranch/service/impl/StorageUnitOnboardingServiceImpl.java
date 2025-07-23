@@ -25,7 +25,7 @@ public class StorageUnitOnboardingServiceImpl implements StorageUnitOnboardingSe
     private final UserRepository userRepository;
 
     // Bạn cần chỉ định SYSTEM_USER_ID đúng
-    private static final Integer SYSTEM_USER_ID = 5;
+    private static final Integer SYSTEM_USER_ID = 11;
 
     @Override
     @Transactional

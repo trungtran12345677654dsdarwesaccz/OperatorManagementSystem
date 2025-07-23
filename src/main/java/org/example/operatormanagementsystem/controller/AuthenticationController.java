@@ -172,6 +172,7 @@ public class AuthenticationController {
                     .body("Lỗi khi đăng xuất: " + e.getMessage());
         }
     }
+
     private String parseDeviceInfo(String userAgent) {
         if (userAgent == null) return "Unknown";
 
