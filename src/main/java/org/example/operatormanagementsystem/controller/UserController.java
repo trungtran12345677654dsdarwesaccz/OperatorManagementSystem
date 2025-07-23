@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasRole('STAFF')")
+@PreAuthorize("hasRole('STAFF') or hasRole('MANAGER')")
 public class UserController {
 
     @Autowired

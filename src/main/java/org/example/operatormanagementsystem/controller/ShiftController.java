@@ -56,7 +56,7 @@ public class ShiftController {
      * Get shift details by ID
      */
     @GetMapping("/{shiftId}")
-    @PreAuthorize("hasRole('OPERATOR') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('STAFF') or hasRole('MANAGER')")
     public ResponseEntity<ShiftDetailsResponse> getShiftById(@PathVariable Integer shiftId) {
         log.debug("Getting shift by ID: {}", shiftId);
         
@@ -68,7 +68,7 @@ public class ShiftController {
      * Get all active shifts
      */
     @GetMapping
-    @PreAuthorize("hasRole('OPERATOR') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('STAFF') or hasRole('MANAGER')")
     public ResponseEntity<List<ShiftDetailsResponse>> getAllActiveShifts() {
         log.debug("Getting all active shifts");
         
@@ -139,7 +139,7 @@ public class ShiftController {
      * Get shift assignments for a specific operator
      */
     @GetMapping("/assignments/{operatorId}")
-    @PreAuthorize("hasRole('OPERATOR') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('STAFF') or hasRole('MANAGER')")
     public ResponseEntity<List<ShiftDetailsResponse>> getOperatorShiftAssignments(
             @PathVariable Integer operatorId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
