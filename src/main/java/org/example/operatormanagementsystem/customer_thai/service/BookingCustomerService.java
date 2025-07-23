@@ -83,4 +83,9 @@ public interface BookingCustomerService {
      * Đổi trạng thái booking sang CANCELED cho customer hiện tại
      */
     BookingCustomerResponse cancelBooking(Integer bookingId);
+    
+    /**
+     * Đổi trạng thái booking sang COMPLETED và giải phóng tài nguyên (slotIndex và vehicleQuantity)
+     */
+    BookingCustomerResponse completeBooking(Integer bookingId);
 } 

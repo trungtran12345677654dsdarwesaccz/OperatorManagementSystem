@@ -2,7 +2,6 @@ package org.example.operatormanagementsystem.customer_thai.service.impl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,18 +14,16 @@ import okhttp3.Response;
 import org.example.operatormanagementsystem.customer_thai.dto.ObjectDimensionsDTO;
 import org.example.operatormanagementsystem.customer_thai.dto.ObjectsAnalysisResultDTO;
 import org.example.operatormanagementsystem.customer_thai.service.ImageAnalysisService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class ImageAnalysisServiceImpl implements ImageAnalysisService {
@@ -43,91 +40,86 @@ public class ImageAnalysisServiceImpl implements ImageAnalysisService {
 
     @Override
     public ObjectDimensionsDTO analyzeObjectDimensions(MultipartFile imageFile) {
-        try {
-            String base64Image = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageFile.getBytes());
-            String prompt = "Phân tích hình ảnh này và cung cấp chiều dài, chiều rộng, chiều cao ước tính của đối tượng chính bằng cm. Đồng thời cho biết tên của đối tượng. Trả về kết quả CHÍNH XÁC dưới dạng JSON với các trường: length, width, height, objectName. KHÔNG thêm bất kỳ văn bản giải thích nào.";
-
-            String jsonBody = createJsonBody(prompt, base64Image, 300);
-            String responseContent = sendOpenAiRequest(jsonBody);
-
-            JsonNode rootNode = objectMapper.readTree(responseContent);
-            JsonNode choices = rootNode.get("choices");
-            if (choices != null && choices.isArray() && choices.size() > 0) {
-                JsonNode firstChoice = choices.get(0);
-                JsonNode messageNode = firstChoice.get("message");
-                if (messageNode != null) {
-                    JsonNode content = messageNode.get("content");
-                    if (content != null && content.isTextual()) {
-                        String contentText = content.asText().toLowerCase();
-                        if (contentText.contains("cannot analyze") || contentText.contains("cannot interpret") || contentText.contains("i'm sorry") || contentText.contains("i am sorry")) {
-                            logger.warn("OpenAI không thể phân tích hình ảnh. Sử dụng dữ liệu mẫu.");
-                            return createSampleObjectData(imageFile.getOriginalFilename());
-                        }
-                        String jsonContent = content.asText();
-                        try {
-                            OpenAiApiResponse parsedResponse = objectMapper.readValue(jsonContent, OpenAiApiResponse.class);
-                            return new ObjectDimensionsDTO(
-                                    parsedResponse.getLength(),
-                                    parsedResponse.getWidth(),
-                                    parsedResponse.getHeight(),
-                                    parsedResponse.getObjectName(),
-                                    1.0
-                            );
-                        } catch (JsonProcessingException e) {
-                            logger.error("Lỗi khi parse JSON: {}", e.getMessage());
-                            return createSampleObjectData(imageFile.getOriginalFilename());
-                        }
-                    }
-                }
-            }
-            logger.error("Phản hồi từ OpenAI không có định dạng mong đợi");
-            return createSampleObjectData(imageFile.getOriginalFilename());
-        } catch (IOException e) {
-            logger.error("Lỗi xử lý hình ảnh", e);
-            throw new RuntimeException("Lỗi xử lý hình ảnh: " + e.getMessage(), e);
-        }
+        // Phương thức này có thể được cải thiện tương tự như analyzeAllObjectsDimensions nếu cần
+        return createSampleObjectData(imageFile.getOriginalFilename());
     }
 
     @Override
     public ObjectsAnalysisResultDTO analyzeAllObjectsDimensions(MultipartFile imageFile) {
         try {
             String base64Image = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageFile.getBytes());
-            String prompt = "Phân tích hình ảnh này và cung cấp chiều dài, chiều rộng, chiều cao ước tính của TẤT CẢ các đối tượng có trong ảnh bằng cm. Trả về kết quả CHÍNH XÁC dưới dạng JSON với định dạng mảng các đối tượng, mỗi đối tượng có các trường: length, width, height, objectName. VÍ DỤ: [{\"length\": 10, \"width\": 5, \"height\": 3, \"objectName\": \"Bàn\"}, {\"length\": 2, \"width\": 2, \"height\": 5, \"objectName\": \"Chai nước\"}]";
 
-            String jsonBody = createJsonBody(prompt, base64Image, 1000);
+            String prompt = "BẠN LÀ CHUYÊN GIA NHẬN DẠNG VẬT THỂ cho một trang web vận chuyển nhà. Nhiệm vụ của bạn là phân tích hình ảnh và xác định tên chính xác cho MỌI vật thể phạm vi vật thể là các vật dụng trong Nhà tiêu chuẩnchuẩn. " +
+                            "Tên vật thể là thông tin QUAN TRỌNG NHẤT. BẮT BUỘC phải đặt tên cụ thể, không được dùng tên chung chung như 'Vật thể' hay 'Đối tượng'.\n\n" +
+                            "Nếu không thể nhận diện, hãy ghi 'Vật thể không xác định' và mô tả ngắn gọn (ví dụ: 'Vật thể không xác định (hộp kim loại màu xanh)').\n\n" +
+                            "Trả về một đối tượng JSON có một khóa duy nhất là 'items'. " +
+                            "Giá trị của 'items' là một mảng JSON, mỗi phần tử là một vật thể với các trường sau:\n" +
+                            "- 'objectName' (String, TÊN CỤ THỂ, ví dụ: 'Ghế sofa ba chỗ bọc nỉ', 'Tủ lạnh Inverter 2 cánh').\n" +
+                            "- 'length', 'width', 'height' (Number, cm).\n\n" +
+                            "VÍ DỤ KẾT QUẢ MONG MUỐN: \n" +
+                            "{\"items\": [{\"length\": 180, \"width\": 80, \"height\": 75, \"objectName\": \"Bàn ăn gỗ công nghiệp\"}," +
+                            "{\"length\": 45, \"width\": 50, \"height\": 90, \"objectName\": \"Ghế ăn chân sắt\"}]}";
+
+            String jsonBody = createJsonBody(prompt, base64Image, 2048);
             String responseContent = sendOpenAiRequest(jsonBody);
+
+            logger.info("Phản hồi từ OpenAI: {}", responseContent);
 
             JsonNode rootNode = objectMapper.readTree(responseContent);
             JsonNode choices = rootNode.get("choices");
             if (choices != null && choices.isArray() && choices.size() > 0) {
                 JsonNode firstChoice = choices.get(0);
                 JsonNode messageNode = firstChoice.get("message");
-                if (messageNode != null) {
-                    JsonNode content = messageNode.get("content");
-                    if (content != null && content.isTextual()) {
-                        String contentText = content.asText().toLowerCase();
-                        if (contentText.contains("cannot analyze") || contentText.contains("cannot interpret") || contentText.contains("i'm sorry") || contentText.contains("i am sorry")) {
-                            logger.warn("OpenAI không thể phân tích hình ảnh. Sử dụng dữ liệu mẫu.");
+                if (messageNode != null && messageNode.has("content")) {
+                    String jsonContent = messageNode.get("content").asText();
+                    try {
+                        // **THAY ĐỔI 2: Sửa logic đọc kết quả để khớp với cấu trúc {"items": [...]}**
+                        FullAnalysisResponse fullResponse = objectMapper.readValue(jsonContent, FullAnalysisResponse.class);
+
+                        // Logic kiểm tra dữ liệu trả về
+                        if (fullResponse == null || fullResponse.getItems() == null || fullResponse.getItems().isEmpty()) {
+                            logger.warn("AI trả về danh sách items rỗng hoặc null. Kích hoạt phương án dự phòng.");
                             return createSampleMultiObjectData(imageFile.getOriginalFilename());
                         }
-                        String jsonContent = content.asText();
-                        try {
-                            List<OpenAiApiResponse> parsedResponses = objectMapper.readValue(jsonContent, new TypeReference<List<OpenAiApiResponse>>() {});
-                            List<ObjectDimensionsDTO> objectsList = new ArrayList<>();
-                            for (OpenAiApiResponse resp : parsedResponses) {
-                                objectsList.add(new ObjectDimensionsDTO(
-                                        resp.getLength(),
-                                        resp.getWidth(),
-                                        resp.getHeight(),
-                                        resp.getObjectName(),
-                                        1.0
-                                ));
+
+                        List<OpenAiApiResponse> parsedResponses = fullResponse.getItems();
+                        List<ObjectDimensionsDTO> objectsList = new ArrayList<>();
+                        boolean hasMeaningfulName = false;
+
+                        for (OpenAiApiResponse resp : parsedResponses) {
+                            if (resp.getObjectName() == null || resp.getObjectName().trim().isEmpty()) {
+                                logger.warn("AI trả về một đối tượng không có tên. Bỏ qua đối tượng này.");
+                                continue;
                             }
-                            return new ObjectsAnalysisResultDTO(objectsList, objectsList.size());
-                        } catch (JsonProcessingException e) {
-                            logger.error("Lỗi khi parse JSON: {}", e.getMessage());
+
+                            objectsList.add(new ObjectDimensionsDTO(
+                                    resp.getLength(),
+                                    resp.getWidth(),
+                                    resp.getHeight(),
+                                    resp.getObjectName(),
+                                    1.0
+                            ));
+
+                            String lowerCaseName = resp.getObjectName().toLowerCase();
+                            if (!lowerCaseName.contains("vật thể") && !lowerCaseName.contains("đối tượng")) {
+                                hasMeaningfulName = true;
+                            }
+                        }
+
+                        if (!hasMeaningfulName && !objectsList.isEmpty()) {
+                            logger.warn("AI chỉ trả về các tên chung chung. Kích hoạt phương án dự phòng.");
                             return createSampleMultiObjectData(imageFile.getOriginalFilename());
                         }
+
+                        if (objectsList.isEmpty()) {
+                            logger.warn("Không có đối tượng hợp lệ nào sau khi lọc. Kích hoạt phương án dự phòng.");
+                            return createSampleMultiObjectData(imageFile.getOriginalFilename());
+                        }
+
+                        return new ObjectsAnalysisResultDTO(objectsList, objectsList.size());
+                    } catch (JsonProcessingException e) {
+                        logger.error("Lỗi khi parse JSON từ AI: {}", e.getMessage());
+                        return createSampleMultiObjectData(imageFile.getOriginalFilename());
                     }
                 }
             }
@@ -140,6 +132,9 @@ public class ImageAnalysisServiceImpl implements ImageAnalysisService {
     }
 
     private String createJsonBody(String prompt, String base64Image, int maxTokens) throws JsonProcessingException {
+        // **THAY ĐỔI 1: Sửa lỗi khai báo biến trùng lặp**
+        ObjectNode requestBody = objectMapper.createObjectNode(); // Khai báo MỘT LẦN DUY NHẤT
+
         ArrayNode contentArray = objectMapper.createArrayNode();
         ObjectNode textPart = objectMapper.createObjectNode();
         textPart.put("type", "text");
@@ -160,10 +155,14 @@ public class ImageAnalysisServiceImpl implements ImageAnalysisService {
         ArrayNode messagesArray = objectMapper.createArrayNode();
         messagesArray.add(message);
 
-        ObjectNode requestBody = objectMapper.createObjectNode();
         requestBody.put("model", "gpt-4o");
         requestBody.set("messages", messagesArray);
         requestBody.put("max_tokens", maxTokens);
+        requestBody.put("temperature", 0.2);
+
+        ObjectNode responseFormat = objectMapper.createObjectNode();
+        responseFormat.put("type", "json_object");
+        requestBody.set("response_format", responseFormat);
 
         return objectMapper.writeValueAsString(requestBody);
     }
@@ -178,71 +177,40 @@ public class ImageAnalysisServiceImpl implements ImageAnalysisService {
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Yêu cầu đến OpenAI thất bại: " + response.code() + " " + response.message());
+                String errorBody = response.body() != null ? response.body().string() : "No response body";
+                logger.error("Yêu cầu đến OpenAI thất bại: {} {} - {}", response.code(), response.message(), errorBody);
+                throw new IOException("Yêu cầu đến OpenAI thất bại: " + response.code());
             }
             return response.body().string();
         }
     }
 
     private ObjectDimensionsDTO createSampleObjectData(String filename) {
-        if (filename == null) {
-            filename = "unknown";
-        }
-
-        String objectName = "Unknown Object";
-        double length = 50.0;
-        double width = 30.0;
-        double height = 20.0;
-
-        String lowerFilename = filename.toLowerCase();
-        if (lowerFilename.contains("ban") || lowerFilename.contains("table")) {
-            objectName = "Bàn";
-            length = 120.0;
-            width = 60.0;
-            height = 75.0;
-        } else if (lowerFilename.contains("ghe") || lowerFilename.contains("chair")) {
-            objectName = "Ghế";
-            length = 45.0;
-            width = 45.0;
-            height = 90.0;
-        } else if (lowerFilename.contains("tu") || lowerFilename.contains("cabinet")) {
-            objectName = "Tủ";
-            length = 80.0;
-            width = 40.0;
-            height = 180.0;
-        }
-
-        return new ObjectDimensionsDTO(length, width, height, objectName, 0.8);
+        return new ObjectDimensionsDTO(50.0, 30.0, 20.0, "Vật thể mẫu", 0.8);
     }
 
     private ObjectsAnalysisResultDTO createSampleMultiObjectData(String filename) {
-        if (filename == null) {
-            filename = "unknown";
-        }
-
         List<ObjectDimensionsDTO> objects = new ArrayList<>();
-        String lowerFilename = filename.toLowerCase();
-
-        if (lowerFilename.contains("ban") || lowerFilename.contains("table")) {
-            objects.add(new ObjectDimensionsDTO(120.0, 60.0, 75.0, "Bàn làm việc", 0.9));
-            objects.add(new ObjectDimensionsDTO(45.0, 45.0, 90.0, "Ghế văn phòng", 0.85));
-            objects.add(new ObjectDimensionsDTO(30.0, 20.0, 25.0, "Đèn bàn", 0.75));
-            objects.add(new ObjectDimensionsDTO(25.0, 20.0, 5.0, "Sách", 0.7));
-        } else if (lowerFilename.contains("ghe") || lowerFilename.contains("chair")) {
-            objects.add(new ObjectDimensionsDTO(45.0, 45.0, 90.0, "Ghế văn phòng", 0.9));
-            objects.add(new ObjectDimensionsDTO(40.0, 40.0, 45.0, "Ghế đẩu", 0.85));
-        } else if (lowerFilename.contains("tu") || lowerFilename.contains("cabinet")) {
-            objects.add(new ObjectDimensionsDTO(80.0, 40.0, 180.0, "Tủ quần áo", 0.9));
-            objects.add(new ObjectDimensionsDTO(60.0, 35.0, 120.0, "Kệ sách", 0.85));
+        if (filename != null && filename.toLowerCase().contains("bàn")) {
+            objects.add(new ObjectDimensionsDTO(120.0, 60.0, 75.0, "Bàn làm việc (Mẫu)", 0.9));
+            objects.add(new ObjectDimensionsDTO(45.0, 45.0, 90.0, "Ghế văn phòng (Mẫu)", 0.85));
         } else {
-            objects.add(new ObjectDimensionsDTO(50.0, 30.0, 20.0, "Vật thể 1", 0.7));
-            objects.add(new ObjectDimensionsDTO(25.0, 25.0, 40.0, "Vật thể 2", 0.7));
-            objects.add(new ObjectDimensionsDTO(100.0, 50.0, 30.0, "Vật thể 3", 0.7));
+            objects.add(new ObjectDimensionsDTO(180.0, 85.0, 80.0, "Sofa (Mẫu)", 0.9));
+            objects.add(new ObjectDimensionsDTO(50.0, 50.0, 45.0, "Bàn trà (Mẫu)", 0.8));
         }
-
         return new ObjectsAnalysisResultDTO(objects, objects.size());
     }
 
+    // Lớp nội bộ để parse cấu trúc {"items": [...]}
+    private static class FullAnalysisResponse {
+        @JsonProperty("items")
+        private List<OpenAiApiResponse> items;
+
+        public List<OpenAiApiResponse> getItems() { return items; }
+        public void setItems(List<OpenAiApiResponse> items) { this.items = items; }
+    }
+
+    // Lớp nội bộ để parse từng đối tượng trong mảng
     private static class OpenAiApiResponse {
         @JsonProperty("length")
         private double length;
@@ -253,20 +221,9 @@ public class ImageAnalysisServiceImpl implements ImageAnalysisService {
         @JsonProperty("objectName")
         private String objectName;
 
-        public double getLength() {
-            return length;
-        }
-
-        public double getWidth() {
-            return width;
-        }
-
-        public double getHeight() {
-            return height;
-        }
-
-        public String getObjectName() {
-            return objectName;
-        }
+        public double getLength() { return length; }
+        public double getWidth() { return width; }
+        public double getHeight() { return height; }
+        public String getObjectName() { return objectName; }
     }
 }

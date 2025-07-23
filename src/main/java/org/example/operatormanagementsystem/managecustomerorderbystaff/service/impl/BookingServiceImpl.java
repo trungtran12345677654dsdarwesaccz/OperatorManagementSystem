@@ -73,7 +73,16 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
 
         if (bookingUpdatesRequest.getStatus() != null) {
+            String oldStatus = existingBooking.getStatus();
             existingBooking.setStatus(bookingUpdatesRequest.getStatus());
+            
+            // Giải phóng tài nguyên khi booking hoàn thành
+            if ("COMPLETED".equalsIgnoreCase(bookingUpdatesRequest.getStatus())) {
+                existingBooking.setSlotIndex(null);
+                existingBooking.setVehicleQuantity(null);
+                existingBooking.setNewSlot(null);
+                existingBooking.setNewVehicle(null);
+            }
         }
         if (bookingUpdatesRequest.getDeliveryDate() != null) {
             existingBooking.setDeliveryDate(bookingUpdatesRequest.getDeliveryDate());
