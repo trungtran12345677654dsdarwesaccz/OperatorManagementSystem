@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.operatormanagementsystem.dto.response.RevenueResponse;
 import org.example.operatormanagementsystem.entity.Revenue;
 import org.example.operatormanagementsystem.service.RevenueService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -81,24 +84,38 @@ public class RevenueController {
 
     @GetMapping("/export/excel")
     public ResponseEntity<byte[]> exportToExcel(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate endDate) {
-        // If dates are not provided, use current date
-        if (startDate == null) {
-            startDate = LocalDate.now();
-        }
-        if (endDate == null) {
-            endDate = LocalDate.now();
-        }
-
-        byte[] excelFile = revenueService.exportToExcel(startDate, endDate);
-
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String sourceType,
+            @RequestParam(required = false) String beneficiaryId,
+            @RequestParam(required = false) String bookingId,
+            @RequestParam(required = false) String minAmount,
+            @RequestParam(required = false) String maxAmount
+    ) {
+        byte[] excelFile = revenueService.exportToExcelWithFilter(startDate, endDate, sourceType, beneficiaryId, bookingId, minAmount, maxAmount);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment", "revenue_report.xlsx");
-
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(excelFile);
+    }
+
+    // Add this endpoint for paginated/filterable revenues
+    @GetMapping("/filtered")
+    public Page<RevenueResponse> getPagedRevenues(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String sourceType,
+            @RequestParam(required = false) String beneficiaryId,
+            @RequestParam(required = false) String bookingId,
+            @RequestParam(required = false) String minAmount,
+            @RequestParam(required = false) String maxAmount
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        // Implement this method in RevenueService to handle filtering and paging
+        return revenueService.getPagedRevenues(pageable, startDate, endDate, sourceType, beneficiaryId, bookingId, minAmount, maxAmount);
     }
 }
