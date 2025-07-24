@@ -80,25 +80,24 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public String confirmPayment() {
-        // Lấy danh sách email mới nhất
+        // 1. Lấy danh sách email mới nhất
         List<String> messages = oauthGmail.listLatestEmails(1);
         for (String msg : messages) {
             System.out.println("Email content: " + msg);
         }
+        Users systemBot = userRepository.findByEmail("tranduytrung251105@gmail.com")
+                .orElseThrow(() -> new RuntimeException("System bot user not found"));
 
-        // Phân tích các giao dịch từ nội dung email
+        // 2. Phân tích giao dịch từ email
         List<Transaction> transactions = parseTransactions(messages);
         if (transactions == null || transactions.isEmpty()) {
             throw new RuntimeException("No transactions found");
         }
 
-        // Lấy người dùng hiện tại
-        Users currentUser = getCurrentUser();
-
         for (Transaction tx : transactions) {
             Integer bookingId = tx.getId();
 
-            // Tìm kiếm booking tương ứng
+            // 3. Tìm booking tương ứng
             Booking booking = bookingRepository.findById(bookingId)
                     .orElseThrow(() -> new RuntimeException("Booking not found for id: " + bookingId));
 
@@ -109,25 +108,26 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new RuntimeException("Amount mismatch for booking ID: " + bookingId);
             }
 
-
-            // Tạo đối tượng Payment mới, transactionNo lấy từ nội dung note (description)
+            // 4. Tạo đối tượng Payment
             Payment payment = Payment.builder()
                     .booking(booking)
-                    .payer(currentUser)
-                    .amount(BigDecimal.valueOf(tx.getAmount()))
+                    .payer(systemBot) // hoặc set 1 user mặc định nếu cần
+                    .amount(amount)
                     .paidDate(LocalDate.now())
                     .transactionNo(generateRandom6Digits())
                     .build();
 
             paymentRepository.save(payment);
 
-            // Cập nhật trạng thái thanh toán booking
+            // 5. Cập nhật trạng thái thanh toán của booking
             booking.setPaymentStatus(PaymentStatus.COMPLETED);
             bookingRepository.save(booking);
         }
 
         return "Confirmed Successfully";
     }
+
+
     public String generateRandom6Digits() {
         Random random = new Random();
         int number = 100000 + random.nextInt(900000); // sinh số từ 100000 đến 999999

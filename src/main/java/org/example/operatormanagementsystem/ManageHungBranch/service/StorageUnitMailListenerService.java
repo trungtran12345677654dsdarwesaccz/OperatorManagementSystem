@@ -61,22 +61,22 @@ public class StorageUnitMailListenerService {
             inbox.open(Folder.READ_WRITE);
 
             // Chỉ lọc email chưa đọc, subject đúng
-            System.out.println("Đang kiểm tra mail chưa đọc...");
-            Message[] messages = inbox.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
-            System.out.println("Tìm thấy " + messages.length + " mail chưa đọc.");
-            for (Message message : messages) {
-                System.out.println("Subject mail: " + message.getSubject());
-                if (message.getSubject() == null || !message.getSubject().contains("[ĐĂNG KÝ KHO MỚI]")) {
-                    message.setFlag(Flags.Flag.SEEN, true);
-                    continue;
-                }
-                String content = getTextFromMessage(message);
-                System.out.println("Nội dung mail: " + content);
-                StorageUnitEmailRequest req = parseEmailContent(content, extractSender(message));
-                System.out.println("Đã parse thành DTO: " + req);
-                sendToOnboardingApi(req);
-                message.setFlag(Flags.Flag.SEEN, true);
-            }
+//            System.out.println("Đang kiểm tra mail chưa đọc...");
+//            Message[] messages = inbox.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+//            System.out.println("Tìm thấy " + messages.length + " mail chưa đọc.");
+//            for (Message message : messages) {
+//                System.out.println("Subject mail: " + message.getSubject());
+//                if (message.getSubject() == null || !message.getSubject().contains("[ĐĂNG KÝ KHO MỚI]")) {
+//                    message.setFlag(Flags.Flag.SEEN, true);
+//                    continue;
+//                }
+//                String content = getTextFromMessage(message);
+//                System.out.println("Nội dung mail: " + content);
+//                StorageUnitEmailRequest req = parseEmailContent(content, extractSender(message));
+//                System.out.println("Đã parse thành DTO: " + req);
+//                sendToOnboardingApi(req);
+//                message.setFlag(Flags.Flag.SEEN, true);
+//            }
 
         } catch (Exception e) {
             e.printStackTrace();

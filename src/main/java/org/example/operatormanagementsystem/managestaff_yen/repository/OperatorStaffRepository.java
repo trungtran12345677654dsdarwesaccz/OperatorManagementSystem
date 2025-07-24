@@ -1,6 +1,7 @@
 package org.example.operatormanagementsystem.managestaff_yen.repository;
 
 import org.example.operatormanagementsystem.entity.OperatorStaff;
+import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.enumeration.UserGender;
 import org.example.operatormanagementsystem.enumeration.UserStatus;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import java.util.Optional;
 public interface OperatorStaffRepository extends JpaRepository<OperatorStaff, Integer> {
 
     List<OperatorStaff> findByManagerManagerId(Integer managerId);
+    List<OperatorStaff> findByUsers(Users users);
 
     Page<OperatorStaff> findByManagerManagerId(Integer managerId, Pageable pageable);
 

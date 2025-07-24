@@ -25,9 +25,7 @@ public interface BookingService {
     void deleteBooking(Integer id);
     Optional<BookingDetailResponse> getBookingDetail(Integer storageId, Integer slotIndex);
     BookingDetailResponse createBooking(BookingRequest req);
-    // BookingService.java
     Map<String, List<Integer>> getAllRelatedIds();
-
 
 
 }

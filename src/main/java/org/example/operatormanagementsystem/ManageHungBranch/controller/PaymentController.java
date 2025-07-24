@@ -26,6 +26,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @GetMapping("/search")
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Search receipts", description = "Search payments by various criteria for staff to view")
     public ResponseEntity<Page<PaymentDTO>> searchReceipts(
             @Parameter(description = "Search criteria") PaymentSearchDTO searchDTO,
@@ -35,6 +36,8 @@ public class PaymentController {
     }
 
     @GetMapping("/list")
+    @PreAuthorize("hasRole('MANAGER')")
+
     @Operation(summary = "View receipts list", description = "Get paginated list of all payments")
     public ResponseEntity<Page<PaymentDTO>> getReceiptsList(
             @Parameter(description = "Page information") Pageable pageable) {
@@ -43,6 +46,8 @@ public class PaymentController {
     }
 
     @GetMapping("/{paymentId}")
+    @PreAuthorize("hasRole('MANAGER')")
+
     @Operation(summary = "View receipt detail", description = "Get detailed information of a specific payment")
     public ResponseEntity<PaymentDTO> getReceiptDetail(
             @Parameter(description = "Payment ID") @PathVariable Integer paymentId) {
@@ -51,6 +56,8 @@ public class PaymentController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('MANAGER')")
+
     @Operation(summary = "Create new payment", description = "Create a new payment record")
     public ResponseEntity<PaymentDTO> createPayment(@RequestBody PaymentDTO paymentDTO) {
         PaymentDTO createdPayment = paymentService.createPayment(paymentDTO);
@@ -58,6 +65,8 @@ public class PaymentController {
     }
 
     @PutMapping("/{paymentId}")
+    @PreAuthorize("hasRole('MANAGER')")
+
     @Operation(summary = "Update payment", description = "Update existing payment information")
     public ResponseEntity<PaymentDTO> updatePayment(
             @Parameter(description = "Payment ID") @PathVariable Integer paymentId,
@@ -67,6 +76,8 @@ public class PaymentController {
     }
 
     @DeleteMapping("/{paymentId}")
+    @PreAuthorize("hasRole('MANAGER')")
+
     @Operation(summary = "Delete payment", description = "Delete a payment record from database")
     public ResponseEntity<Void> deletePayment(
             @Parameter(description = "Payment ID") @PathVariable Integer paymentId) {

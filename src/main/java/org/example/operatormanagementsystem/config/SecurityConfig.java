@@ -10,6 +10,8 @@
     import org.springframework.security.authentication.ProviderManager;
     import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
     import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+    import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
     import org.springframework.security.config.annotation.web.builders.HttpSecurity;
     import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
     import org.springframework.security.config.core.GrantedAuthorityDefaults;
@@ -29,6 +31,7 @@
     @Configuration // Đánh dấu đây là lớp cấu hình của Spring
     @RequiredArgsConstructor
     @EnableGlobalMethodSecurity(prePostEnabled = true)
+    @EnableMethodSecurity(prePostEnabled = true)
     public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của bạn
         private final JwtRequestFilter jwtAuthenticationFilter;
         private final UserDetailsService userDetailsService;
@@ -97,7 +100,7 @@
                                     "/api/auth/reset-password",
                                     "/api/auth/login/verify-otp").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/onboarding/storage-unit-via-email").permitAll()
-
+                            .requestMatchers("/api/payment/confirm-payment").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .requestMatchers("/api/payment/sms-callback").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/payment/generate-vietqr/{bookingId}").hasAnyRole("CUSTOMER")
@@ -114,17 +117,18 @@
                             .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
-                            .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAuthority("ROLE_STAFF")
-                            .requestMatchers("/api/storage-units").hasAuthority("ROLE_STAFF")
+                            .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/storage-units").hasRole("MANAGER")
                             .requestMatchers("/api/storage-unit-approvals/**").hasRole("MANAGER")
-                            .requestMatchers("/api/storage-units/**").hasAuthority("ROLE_STAFF")
+                            .requestMatchers("/api/storage-units/**").hasRole("MANAGER")
                             .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER")
-                            .requestMatchers("/api/payment/**").hasAnyRole("CUSTOMER")
+                            .requestMatchers("/api/payment/").hasAnyRole("CUSTOMER")
+                            .requestMatchers("/api/payments/**").hasRole("MANAGER")
                             .requestMatchers("/api/user/staff").hasRole("MANAGER")
                             .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF","CUSTOMER")
-
+                            .requestMatchers("/api/revenues", "/api/revenues/", "/api/revenues/**").hasRole( "MANAGER")
 
 
 

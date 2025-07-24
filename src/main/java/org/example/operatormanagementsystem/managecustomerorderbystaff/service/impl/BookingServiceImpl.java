@@ -83,7 +83,6 @@ public class BookingServiceImpl implements BookingService {
             existingBooking.setNote(bookingUpdatesRequest.getNote());
         }
 
-
         if (bookingUpdatesRequest.getCustomerId() != null) {
             Customer customer = customerRepository.findById(bookingUpdatesRequest.getCustomerId())
                     .orElseThrow(() -> new RuntimeException("Customer not found for update with ID: " + bookingUpdatesRequest.getCustomerId()));
@@ -134,6 +133,7 @@ public class BookingServiceImpl implements BookingService {
         try {
             booking.setPaymentStatus(PaymentStatus.valueOf(status.toUpperCase()));
             System.out.println("Cập nhật paymentStatus thành: " + status + " cho booking ID: " + id);
+            // Không thay đổi status khi paymentStatus là COMPLETED
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid payment status: " + status);
         }
@@ -167,19 +167,6 @@ public class BookingServiceImpl implements BookingService {
                     dto.setPaymentStatus(b.getPaymentStatus().name());
                     // thêm slotIndex
                     dto.setSlotIndex(b.getSlotIndex());
-                    dto.setPickupLocation(b.getPickupLocation());
-                    dto.setDeliveryLocation(b.getDeliveryLocation());
-                    dto.setOperatorStaffId(b.getOperatorStaff() != null ? b.getOperatorStaff().getOperatorId() : null);
-                    dto.setOperatorStaffName(
-                            b.getOperatorStaff() != null && b.getOperatorStaff().getUsers() != null
-                                    ? b.getOperatorStaff().getUsers().getFullName() : null
-                    );
-
-                    dto.setTransportUnitId(b.getTransportUnit() != null ? b.getTransportUnit().getTransportId() : null);
-                    dto.setTransportUnitName(
-                            b.getTransportUnit() != null ? b.getTransportUnit().getNameCompany() : null
-                    );
-
                     return dto;
                 });
     }
@@ -206,19 +193,10 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new RuntimeException("Operator not found: " + req.getOperatorStaffId())));
         b.setStatus(req.getStatus());
         b.setDeliveryDate(req.getDeliveryDate());
-//        b.setNote(req.getNote());
+        b.setNote(req.getNote());
         b.setTotal(req.getTotal());
         b.setPaymentStatus(PaymentStatus.valueOf(req.getPaymentStatus().toUpperCase()));
-        b.setDeliveryLocation(req.getDeliveryLocation());  // <- PHẢI CÓ DÒNG NÀY
-        b.setPickupLocation(req.getPickupLocation());      // <- PHẢI CÓ DÒNG NÀY
-        // Save booking lần 1 để lấy bookingId
         Booking saved = bookingRepository.save(b);
-
-        // Tự động set note nếu chưa có
-        if (saved.getNote() == null || saved.getNote().trim().isEmpty()) {
-            saved.setNote("BOOKING" + saved.getBookingId());
-            saved = bookingRepository.save(saved); // Update lại note
-        }
         // 4) Map to response DTO
         BookingDetailResponse dto = new BookingDetailResponse();
         // copy fields including slotIndex...
@@ -232,8 +210,6 @@ public class BookingServiceImpl implements BookingService {
         dto.setPaymentStatus(saved.getPaymentStatus().name());
         dto.setStatus(saved.getStatus());
         dto.setCreatedAt(saved.getCreatedAt());
-        dto.setPickupLocation(b.getPickupLocation());
-        dto.setDeliveryLocation(b.getDeliveryLocation());
         return dto;
     }
     @Override
@@ -242,7 +218,6 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy booking với ID: " + id));
         bookingRepository.delete(booking);
     }
-    // BookingServiceImpl.java
 
     @Override
     public Map<String, List<Integer>> getAllRelatedIds() {
@@ -254,7 +229,6 @@ public class BookingServiceImpl implements BookingService {
         ids.put("storageUnitIds", storageUnitRepository.findAll().stream().map(s -> s.getStorageId()).toList());
         return ids;
     }
-
 
 
 }
