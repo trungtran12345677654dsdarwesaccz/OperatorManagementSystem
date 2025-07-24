@@ -1,40 +1,43 @@
 package org.example.operatormanagementsystem.config;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.core.GrantedAuthorityDefaults;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // Import BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+    import lombok.AllArgsConstructor;
+    import lombok.RequiredArgsConstructor;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.context.annotation.Configuration;
+    import org.springframework.http.HttpMethod;
+    import org.springframework.security.authentication.AuthenticationManager;
+    import org.springframework.security.authentication.ProviderManager;
+    import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+    import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+    import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
+    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+    import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+    import org.springframework.security.config.core.GrantedAuthorityDefaults;
+    import org.springframework.security.config.http.SessionCreationPolicy;
+    import org.springframework.security.core.userdetails.UserDetailsService;
+    import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // Import BCryptPasswordEncoder
+    import org.springframework.security.crypto.password.PasswordEncoder;
+    import org.springframework.security.web.SecurityFilterChain;
+    import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+    import org.springframework.web.cors.CorsConfiguration;
+    import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
 
 
-@Configuration // Đánh dấu đây là lớp cấu hình của Spring
-@RequiredArgsConstructor
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của bạn
-    private final JwtRequestFilter jwtAuthenticationFilter;
-    private final UserDetailsService userDetailsService;
-    // private final PasswordEncoder passwordEncoder; // Không cần tiêm PasswordEncoder vào đây nữa, vì nó sẽ được tạo trong cùng lớp
-    // Constructor đã được @AllArgsConstructor tạo ra sẽ không cần PasswordEncoder nữa
-    // nếu bạn định nghĩa nó là một @Bean trong cùng lớp này.
+    @Configuration // Đánh dấu đây là lớp cấu hình của Spring
+    @RequiredArgsConstructor
+    @EnableGlobalMethodSecurity(prePostEnabled = true)
+    @EnableMethodSecurity(prePostEnabled = true)
+    public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của bạn
+        private final JwtRequestFilter jwtAuthenticationFilter;
+        private final UserDetailsService userDetailsService;
+        // private final PasswordEncoder passwordEncoder; // Không cần tiêm PasswordEncoder vào đây nữa, vì nó sẽ được tạo trong cùng lớp
+        // Constructor đã được @AllArgsConstructor tạo ra sẽ không cần PasswordEncoder nữa
+        // nếu bạn định nghĩa nó là một @Bean trong cùng lớp này.
 
     /**
      * Cấu hình và cung cấp một bean PasswordEncoder.
@@ -56,17 +59,17 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
         return new ProviderManager(List.of(authProvider));
     }
 
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/auth/register", "/api/auth/login", "/api/auth/me", "/api/auth/sendOTP", "/api/auth/verifyOTP", "/auth/verify-email-code",
-            "/api/user/forget-password", "/api/user/reset-password", "/profiles/create/**", "/webhook/payment",
-            "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp", "/api/auth/sendOTP",
-            "/api/auth/request-status-change", "/api/auth/manager/update-status/{email}",
-            "/api/auth/manager/users-for-action", "/api/auth/manager/user-details/{email}",
-            "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
-            "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
-            "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**",
-            "/api/auth/customer/login"
-    };
+        private static final String[] PUBLIC_ENDPOINTS = {
+                "/api/auth/register", "/api/auth/login", "/api/auth/me", "/api/auth/sendOTP", "/api/auth/verifyOTP", "/auth/verify-email-code",
+                "/api/user/forget-password", "/api/user/reset-password", "/profiles/create/**", "/webhook/payment",
+                "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp", "/api/auth/sendOTP",
+                "/api/auth/request-status-change", "/api/auth/manager/update-status/{email}",
+                "/api/auth/manager/users-for-action", "/api/auth/manager/user-details/{email}",
+                "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
+                "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
+                "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**",
+                "/api/auth/customer/login", "//api/onboarding/**"
+        };
 
     private static final String[] GET_PUBLIC_ENDPOINTS = {
             "/blogs/**", "/profiles/**", "/banner/**"
@@ -81,45 +84,50 @@ public class SecurityConfig { // Hoặc tên lớp cấu hình bảo mật của
             "/webjars/**"
     };
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(WHITELIST_ENDPOINTS).permitAll()
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST,
-                                "/api/auth/login",
-
-                                "/api/auth/forgot-password",
-                                "/api/onboarding/**",
-                                "/api/auth/reset-password",
-                                "/api/auth/login/verify-otp").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/payment/sms-callback").hasAnyRole("CUSTOMER")
-                        .requestMatchers("/api/payment/generate-vietqr/{bookingId}").hasAnyRole("CUSTOMER")
-                        .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
-                        .requestMatchers("/api/promotions/**").hasRole("MANAGER")
-                        .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
-                        .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
-                        .requestMatchers("/api/dashboard/staff/**").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_MANAGER")
-                        .requestMatchers("/api/pending-staff/**").hasAnyRole("MANAGER")
-                        .requestMatchers("/api/transport-unit-analytics/**").hasAnyRole("MANAGER")
-                        .requestMatchers("/api/profile","/api/profile/**").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAuthority("ROLE_STAFF")
-                        .requestMatchers("/api/storage-units").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
-                        .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
-                        .requestMatchers("/api/users/staff").hasRole("MANAGER")
-                        .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF")
-                        .requestMatchers("/api/revenues", "/api/revenues/", "/api/revenues/**").hasAnyRole("STAFF", "MANAGER")
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+            http
+                    .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers(WHITELIST_ENDPOINTS).permitAll()
+                            .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                            .requestMatchers(HttpMethod.POST,
+                                    "/api/auth/login",
+                                    "/api/auth/forgot-password",
+                                    "/api/onboarding/**",
+                                    "/api/auth/reset-password",
+                                    "/api/auth/login/verify-otp").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/onboarding/storage-unit-via-email").permitAll()
+                            .requestMatchers("/api/payment/confirm-payment").permitAll()
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers("/api/payment/sms-callback").hasAnyRole("CUSTOMER")
+                            .requestMatchers("/api/payment/generate-vietqr/{bookingId}").hasAnyRole("CUSTOMER")
+                            .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
+                            .requestMatchers("/api/promotions/**").hasRole("MANAGER")
+                            .requestMatchers("/api/report-performance/**").hasRole("MANAGER")
+                            .requestMatchers("/api/transport-units/**").hasAnyRole("MANAGER")
+                            .requestMatchers("/api/transport-unit-approvals/**").hasRole("MANAGER")
+                            .requestMatchers("/api/dashboard/staff/**").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_MANAGER")
+                            .requestMatchers("/api/pending-staff/**").hasAnyRole("MANAGER")
+                            .requestMatchers("/api/transport-unit-analytics/**").hasAnyRole("MANAGER")
+                            .requestMatchers("/api/profile","/api/profile/**").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAuthority("ROLE_STAFF")
+                            .requestMatchers("/api/storage-units").hasRole("MANAGER")
+                            .requestMatchers("/api/storage-unit-approvals/**").hasRole("MANAGER")
+                            .requestMatchers("/api/storage-units/**").hasRole("MANAGER")
+                            .requestMatchers("/api/gemini/ask").hasAnyRole("CUSTOMER")
+                            .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
+                            .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER")
+                            .requestMatchers("/api/payment/").hasAnyRole("CUSTOMER")
+                            .requestMatchers("/api/user/staff").hasRole("MANAGER")
+                            .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF","CUSTOMER")
+                            .requestMatchers("/api/revenues", "/api/revenues/", "/api/revenues/**").hasRole( "MANAGER")
 
 
 
