@@ -6,6 +6,7 @@ import org.example.operatormanagementsystem.entity.Booking;
 import org.example.operatormanagementsystem.managecustomerorderbystaff.dto.request.BookingRequest;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface BookingService {
@@ -24,6 +25,7 @@ public interface BookingService {
     void deleteBooking(Integer id);
     Optional<BookingDetailResponse> getBookingDetail(Integer storageId, Integer slotIndex);
     BookingDetailResponse createBooking(BookingRequest req);
+    Map<String, List<Integer>> getAllRelatedIds();
 
 
 }
