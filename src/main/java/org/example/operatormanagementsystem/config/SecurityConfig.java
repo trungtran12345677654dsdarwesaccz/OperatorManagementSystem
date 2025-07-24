@@ -65,10 +65,7 @@ import java.util.List;
                 "/api/users", "/api/users/{id}", "/api/users/{id}/status", "/api/auth/login/verify-otp", "/api/auth/sendOTP",
                 "/api/auth/request-status-change", "/api/auth/manager/update-status/{email}",
                 "/api/auth/manager/users-for-action", "/api/auth/manager/user-details/{email}",
-                "/api/revenues", "/api/revenues/date-range", "/api/revenues/beneficiary/{beneficiaryId}",
-                "/api/revenues/source-type/{sourceType}", "/api/revenues/booking/{bookingId}",
-                "/api/revenues/total", "/api/revenues/total/**", "/api/revenues/export/excel", "/api/revenues/export/excel/**",
-                "/api/auth/customer/login", "//api/onboarding/**"
+                "/api/auth/customer/login", "/api/onboarding/**",
         };
 
     private static final String[] GET_PUBLIC_ENDPOINTS = {
@@ -126,7 +123,7 @@ import java.util.List;
                             .requestMatchers("/api/payment/").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/user/staff").hasRole("MANAGER")
                             .requestMatchers("/api/users/profile").hasAnyRole("MANAGER", "STAFF","CUSTOMER")
-                            .requestMatchers("/api/revenues", "/api/revenues/", "/api/revenues/**").hasRole( "MANAGER")
+                            .requestMatchers( "/api/revenues/**").hasAnyRole("MANAGER")
 
 
 

@@ -25,4 +25,6 @@ public interface UserService extends BaseService<Users, Integer> {
     Users findUsersResponseByEmail(String email);
     PageResponse<UserSearchResponse> getUsersWithFilters(UserFilterRequest filterRequest);
     List<UserSearchResponse> findAllStaffResponse();
+    List<UserSearchResponse> findAllCustomersManagedByStaff(String staffEmail);
+    List<UserSearchResponse> advancedSearchCustomersManagedByStaff(String staffEmail, String fullname, String email, String phone, String address);
 }

@@ -10,6 +10,9 @@ import org.example.operatormanagementsystem.repository.RevenueRepository;
 import org.example.operatormanagementsystem.service.RevenueService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -106,14 +109,14 @@ public class RevenueServiceImpl implements RevenueService {
             int rowNum = 1;
             for (Revenue revenue : revenues) {
                 Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(revenue.getRevenueId());
-                row.createCell(1).setCellValue(revenue.getBeneficiaryType());
-                row.createCell(2).setCellValue(revenue.getBeneficiaryId());
-                row.createCell(3).setCellValue(revenue.getSourceType());
-                row.createCell(4).setCellValue(revenue.getSourceId());
-                row.createCell(5).setCellValue(revenue.getAmount().doubleValue());
-                row.createCell(6).setCellValue(revenue.getDate().toString());
-                row.createCell(7).setCellValue(revenue.getDescription());
+                row.createCell(0).setCellValue(revenue.getRevenueId() != null ? String.valueOf(revenue.getRevenueId()) : "");
+                row.createCell(1).setCellValue(revenue.getBeneficiaryType() != null ? revenue.getBeneficiaryType() : "");
+                row.createCell(2).setCellValue(revenue.getBeneficiaryId() != null ? String.valueOf(revenue.getBeneficiaryId()) : "");
+                row.createCell(3).setCellValue(revenue.getSourceType() != null ? revenue.getSourceType() : "");
+                row.createCell(4).setCellValue(revenue.getSourceId() != null ? String.valueOf(revenue.getSourceId()) : "");
+                row.createCell(5).setCellValue(revenue.getAmount() != null ? revenue.getAmount().doubleValue() : 0);
+                row.createCell(6).setCellValue(revenue.getDate() != null ? revenue.getDate().toString() : "");
+                row.createCell(7).setCellValue(revenue.getDescription() != null ? revenue.getDescription() : "");
             }
 
             // Auto-size columns
@@ -130,6 +133,73 @@ public class RevenueServiceImpl implements RevenueService {
             throw new RuntimeException("Error generating Excel file: " + e.getMessage());
         }
     }
+
+    @Override
+    public Page<RevenueResponse> getPagedRevenues(Pageable pageable, String startDate, String endDate, String sourceType, String beneficiaryId, String bookingId, String minAmount, String maxAmount) {
+        // Basic implementation: fetch all, filter in memory (for demo, replace with JPA Specification for production)
+        List<Revenue> all = revenueRepository.findAll();
+        List<Revenue> filtered = all.stream()
+            .filter(r -> startDate == null || startDate.isEmpty() || !r.getDate().isBefore(LocalDate.parse(startDate)))
+            .filter(r -> endDate == null || endDate.isEmpty() || !r.getDate().isAfter(LocalDate.parse(endDate)))
+            .filter(r -> sourceType == null || sourceType.isEmpty() || sourceType.equals(r.getSourceType()))
+            .filter(r -> beneficiaryId == null || beneficiaryId.isEmpty() || beneficiaryId.equals(String.valueOf(r.getBeneficiaryId())))
+            .filter(r -> bookingId == null || bookingId.isEmpty() || (r.getBooking() != null && bookingId.equals(String.valueOf(r.getBooking().getBookingId()))))
+            .filter(r -> minAmount == null || minAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(minAmount)) >= 0)
+            .filter(r -> maxAmount == null || maxAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(maxAmount)) <= 0)
+            .toList();
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filtered.size());
+        List<RevenueResponse> content = filtered.subList(start, end).stream().map(this::convertToRevenueResponse).toList();
+        return new PageImpl<>(content, pageable, filtered.size());
+    }
+
+    @Override
+    public byte[] exportToExcelWithFilter(String startDate, String endDate, String sourceType, String beneficiaryId, String bookingId, String minAmount, String maxAmount) {
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Revenue Data");
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            String[] columns = {"Revenue ID", "Beneficiary Type", "Beneficiary ID", "Source Type",
+                    "Source ID", "Amount", "Date", "Description"};
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+            }
+            // Filter data (same as getPagedRevenues, but no paging)
+            List<Revenue> all = revenueRepository.findAll();
+            List<Revenue> filtered = all.stream()
+                .filter(r -> startDate == null || startDate.isEmpty() || !r.getDate().isBefore(LocalDate.parse(startDate)))
+                .filter(r -> endDate == null || endDate.isEmpty() || !r.getDate().isAfter(LocalDate.parse(endDate)))
+                .filter(r -> sourceType == null || sourceType.isEmpty() || sourceType.equals(r.getSourceType()))
+                .filter(r -> beneficiaryId == null || beneficiaryId.isEmpty() || beneficiaryId.equals(String.valueOf(r.getBeneficiaryId())))
+                .filter(r -> bookingId == null || bookingId.isEmpty() || (r.getBooking() != null && bookingId.equals(String.valueOf(r.getBooking().getBookingId()))))
+                .filter(r -> minAmount == null || minAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(minAmount)) >= 0)
+                .filter(r -> maxAmount == null || maxAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(maxAmount)) <= 0)
+                .toList();
+            // Create data rows
+            int rowNum = 1;
+            for (Revenue revenue : filtered) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(revenue.getRevenueId() != null ? String.valueOf(revenue.getRevenueId()) : "");
+                row.createCell(1).setCellValue(revenue.getBeneficiaryType() != null ? revenue.getBeneficiaryType() : "");
+                row.createCell(2).setCellValue(revenue.getBeneficiaryId() != null ? String.valueOf(revenue.getBeneficiaryId()) : "");
+                row.createCell(3).setCellValue(revenue.getSourceType() != null ? revenue.getSourceType() : "");
+                row.createCell(4).setCellValue(revenue.getSourceId() != null ? String.valueOf(revenue.getSourceId()) : "");
+                row.createCell(5).setCellValue(revenue.getAmount() != null ? revenue.getAmount().doubleValue() : 0);
+                row.createCell(6).setCellValue(revenue.getDate() != null ? revenue.getDate().toString() : "");
+                row.createCell(7).setCellValue(revenue.getDescription() != null ? revenue.getDescription() : "");
+            }
+            for (int i = 0; i < columns.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            return outputStream.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating Excel file: " + e.getMessage());
+        }
+    }
+
     private RevenueResponse convertToRevenueResponse(Revenue revenue) {
         RevenueResponse response = new RevenueResponse();
         response.setRevenueId(revenue.getRevenueId());

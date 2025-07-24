@@ -257,4 +257,16 @@ public class UserServiceImpl extends BaseServiceImpl<Users, Integer> implements 
                 .map(this::convertToUserSearchResponse)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<UserSearchResponse> findAllCustomersManagedByStaff(String staffEmail) {
+        List<Users> customers = managerUserRepository.findCustomersManagedByStaffEmail(staffEmail);
+        return customers.stream().map(this::convertToUserSearchResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserSearchResponse> advancedSearchCustomersManagedByStaff(String staffEmail, String fullname, String email, String phone, String address) {
+        List<Users> customers = managerUserRepository.advancedSearchCustomersManagedByStaff(staffEmail, fullname, email, phone, address);
+        return customers.stream().map(this::convertToUserSearchResponse).collect(Collectors.toList());
+    }
 }

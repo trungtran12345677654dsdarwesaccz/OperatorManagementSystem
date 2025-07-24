@@ -35,4 +35,30 @@ public interface ManagerUserRepository extends BaseRepository<Users,Integer> {
             @Param("status") UserStatus status,
             Pageable pageable
     );
+
+    @Query("SELECT DISTINCT u FROM Users u " +
+           "JOIN u.customer c " +
+           "JOIN c.bookings b " +
+           "JOIN b.operatorStaff os " +
+           "JOIN os.users staffUser " +
+           "WHERE staffUser.email = :staffEmail AND u.role = org.example.operatormanagementsystem.enumeration.UserRole.CUSTOMER")
+    List<Users> findCustomersManagedByStaffEmail(@Param("staffEmail") String staffEmail);
+
+    @Query("SELECT DISTINCT u FROM Users u " +
+           "JOIN u.customer c " +
+           "JOIN c.bookings b " +
+           "JOIN b.operatorStaff os " +
+           "JOIN os.users staffUser " +
+           "WHERE staffUser.email = :staffEmail AND u.role = org.example.operatormanagementsystem.enumeration.UserRole.CUSTOMER " +
+           "AND (:fullname IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullname, '%'))) " +
+           "AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) " +
+           "AND (:phone IS NULL OR LOWER(u.phone) LIKE LOWER(CONCAT('%', :phone, '%'))) " +
+           "AND (:address IS NULL OR LOWER(u.address) LIKE LOWER(CONCAT('%', :address, '%')))")
+    List<Users> advancedSearchCustomersManagedByStaff(
+        @Param("staffEmail") String staffEmail,
+        @Param("fullname") String fullname,
+        @Param("email") String email,
+        @Param("phone") String phone,
+        @Param("address") String address
+    );
 }

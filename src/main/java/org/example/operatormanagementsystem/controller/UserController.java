@@ -31,15 +31,17 @@ public class UserController {
             @RequestParam(value = "fullname", required = false) String fullname,
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "phone", required = false) String phone,
-            @RequestParam(value = "address", required = false) String address
+            @RequestParam(value = "address", required = false) String address,
+            Authentication authentication
     ) {
+        String staffEmail = authentication.getName();
         if ((fullname == null || fullname.isEmpty()) &&
                 (email == null || email.isEmpty()) &&
                 (phone == null || phone.isEmpty()) &&
                 (address == null || address.isEmpty())) {
-            return userService.findAllUsersResponse();
+            return userService.findAllCustomersManagedByStaff(staffEmail);
         }
-        return userService.advancedSearchResponse(fullname, email, phone, address);
+        return userService.advancedSearchCustomersManagedByStaff(staffEmail, fullname, email, phone, address);
     }
 
     // Lấy customer theo ID
