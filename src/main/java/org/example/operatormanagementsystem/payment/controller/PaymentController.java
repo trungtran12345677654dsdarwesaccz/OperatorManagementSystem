@@ -21,11 +21,5 @@
         public ResponseEntity<PaymentReturnUrl> createQr( @RequestBody CreatePaymentRequest request) {
             return ResponseEntity.ok(paymentService.createQr(request));
         }
-    
-        @Scheduled(fixedRate = 3 * 1000)
-        @PostMapping("/confirm-payment")
-        public ResponseEntity<String> confirmPayment() {
-            String result = paymentService.confirmPayment();
-            return ResponseEntity.ok(result);
-        }
+
     }

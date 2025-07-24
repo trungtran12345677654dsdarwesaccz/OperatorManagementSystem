@@ -4,10 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.model.Message;
-import com.google.api.services.gmail.model.MessagePart;
-import com.google.api.services.gmail.model.MessagePartBody;
-import com.google.api.services.gmail.model.MessagePartHeader;
+import com.google.api.services.gmail.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,6 +55,13 @@ public class OauthGmail {
                     .build()
                     .setRefreshToken(refreshToken);
             credential.refreshToken();
+//            boolean refreshed = credential.refreshToken(); //  Kiểm tra có refresh thành công không
+//            if (!refreshed) {
+//                logger.error(" Refresh token không hợp lệ hoặc đã hết hạn. Vui lòng cấp lại token.");
+//                throw new RuntimeException("Refresh token invalid or expired.");
+//            } else {
+//                logger.info(" Refresh token thành công.");
+//            }
 
             return new Gmail.Builder(getTransport(), jsonFactory, credential)
                     .setApplicationName("Gmail Java AutoAuth")
@@ -73,46 +78,52 @@ public class OauthGmail {
             List<Message> messages = Optional.ofNullable(
                             service.users().messages().list("me")
                                     .setMaxResults(limit)
-                                    .setQ("is:read [SMSFW] New text message from 'MBBANK'")
+                                    .setQ("is:unread [SMSFW] New text message from 'MBBANK'")
                                     .execute()
                                     .getMessages())
                     .orElse(List.of());
 
             return messages.stream().map(msg -> {
                 try {
+                    // 1. Lấy nội dung chi tiết
                     Message fullMessage = service.users().messages()
                             .get("me", msg.getId())
                             .setFormat("full")
                             .execute();
 
+                    // 2. Parse body
+                    String bodyText = getBodyFromMessage(fullMessage);
 
-
+                    // 3. Parse header
                     List<MessagePartHeader> headers = fullMessage.getPayload().getHeaders();
                     String subject = headers.stream()
                             .filter(h -> "Subject".equalsIgnoreCase(h.getName()))
-                            .findFirst()
-                            .map(h -> h.getValue())
-                            .orElse(null);
+                            .findFirst().map(MessagePartHeader::getValue).orElse("(No Subject)");
 
                     String from = headers.stream()
                             .filter(h -> "From".equalsIgnoreCase(h.getName()))
-                            .findFirst()
-                            .map(h -> h.getValue())
-                            .orElse("(No From)");
+                            .findFirst().map(MessagePartHeader::getValue).orElse("(No From)");
 
-                    String bodyText = getBodyFromMessage(fullMessage);
+                    //  4. Đánh dấu là đã đọc (ngay sau khi xử lý thành công)
+                    ModifyMessageRequest mods = new ModifyMessageRequest().setRemoveLabelIds(List.of("UNREAD"));
+                    service.users().messages().modify("me", msg.getId(), mods).execute();
 
-                    return " " + (subject != null ? subject : "") + "\n " + from + "\n Nội dung:\n" + bodyText;
+                    // 5. Trả kết quả
+                    return subject + "\n" + from + "\nNội dung:\n" + bodyText;
 
                 } catch (Exception e) {
+                    logger.error("[GMAIL] Lỗi xử lý email id {}: {}", msg.getId(), e.getMessage());
                     return null;
                 }
-            }).filter(s -> s != null).collect(Collectors.toList());
+            }).filter(Objects::nonNull).collect(Collectors.toList());
 
         } catch (Exception e) {
+            logger.error("[GMAIL] Lỗi kết nối Gmail API: {}", e.getMessage());
             return List.of();
         }
     }
+
+
 
     private String getBodyFromMessage(Message message) {
         List<MessagePart> parts = message.getPayload().getParts();

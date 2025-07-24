@@ -11,6 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Transaction {
     private Integer id;
-    private double amount;
+    private Long amount;
     private String description;
 }

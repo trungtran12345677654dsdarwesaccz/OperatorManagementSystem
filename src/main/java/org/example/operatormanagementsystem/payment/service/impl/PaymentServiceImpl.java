@@ -46,12 +46,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentReturnUrl createQr(CreatePaymentRequest req) {
-        Booking booking = bookingRepository.findById(req.getBookingId())
+        Booking booking = bookingRepository.findBookingByBookingId(req.getBookingId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy booking"));
+        System.out.println(">>> [createQr] bookingId = " + req.getBookingId());
 
         Long totalValue = booking.getTotal();
+        System.out.println(">>> [createQr] totalAmount = " + booking.getTotal());
         if (totalValue == null || totalValue <= 0) {
-            throw new IllegalArgumentException("Giá trị tổng tiền trong booking không hợp lệ");
+            throw new IllegalArgumentException("Giá trị tổng tiền trong booking không hợp lệ: bookingId=" + req.getBookingId()
+                    + ", amount=" + booking.getTotal());
         }
 
         BigDecimal amount = BigDecimal.valueOf(totalValue);
@@ -82,6 +85,11 @@ public class PaymentServiceImpl implements PaymentService {
     public String confirmPayment() {
         // 1. Lấy danh sách email mới nhất
         List<String> messages = oauthGmail.listLatestEmails(1);
+        if( messages.size() < 1 || messages == null ) {
+            throw new RuntimeException("Khong thay mail moi");
+
+        }
+
         for (String msg : messages) {
             System.out.println("Email content: " + msg);
         }
@@ -96,7 +104,7 @@ public class PaymentServiceImpl implements PaymentService {
             Integer bookingId = tx.getId();
 
             // 3. Tìm booking tương ứng
-            Booking booking = bookingRepository.findById(bookingId)
+            Booking booking = bookingRepository.findBookingByBookingId(bookingId)
                     .orElseThrow(() -> new RuntimeException("Booking not found for id: " + bookingId));
 
             BigDecimal total = BigDecimal.valueOf(booking.getTotal());
@@ -106,16 +114,23 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new RuntimeException("Amount mismatch for booking ID: " + bookingId);
             }
 
+            if (paymentRepository.existsByBooking_BookingId(bookingId)) {
+                System.out.println(" Booking #" + bookingId + " đã có payment, bỏ qua");
+                continue;
+            }
+
             // 4. Tạo đối tượng Payment
             Payment payment = Payment.builder()
                     .booking(booking)
-                    .payer(systemBot) // hoặc set 1 user mặc định nếu cần
+                    .payer(systemBot)
                     .amount(amount)
+                    .status(PaymentStatus.COMPLETED)
                     .paidDate(LocalDate.now())
                     .transactionNo(generateRandom6Digits())
                     .build();
 
             paymentRepository.save(payment);
+
 
             // 5. Cập nhật trạng thái thanh toán của booking
             booking.setPaymentStatus(PaymentStatus.COMPLETED);
@@ -137,42 +152,48 @@ public class PaymentServiceImpl implements PaymentService {
         List<Transaction> transactions = new ArrayList<>();
 
         for (String message : messages) {
-            // Lấy số tiền sau "GD: "
-            Pattern amountPattern = Pattern.compile("GD:\\s*([+-][\\d,]+)VND");
+            // 🧾 VD: GD: +510,000VND
+            Pattern amountPattern = Pattern.compile("GD:\\s*([+-]?[\\d,.]+)VND");
             Matcher amountMatcher = amountPattern.matcher(message);
-            if (!amountMatcher.find()) continue;
-
-            String rawAmount = amountMatcher.group(1).replace(",", "");
-            Double amount;
-            try {
-                amount = Double.parseDouble(rawAmount);
-            } catch (NumberFormatException e) {
+            if (!amountMatcher.find()) {
+                System.out.println(" Không tìm thấy amount trong: " + message);
                 continue;
             }
 
-            // Lấy số bookingId sau "BOOKING"
-            Pattern bookingIdPattern = Pattern.compile("BOOKING(\\d+)");
-            Matcher bookingIdMatcher = bookingIdPattern.matcher(message);
-            if (!bookingIdMatcher.find()) continue;
-
-            String rawIdStr = bookingIdMatcher.group(1);
-
-            Integer rawId;
+            String rawAmount = amountMatcher.group(1).replace(",", "");
+            long amount;
             try {
-                rawId = Integer.valueOf(rawIdStr);
+                amount = Long.parseLong(rawAmount);
             } catch (NumberFormatException e) {
-                throw new RuntimeException("Invalid booking id format: " + rawIdStr);
+                System.out.println(" Lỗi khi parse amount: " + rawAmount);
+                continue;
             }
 
-            // Lấy nguyên nội dung message làm note (bạn có thể chỉnh sửa nếu cần lấy đoạn cụ thể hơn)
-            String note = message;
+            //  VD: BOOKING73
+            Pattern bookingIdPattern = Pattern.compile("BOOKING(\\d+)");
+            Matcher bookingIdMatcher = bookingIdPattern.matcher(message);
+            if (!bookingIdMatcher.find()) {
+                System.out.println(" Không tìm thấy Booking ID trong: " + message);
+                continue;
+            }
 
-            // Tạo Transaction với bookingId, amount, và note
-            transactions.add(new Transaction(rawId, amount, note));
+            int bookingId;
+            try {
+                bookingId = Integer.parseInt(bookingIdMatcher.group(1));
+            } catch (NumberFormatException e) {
+                System.out.println(" Booking ID không hợp lệ: " + bookingIdMatcher.group(1));
+                continue;
+            }
+
+            String note = message; // có thể cắt lấy đoạn riêng nếu muốn
+
+            transactions.add(new Transaction(bookingId, amount, note));
+            System.out.println(" Parsed Transaction: bookingId=" + bookingId + ", amount=" + amount);
         }
 
         return transactions;
     }
+
 
 
 

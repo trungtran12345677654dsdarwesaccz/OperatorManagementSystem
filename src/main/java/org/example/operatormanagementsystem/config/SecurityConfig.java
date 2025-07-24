@@ -102,7 +102,6 @@ import java.util.List;
                             .requestMatchers(HttpMethod.POST, "/api/onboarding/storage-unit-via-email").permitAll()
                             .requestMatchers("/api/payment/confirm-payment").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                            .requestMatchers("/api/payment/sms-callback").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/payment/generate-vietqr/{bookingId}").hasAnyRole("CUSTOMER")
                             .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
                             .requestMatchers("/api/promotions/**").hasRole("MANAGER")

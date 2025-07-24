@@ -27,6 +27,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     // Tìm payment theo khoảng thời gian
     @Query("SELECT p FROM Payment p WHERE p.paidDate BETWEEN :fromDate AND :toDate")
     List<Payment> findByDateRange(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+    boolean existsByBooking_BookingId(Integer bookingId);
 
     // Custom search method
     @Query("""

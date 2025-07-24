@@ -6,6 +6,7 @@ import org.example.operatormanagementsystem.entity.TransportUnit;
 import org.example.operatormanagementsystem.enumeration.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,4 +25,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     Optional<Booking> findByPaymentStatusAndTotalAndNote(PaymentStatus paymentStatus, Long total, String note);
     @Query("SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.items LEFT JOIN FETCH b.transports")
     List<Booking> findAllWithItemsAndTransports();
+    @Query("SELECT b FROM Booking b WHERE b.bookingId = :id")
+    Optional<Booking> findBookingByBookingId(@Param("id") Integer id);
+
 }

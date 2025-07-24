@@ -125,6 +125,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
             savedBooking.getStatus()
         );
         
+
         return mapToBookingResponse(savedBooking);
     }
 
@@ -203,7 +204,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         Booking booking = bookingCustomerRepository.findByBookingIdAndCustomer_CustomerId(bookingId, customerId)
                 .orElseThrow(() -> new RuntimeException("Booking not found or you do not have permission to cancel it."));
         if ("CANCELED".equals(booking.getStatus())) {
-            throw new RuntimeException("Booking is already canceled.");
+            return mapToBookingResponse(booking);
         }
         String oldStatus = booking.getStatus();
         booking.setStatus("CANCELED");

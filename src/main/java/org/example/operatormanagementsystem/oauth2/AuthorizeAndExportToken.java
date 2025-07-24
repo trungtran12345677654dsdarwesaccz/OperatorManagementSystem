@@ -32,12 +32,12 @@ public class AuthorizeAndExportToken {
                 + (profile.equals("server") ? "-server" : "")
                 + ".json";
 
-        String storedTokenPath = "src/main/resources/tokens/StoredCredential"
-                + (profile.equals("server") ? "-server" : "")
-                + ".json";
+//        String storedTokenPath = "src/main/resources/tokens/StoredCredential"
+//                + (profile.equals("server") ? "-server" : "")
+//                + ".json";
 
         System.out.println(" Đang sử dụng file credentials: " + credentialsPath);
-        System.out.println(" Token sẽ được lưu vào: " + storedTokenPath);
+//        System.out.println(" Token sẽ được lưu vào: " + storedTokenPath);
 
         // 4. Load credentials
         FileInputStream credentialsStream = new FileInputStream(credentialsPath);
@@ -71,7 +71,7 @@ public class AuthorizeAndExportToken {
         tokenJson.put("type", "authorized_user");
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writerWithDefaultPrettyPrinter().writeValue(new File(storedTokenPath), tokenJson);
+//        mapper.writerWithDefaultPrettyPrinter().writeValue(new File(storedTokenPath), tokenJson);
 
         System.out.println(" Token đã được export thành công!");
     }
