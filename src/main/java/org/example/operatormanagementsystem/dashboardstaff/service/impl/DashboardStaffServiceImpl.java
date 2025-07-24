@@ -161,11 +161,22 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public List<MonthlyRevenueResponse> getMonthlyRevenue(String year, String unit) {
+    public List<MonthlyRevenueResponse> getMonthlyRevenue(String year, String unit, String startMonth, String endMonth) {
         try {
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
+
             List<Revenue> revenues = revenueRepository.findAll();
-            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, 1, 1) : LocalDate.of(Integer.parseInt(year), 1, 1);
-            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), 12, 31);
+            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, startMonthInt, 1) : LocalDate.of(Integer.parseInt(year), startMonthInt, 1);
+            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), endMonthInt, java.time.YearMonth.of(Integer.parseInt(year), endMonthInt).lengthOfMonth());
 
             revenues = revenues.stream()
                     .filter(r -> !r.getDate().isBefore(startDate) && !r.getDate().isAfter(endDate))
@@ -191,9 +202,9 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             monthlyData.forEach((month, unitMap) -> {
                 MonthlyRevenueResponse response = new MonthlyRevenueResponse();
                 response.setMonth(month);
-                response.setChuyenNha24H(unitMap.getOrDefault("chuyenNha24H", BigDecimal.ZERO));
-                response.setDvChuyenNhaSaiGon(unitMap.getOrDefault("dvChuyenNhaSaiGon", BigDecimal.ZERO));
-                response.setChuyenNhaMinhAnh(unitMap.getOrDefault("chuyenNhaMinhAnh", BigDecimal.ZERO));
+                response.setChuyenNha24H(unitMap.getOrDefault("Chuyển Nhà 24H", BigDecimal.ZERO));
+                response.setDvChuyenNhaSaiGon(unitMap.getOrDefault("DV Chuyển Nhà SG", BigDecimal.ZERO));
+                response.setChuyenNhaMinhAnh(unitMap.getOrDefault("Chuyển Nhà Minh Anh", BigDecimal.ZERO));
                 result.add(response);
             });
 
@@ -210,11 +221,22 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public List<PerformanceDataResponse> getPerformanceData(String year, String unit) {
+    public List<PerformanceDataResponse> getPerformanceData(String year, String unit, String startMonth, String endMonth) {
         try {
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
+
             List<Booking> bookings = bookingRepository.findAll();
-            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, 1, 1) : LocalDate.of(Integer.parseInt(year), 1, 1);
-            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), 12, 31);
+            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, startMonthInt, 1) : LocalDate.of(Integer.parseInt(year), startMonthInt, 1);
+            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), endMonthInt, java.time.YearMonth.of(Integer.parseInt(year), endMonthInt).lengthOfMonth());
 
             bookings = bookings.stream()
                     .filter(b -> {
@@ -231,12 +253,18 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
 
             List<PerformanceDataResponse> result = new ArrayList<>();
             monthlyBookings.forEach((month, bookingList) -> {
+                // Thêm log debug
+                System.out.println("=== DEBUG: Tháng " + month + " ===");
+                bookingList.forEach(b -> System.out.println("BookingId: " + b.getBookingId() + ", Status: " + b.getStatus()));
+                long huyCount = bookingList.stream().filter(b -> "CANCELED".equals(b.getStatus())).count();
+                System.out.println("Số booking huỷ (CANCELED) tháng " + month + ": " + huyCount);
+
                 PerformanceDataResponse response = new PerformanceDataResponse();
                 response.setMonth(month);
                 response.setDungHan((int) bookingList.stream()
                         .filter(b -> "COMPLETED".equals(b.getStatus()) && b.getDeliveryDate() != null && !b.getDeliveryDate().toLocalDate().isAfter(LocalDate.now()))
                         .count());
-                response.setHuy((int) bookingList.stream().filter(b -> "CANCELLED".equals(b.getStatus())).count());
+                response.setHuy((int) huyCount);
                 response.setTre((int) bookingList.stream()
                         .filter(b -> "COMPLETED".equals(b.getStatus())
                                 && b.getDeliveryDate() != null
@@ -259,11 +287,22 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public List<DetailDataResponse> getDetailData(String year, String unit) {
+    public List<DetailDataResponse> getDetailData(String year, String unit, String startMonth, String endMonth) {
         try {
             List<Booking> bookings = bookingRepository.findAll();
-            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, 1, 1) : LocalDate.of(Integer.parseInt(year), 1, 1);
-            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), 12, 31);
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
+
+            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, startMonthInt, 1) : LocalDate.of(Integer.parseInt(year), startMonthInt, 1);
+            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), endMonthInt, java.time.YearMonth.of(Integer.parseInt(year), endMonthInt).lengthOfMonth());
 
             bookings = bookings.stream()
                     .filter(b -> {
@@ -287,7 +326,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
                     response.setUnit(unitName);
                     int onTime = 0, cancelled = 0, late = 0, trips = 0;
                     for (Booking b : bookingList) {
-                        if ("CANCELLED".equals(b.getStatus())) {
+                        if ("CANCELED".equals(b.getStatus())) {
                             cancelled++;
                             trips++;
                         } else if ("COMPLETED".equals(b.getStatus()) && b.getDeliveryDate() != null && b.getCreatedAt() != null) {
@@ -323,10 +362,20 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public TransportDataResponse getTransportData(String year, String unit) {
+    public TransportDataResponse getTransportData(String year, String unit, String startMonth, String endMonth) {
         try {
             List<Booking> allBookings = bookingRepository.findAll();
             List<Revenue> allRevenues = revenueRepository.findAll();
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
 
             String yearParam = year != null ? year.trim() : "";
             boolean calculateGrowth = false;
@@ -356,14 +405,15 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             }
             System.out.println("==DEBUG== year param (final): [" + yearParam + "]");
 
+
             LocalDate finalStartDate;
             LocalDate finalEndDate;
             LocalDate finalPrevStartDate;
             LocalDate finalPrevEndDate;
 
             if (calculateGrowth) {
-                finalStartDate = LocalDate.of(selectedYear, 1, 1);
-                finalEndDate = LocalDate.of(selectedYear, 12, 31);
+                finalStartDate = LocalDate.of(selectedYear, startMonthInt, 1);
+                finalEndDate = LocalDate.of(selectedYear, endMonthInt, java.time.YearMonth.of(selectedYear, endMonthInt).lengthOfMonth());
                 finalPrevStartDate = finalStartDate.minusYears(1);
                 finalPrevEndDate = finalEndDate.minusYears(1);
             } else {

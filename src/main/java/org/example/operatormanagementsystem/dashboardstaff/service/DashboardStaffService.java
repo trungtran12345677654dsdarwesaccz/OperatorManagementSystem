@@ -17,10 +17,10 @@ public interface DashboardStaffService {
     void addPosition(DashboardStaffRequest request);
     DashboardStaffResponse getDashboardStats();
     List<RecentActivityResponse> getRecentActivities();
-    List<MonthlyRevenueResponse> getMonthlyRevenue(String year, String unit);
-    List<PerformanceDataResponse> getPerformanceData(String year, String unit);
-    List<DetailDataResponse> getDetailData(String year, String unit);
-    TransportDataResponse getTransportData(String year, String unit);
+    List<MonthlyRevenueResponse> getMonthlyRevenue(String year, String unit, String startMonth, String endMonth);
+    List<PerformanceDataResponse> getPerformanceData(String year, String unit, String startMonth, String endMonth);
+    List<DetailDataResponse> getDetailData(String year, String unit, String startMonth, String endMonth);
+    TransportDataResponse getTransportData(String year, String unit, String startMonth, String endMonth);
     List<RankingDataResponse> getRankingData(String period, String metric);
     List<TeamRankingResponse> getTeamRanking(String period, String metric);
     List<AchievementResponse> getAchievements();
