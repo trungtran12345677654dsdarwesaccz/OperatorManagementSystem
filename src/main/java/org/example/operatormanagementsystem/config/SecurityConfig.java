@@ -117,7 +117,7 @@
                             .requestMatchers("/api/auth/change-password-request").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/sessions").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/usage").hasAnyRole("MANAGER", "STAFF")
-                            .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAuthority("ROLE_STAFF")
+                            .requestMatchers("/api/bookings", "/api/bookings/", "/api/bookings/**").hasAnyRole("MANAGER", "STAFF")
                             .requestMatchers("/api/storage-units").hasRole("MANAGER")
                             .requestMatchers("/api/storage-unit-approvals/**").hasRole("MANAGER")
                             .requestMatchers("/api/storage-units/**").hasRole("MANAGER")
