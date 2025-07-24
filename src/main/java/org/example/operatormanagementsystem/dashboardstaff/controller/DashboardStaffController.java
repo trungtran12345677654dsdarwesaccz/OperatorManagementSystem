@@ -24,7 +24,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard/staff")
@@ -35,39 +37,42 @@ public class DashboardStaffController {
     private final UserRepository userRepository;
     private final PositionRepository positionRepository;
 
+    // Helper method to create consistent error response
+    private ResponseEntity<Map<String, String>> createErrorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .body(Collections.singletonMap("error", message));
+    }
+
     @PostMapping("/positions")
     @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
-    public ResponseEntity<String> addPosition(@Valid @RequestBody DashboardStaffRequest request) {
+    public ResponseEntity<Map<String, String>> addPosition(@Valid @RequestBody DashboardStaffRequest request) {
         try {
             dashboardStaffService.addPosition(request);
-            return ResponseEntity.ok("Thêm hoặc cập nhật chức vụ thành công!");
+            return ResponseEntity.ok(Collections.singletonMap("message", "Thêm hoặc cập nhật chức vụ thành công!"));
         } catch (RuntimeException e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Lỗi khi thêm/cập nhật chức vụ: " + e.getMessage());
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Lỗi khi thêm/cập nhật chức vụ: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Lỗi server khi thêm/cập nhật chức vụ: " + e.getMessage());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi server khi thêm/cập nhật chức vụ: " + e.getMessage());
         }
     }
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<DashboardStaffResponse> getDashboardStats() {
+    public ResponseEntity<?> getDashboardStats() {
         try {
             DashboardStaffResponse stats = dashboardStaffService.getDashboardStats();
-            return ResponseEntity.ok(stats);
+            return ResponseEntity.ok(stats != null ? stats : new DashboardStaffResponse());
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new DashboardStaffResponse());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy thống kê: " + e.getMessage());
         }
     }
 
     @GetMapping("/activities")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<RecentActivityResponse>> getRecentActivities() {
+    public ResponseEntity<?> getRecentActivities() {
         try {
             List<RecentActivityResponse> activities = dashboardStaffService.getRecentActivities();
             return activities.isEmpty()
@@ -75,13 +80,13 @@ public class DashboardStaffController {
                     : ResponseEntity.ok(activities);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy hoạt động gần đây: " + e.getMessage());
         }
     }
 
     @GetMapping("/positions")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<Position>> getUserPositions() {
+    public ResponseEntity<?> getUserPositions() {
         try {
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             String username = principal instanceof UserDetails ? ((UserDetails) principal).getUsername() : principal.toString();
@@ -93,109 +98,201 @@ public class DashboardStaffController {
                     : ResponseEntity.ok(positions);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy danh sách chức vụ: " + e.getMessage());
         }
     }
 
     @GetMapping("/monthly-revenue")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<MonthlyRevenueResponse>> getMonthlyRevenue(
-            @RequestParam(required = false, defaultValue = "Tất cả") String year,
-            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+    public ResponseEntity<?> getMonthlyRevenue(
+            @RequestParam(defaultValue = "Tất cả") String year,
+            @RequestParam(defaultValue = "Tất cả") String unit,
+            @RequestParam(defaultValue = "1") String startMonth,
+            @RequestParam(defaultValue = "12") String endMonth) {
         try {
-            List<MonthlyRevenueResponse> revenue = dashboardStaffService.getMonthlyRevenue(year, unit);
+            // Validate input parameters
+            int startMonthInt = Integer.parseInt(startMonth);
+            int endMonthInt = Integer.parseInt(endMonth);
+            if (startMonthInt < 1 || startMonthInt > 12 || endMonthInt < 1 || endMonthInt > 12 || startMonthInt > endMonthInt) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Tháng không hợp lệ hoặc tháng bắt đầu lớn hơn tháng kết thúc");
+            }
+            if (!year.equals("Tất cả")) {
+                try {
+                    int yearInt = Integer.parseInt(year);
+                    if (yearInt < 2000 || yearInt > 2025) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ (phải từ 2000 đến 2025)");
+                    }
+                } catch (NumberFormatException e) {
+                    return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ");
+                }
+            }
+
+            List<MonthlyRevenueResponse> revenue = dashboardStaffService.getMonthlyRevenue(year, unit, startMonth, endMonth);
             return revenue.isEmpty()
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(revenue);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu doanh thu: " + e.getMessage());
         }
     }
 
     @GetMapping("/performance-data")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<PerformanceDataResponse>> getPerformanceData(
-            @RequestParam(required = false, defaultValue = "Tất cả") String year,
-            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+    public ResponseEntity<?> getPerformanceData(
+            @RequestParam(defaultValue = "Tất cả") String year,
+            @RequestParam(defaultValue = "Tất cả") String unit,
+            @RequestParam(defaultValue = "1") String startMonth,
+            @RequestParam(defaultValue = "12") String endMonth) {
         try {
-            List<PerformanceDataResponse> performance = dashboardStaffService.getPerformanceData(year, unit);
+            // Validate input parameters
+            int startMonthInt = Integer.parseInt(startMonth);
+            int endMonthInt = Integer.parseInt(endMonth);
+            if (startMonthInt < 1 || startMonthInt > 12 || endMonthInt < 1 || endMonthInt > 12 || startMonthInt > endMonthInt) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Tháng không hợp lệ hoặc tháng bắt đầu lớn hơn tháng kết thúc");
+            }
+            if (!year.equals("Tất cả")) {
+                try {
+                    int yearInt = Integer.parseInt(year);
+                    if (yearInt < 2000 || yearInt > 2025) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ (phải từ 2000 đến 2025)");
+                    }
+                } catch (NumberFormatException e) {
+                    return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ");
+                }
+            }
+
+            List<PerformanceDataResponse> performance = dashboardStaffService.getPerformanceData(year, unit, startMonth, endMonth);
             return performance.isEmpty()
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(performance);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu hiệu suất: " + e.getMessage());
         }
     }
 
     @GetMapping("/detail-data")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<DetailDataResponse>> getDetailData(
-            @RequestParam(required = false, defaultValue = "Tất cả") String year,
-            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+    public ResponseEntity<?> getDetailData(
+            @RequestParam(defaultValue = "Tất cả") String year,
+            @RequestParam(defaultValue = "Tất cả") String unit,
+            @RequestParam(defaultValue = "1") String startMonth,
+            @RequestParam(defaultValue = "12") String endMonth) {
         try {
-            List<DetailDataResponse> detail = dashboardStaffService.getDetailData(year, unit);
+            // Validate input parameters
+            int startMonthInt = Integer.parseInt(startMonth);
+            int endMonthInt = Integer.parseInt(endMonth);
+            if (startMonthInt < 1 || startMonthInt > 12 || endMonthInt < 1 || endMonthInt > 12 || startMonthInt > endMonthInt) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Tháng không hợp lệ hoặc tháng bắt đầu lớn hơn tháng kết thúc");
+            }
+            if (!year.equals("Tất cả")) {
+                try {
+                    int yearInt = Integer.parseInt(year);
+                    if (yearInt < 2000 || yearInt > 2025) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ (phải từ 2000 đến 2025)");
+                    }
+                } catch (NumberFormatException e) {
+                    return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ");
+                }
+            }
+
+            List<DetailDataResponse> detail = dashboardStaffService.getDetailData(year, unit, startMonth, endMonth);
             return detail.isEmpty()
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(detail);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu chi tiết: " + e.getMessage());
         }
     }
 
     @GetMapping("/transport-data")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<TransportDataResponse> getTransportData(
-            @RequestParam(required = false, defaultValue = "Tất cả") String year,
-            @RequestParam(required = false, defaultValue = "Tất cả") String unit) {
+    public ResponseEntity<?> getTransportData(
+            @RequestParam(defaultValue = "Tất cả") String year,
+            @RequestParam(defaultValue = "Tất cả") String unit,
+            @RequestParam(defaultValue = "1") String startMonth,
+            @RequestParam(defaultValue = "12") String endMonth) {
         try {
-            TransportDataResponse transport = dashboardStaffService.getTransportData(year, unit);
+            // Validate input parameters
+            int startMonthInt = Integer.parseInt(startMonth);
+            int endMonthInt = Integer.parseInt(endMonth);
+            if (startMonthInt < 1 || startMonthInt > 12 || endMonthInt < 1 || endMonthInt > 12 || startMonthInt > endMonthInt) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Tháng không hợp lệ hoặc tháng bắt đầu lớn hơn tháng kết thúc");
+            }
+            if (!year.equals("Tất cả")) {
+                try {
+                    int yearInt = Integer.parseInt(year);
+                    if (yearInt < 2000 || yearInt > 2025) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ (phải từ 2000 đến 2025)");
+                    }
+                } catch (NumberFormatException e) {
+                    return createErrorResponse(HttpStatus.BAD_REQUEST, "Năm không hợp lệ");
+                }
+            }
+
+            TransportDataResponse transport = dashboardStaffService.getTransportData(year, unit, startMonth, endMonth);
             return transport == null
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(transport);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new TransportDataResponse());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu vận chuyển: " + e.getMessage());
         }
     }
 
     @GetMapping("/ranking-data")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<RankingDataResponse>> getRankingData(
-            @RequestParam(required = false, defaultValue = "month") String period,
-            @RequestParam(required = false, defaultValue = "revenue") String metric) {
+    public ResponseEntity<?> getRankingData(
+            @RequestParam(defaultValue = "month") String period,
+            @RequestParam(defaultValue = "revenue") String metric) {
         try {
+            // Validate period and metric
+            if (!List.of("week", "month", "quarter", "year", "all").contains(period.toLowerCase())) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Khoảng thời gian không hợp lệ");
+            }
+            if (!List.of("revenue", "trips", "success_rate").contains(metric.toLowerCase())) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Chỉ số không hợp lệ");
+            }
+
             List<RankingDataResponse> ranking = dashboardStaffService.getRankingData(period, metric);
             return ranking.isEmpty()
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(ranking);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu xếp hạng: " + e.getMessage());
         }
     }
 
     @GetMapping("/team-ranking")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<TeamRankingResponse>> getTeamRanking(
-            @RequestParam(required = false, defaultValue = "month") String period,
-            @RequestParam(required = false, defaultValue = "revenue") String metric) {
+    public ResponseEntity<?> getTeamRanking(
+            @RequestParam(defaultValue = "month") String period,
+            @RequestParam(defaultValue = "revenue") String metric) {
         try {
+            // Validate period and metric
+            if (!List.of("week", "month", "quarter", "year", "all").contains(period.toLowerCase())) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Khoảng thời gian không hợp lệ");
+            }
+            if (!List.of("revenue", "trips", "success_rate").contains(metric.toLowerCase())) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Chỉ số không hợp lệ");
+            }
+
             List<TeamRankingResponse> teamRanking = dashboardStaffService.getTeamRanking(period, metric);
             return teamRanking.isEmpty()
                     ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
                     : ResponseEntity.ok(teamRanking);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu xếp hạng đội nhóm: " + e.getMessage());
         }
     }
 
     @GetMapping("/achievements")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<List<AchievementResponse>> getAchievements() {
+    public ResponseEntity<?> getAchievements() {
         try {
             List<AchievementResponse> achievements = dashboardStaffService.getAchievements();
             return achievements.isEmpty()
@@ -203,7 +300,7 @@ public class DashboardStaffController {
                     : ResponseEntity.ok(achievements);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy dữ liệu thành tích: " + e.getMessage());
         }
     }
 }

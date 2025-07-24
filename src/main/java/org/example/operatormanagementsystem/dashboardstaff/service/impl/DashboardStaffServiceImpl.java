@@ -161,11 +161,22 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public List<MonthlyRevenueResponse> getMonthlyRevenue(String year, String unit) {
+    public List<MonthlyRevenueResponse> getMonthlyRevenue(String year, String unit, String startMonth, String endMonth) {
         try {
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
+
             List<Revenue> revenues = revenueRepository.findAll();
-            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, 1, 1) : LocalDate.of(Integer.parseInt(year), 1, 1);
-            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), 12, 31);
+            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, startMonthInt, 1) : LocalDate.of(Integer.parseInt(year), startMonthInt, 1);
+            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), endMonthInt, java.time.YearMonth.of(Integer.parseInt(year), endMonthInt).lengthOfMonth());
 
             revenues = revenues.stream()
                     .filter(r -> !r.getDate().isBefore(startDate) && !r.getDate().isAfter(endDate))
@@ -210,11 +221,22 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public List<PerformanceDataResponse> getPerformanceData(String year, String unit) {
+    public List<PerformanceDataResponse> getPerformanceData(String year, String unit, String startMonth, String endMonth) {
         try {
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
+
             List<Booking> bookings = bookingRepository.findAll();
-            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, 1, 1) : LocalDate.of(Integer.parseInt(year), 1, 1);
-            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), 12, 31);
+            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, startMonthInt, 1) : LocalDate.of(Integer.parseInt(year), startMonthInt, 1);
+            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), endMonthInt, java.time.YearMonth.of(Integer.parseInt(year), endMonthInt).lengthOfMonth());
 
             bookings = bookings.stream()
                     .filter(b -> {
@@ -265,11 +287,22 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public List<DetailDataResponse> getDetailData(String year, String unit) {
+    public List<DetailDataResponse> getDetailData(String year, String unit, String startMonth, String endMonth) {
         try {
             List<Booking> bookings = bookingRepository.findAll();
-            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, 1, 1) : LocalDate.of(Integer.parseInt(year), 1, 1);
-            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), 12, 31);
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
+
+            LocalDate startDate = year.equals("Tất cả") ? LocalDate.of(2000, startMonthInt, 1) : LocalDate.of(Integer.parseInt(year), startMonthInt, 1);
+            LocalDate endDate = year.equals("Tất cả") ? LocalDate.now() : LocalDate.of(Integer.parseInt(year), endMonthInt, java.time.YearMonth.of(Integer.parseInt(year), endMonthInt).lengthOfMonth());
 
             bookings = bookings.stream()
                     .filter(b -> {
@@ -329,10 +362,20 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     }
 
     @Override
-    public TransportDataResponse getTransportData(String year, String unit) {
+    public TransportDataResponse getTransportData(String year, String unit, String startMonth, String endMonth) {
         try {
             List<Booking> allBookings = bookingRepository.findAll();
             List<Revenue> allRevenues = revenueRepository.findAll();
+
+            int startMonthInt = 1;
+            int endMonthInt = 12;
+            try {
+                if (startMonth != null && !startMonth.equals("")) startMonthInt = Integer.parseInt(startMonth);
+                if (endMonth != null && !endMonth.equals("")) endMonthInt = Integer.parseInt(endMonth);
+            } catch (Exception e) {
+                startMonthInt = 1;
+                endMonthInt = 12;
+            }
 
             String yearParam = year != null ? year.trim() : "";
             boolean calculateGrowth = false;
@@ -362,14 +405,15 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
             }
             System.out.println("==DEBUG== year param (final): [" + yearParam + "]");
 
+
             LocalDate finalStartDate;
             LocalDate finalEndDate;
             LocalDate finalPrevStartDate;
             LocalDate finalPrevEndDate;
 
             if (calculateGrowth) {
-                finalStartDate = LocalDate.of(selectedYear, 1, 1);
-                finalEndDate = LocalDate.of(selectedYear, 12, 31);
+                finalStartDate = LocalDate.of(selectedYear, startMonthInt, 1);
+                finalEndDate = LocalDate.of(selectedYear, endMonthInt, java.time.YearMonth.of(selectedYear, endMonthInt).lengthOfMonth());
                 finalPrevStartDate = finalStartDate.minusYears(1);
                 finalPrevEndDate = finalEndDate.minusYears(1);
             } else {
