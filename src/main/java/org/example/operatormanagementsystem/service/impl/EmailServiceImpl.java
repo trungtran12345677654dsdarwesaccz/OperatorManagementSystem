@@ -39,6 +39,8 @@ public class EmailServiceImpl implements EmailService {
     private final UserRepository userRepository;
     @Value("${spring.mail.username}")
     private String email;
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
     private final JwtUtil jwtUtil;
     private final EmailAsyncSender emailAsyncSender;
     private final LoginHistoryRepository loginHistoryRepository;
@@ -274,7 +276,9 @@ private final UserUsageStatRepository usageStatRepository;
     public void sendPasswordResetEmail(String recipientEmail, String resetToken) throws MessagingException {
         System.out.println("DEBUG: sendPasswordResetEmail - Attempting to send password reset email to: '" + recipientEmail + "'");
 
-        String resetLink = "http://localhost:5173/reset-password?token=" + resetToken;
+        String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
+
+
 
         String subject = "[OperatorManagementSystem] Yêu cầu đặt lại mật khẩu";
         String body = "Chào bạn,<br><br>"
