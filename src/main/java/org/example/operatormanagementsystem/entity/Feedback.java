@@ -63,6 +63,12 @@ public class Feedback {
 
     @Column(name = "dislikes")
     private Integer dislikes;
+    
+    @Column(name = "is_transport")
+    private Boolean isTransport;
+    
+    @Column(name = "is_storage")
+    private Boolean isStorage;
 
     @PrePersist
     protected void onCreate() {

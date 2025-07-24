@@ -19,4 +19,7 @@ public class CreateTransportFeedbackRequest {
     private Integer star;
     @NotNull(message = "Transport ID is required")
     private Integer transportId;
+    
+    @NotNull(message = "isTransport flag is required")
+    private Boolean isTransport;
 } 

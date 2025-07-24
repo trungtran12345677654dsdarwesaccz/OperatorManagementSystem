@@ -32,4 +32,8 @@ public class FeedbackResponse {
     private String customerImage;
     private Boolean isLike;
     private Boolean isDislike;
+    
+    // Thêm thuộc tính mới
+    private Boolean isTransport;
+    private Boolean isStorage;
 } 

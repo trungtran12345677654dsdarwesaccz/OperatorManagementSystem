@@ -19,4 +19,7 @@ public class CreateStorageFeedbackRequest {
     private Integer star;
     @NotNull(message = "Storage ID is required")
     private Integer storageId;
+    
+    @NotNull(message = "isStorage flag is required")
+    private Boolean isStorage;
 } 

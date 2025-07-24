@@ -121,7 +121,7 @@ public class BookingCustomerServiceImpl implements BookingCustomerService {
         notificationEventService.createBookingStatusNotification(
             customer, 
             savedBooking.getBookingId().toString(), 
-            "N/A", 
+            "PENDING",
             savedBooking.getStatus()
         );
         
