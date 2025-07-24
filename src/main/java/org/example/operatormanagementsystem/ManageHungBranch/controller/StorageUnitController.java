@@ -59,7 +59,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @PostMapping("/upload")
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -90,7 +90,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<StorageUnitDTO>> getAllStorageUnits() {
         log.info("GET /api/storage-units - Lấy tất cả storage units");
         try {
@@ -110,7 +110,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StorageUnitDTO> getStorageUnitById(
             @Parameter(description = "ID của storage unit") @PathVariable Integer id) {
         log.info("GET /api/storage-units/{} - Lấy storage unit theo ID", id);
@@ -132,7 +132,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StorageUnitDTO> createStorageUnit(
             @Valid @RequestBody CreateStorageUnitDTO createDTO) {
         log.info("POST /api/storage-units - Tạo mới storage unit: {}", createDTO.getName());
@@ -158,7 +158,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<StorageUnitDTO> updateStorageUnit(
             @Parameter(description = "ID của storage unit cần cập nhật") @PathVariable Integer id,
             @Parameter(description = "Thông tin cập nhật")
@@ -184,7 +184,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> deleteStorageUnit(
             @Parameter(description = "ID của storage unit cần xóa") @PathVariable Integer id) {
         log.info("DELETE /api/storage-units/{} - Xóa storage unit", id);
@@ -207,7 +207,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ROLE_')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<StorageUnitDTO>> searchStorageUnits(
             @Parameter(description = "Tên kho (tìm kiếm gần đúng)") @RequestParam(required = false) String name,
             @Parameter(description = "Địa chỉ (tìm kiếm gần đúng)") @RequestParam(required = false) String address,
@@ -231,7 +231,7 @@ public class StorageUnitController {
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     @GetMapping("/by-manager/{managerId}")
-    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<List<StorageUnitDTO>> getStorageUnitsByManager(
             @Parameter(description = "ID của manager") @PathVariable Integer managerId) {
         log.info("GET /api/storage-units/by-manager/{} - Lấy storage units theo manager", managerId);
