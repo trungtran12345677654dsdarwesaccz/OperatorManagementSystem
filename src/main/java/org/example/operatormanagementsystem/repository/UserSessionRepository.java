@@ -11,6 +11,6 @@ import java.util.List;
 public interface UserSessionRepository extends JpaRepository<UserSession, Long> {
     List<UserSession> findByUserAndActiveTrue(Users user);
     List<UserSession> findTop10ByUserOrderByLastAccessedAtDesc(Users user);
-    void deleteByToken(String token);
+
 }
 

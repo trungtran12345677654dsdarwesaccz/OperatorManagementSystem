@@ -14,6 +14,7 @@ public class UserSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Transient
     private String token;
 
     private String ipAddress;

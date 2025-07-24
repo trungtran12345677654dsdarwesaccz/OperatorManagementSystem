@@ -14,12 +14,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key; // Thay đổi từ javax.crypto.SecretKey sang java.security.Key
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
-import java.util.Set; // Import Set
 import java.util.concurrent.ConcurrentHashMap;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -60,8 +56,10 @@ public class JwtUtil {
         // Role
         if (user.getRole() != null) {
             claims.put("role", user.getRole().name());
+            claims.put("authorities", List.of("ROLE_" + user.getRole().name()));
         } else {
             claims.put("role", "ROLE_USER");
+            claims.put("authorities", List.of("ROLE_USER"));
         }
 
         // Username

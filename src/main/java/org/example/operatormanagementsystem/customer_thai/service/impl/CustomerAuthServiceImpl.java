@@ -35,7 +35,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
                 throw new RuntimeException("User is not properly linked to a customer profile.");
             }
 
-            // ✅ Tránh lỗi nếu JwtUtil sẽ gọi user.getManager().getManagerId()
+
 //            if (user.getManager() == null) {
 //                throw new RuntimeException("User is not linked to any manager (required by JWT)");
 //            }
