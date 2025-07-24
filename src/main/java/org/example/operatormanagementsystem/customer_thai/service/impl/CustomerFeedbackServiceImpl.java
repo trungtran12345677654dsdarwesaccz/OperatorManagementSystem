@@ -50,6 +50,14 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
     public FeedbackResponse createFeedbackStorage(CreateStorageFeedbackRequest request, Integer customerId) {
         logger.info("[FEEDBACK_SERVICE] Creating STORAGE feedback");
 
+        // Kiểm tra trùng lặp feedback storage
+        boolean exists = feedbackRepository.existsByBooking_BookingIdAndStorageUnit_StorageIdAndIsStorageTrue(
+            request.getBookingId(), request.getStorageId()
+        );
+        if (exists) {
+            throw new RuntimeException("Bạn đã đánh giá kho này cho đơn hàng này rồi!");
+        }
+
         Users user = userRepository.findById(customerId).orElseThrow(() -> new RuntimeException("Customer not found"));
         Booking booking = bookingRepository.findById(request.getBookingId()).orElseThrow(() -> new RuntimeException("Booking not found"));
         if (!"COMPLETED".equals(booking.getStatus())) throw new RuntimeException("Booking not completed");
@@ -66,6 +74,8 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                 .likes(0)
                 .dislikes(0)
                 .storageUnit(storageUnit)
+                .isStorage(request.getIsStorage())
+                .isTransport(false) // Đặt isTransport = false vì đây là feedback cho storage
                 .build();
 
         Feedback saved = feedbackRepository.save(feedback);
@@ -77,6 +87,14 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
     @Override
     public FeedbackResponse createFeedbackTransport(CreateTransportFeedbackRequest request, Integer customerId) {
         logger.info("[FEEDBACK_SERVICE] Creating TRANSPORT feedback");
+
+        // Kiểm tra trùng lặp feedback transport
+        boolean exists = feedbackRepository.existsByBooking_BookingIdAndTransportUnit_TransportIdAndIsTransportTrue(
+            request.getBookingId(), request.getTransportId()
+        );
+        if (exists) {
+            throw new RuntimeException("Bạn đã đánh giá vận chuyển này cho đơn hàng này rồi!");
+        }
 
         Users user = userRepository.findById(customerId).orElseThrow(() -> new RuntimeException("Customer not found"));
         Booking booking = bookingRepository.findById(request.getBookingId()).orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -94,6 +112,8 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                 .likes(0)
                 .dislikes(0)
                 .transportUnit(transportUnit)
+                .isTransport(request.getIsTransport())
+                .isStorage(false) // Đặt isStorage = false vì đây là feedback cho transport
                 .build();
 
         Feedback saved = feedbackRepository.save(feedback);
@@ -404,6 +424,8 @@ public class CustomerFeedbackServiceImpl implements CustomerFeedbackService {
                     feedback.getCustomer().getUsers().getImg() : null)
                 .isLike(isLike)
                 .isDislike(isDislike)
+                .isTransport(feedback.getIsTransport())
+                .isStorage(feedback.getIsStorage())
                 .build();
     }
 }
