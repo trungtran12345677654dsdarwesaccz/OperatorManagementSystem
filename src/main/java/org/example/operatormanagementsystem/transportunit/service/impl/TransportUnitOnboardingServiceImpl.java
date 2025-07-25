@@ -29,7 +29,7 @@ public class TransportUnitOnboardingServiceImpl implements TransportUnitOnboardi
     // THAY THẾ BẰNG ID THỰC TẾ CỦA USER SYSTEM TỪ SQL INSERT SCRIPT CỦA BẠN.
     // SAU KHI BẠN CHẠY SCRIPT VÀ LẤY ID TỪ PRINT STATEMENT.
     // Đảm bảo user với ID này tồn tại trong bảng Users và có vai trò phù hợp (ví dụ: SYSTEM_USER, ADMIN, v.v.).
-    private static final Integer SYSTEM_USER_ID = 11; // VÍ DỤ: Cần thay thế bằng ID thực tế của System User
+    private static final Integer SYSTEM_USER_ID = 8; // VÍ DỤ: Cần thay thế bằng ID thực tế của System User
 
     private TransportUnitResponse toResponse(TransportUnit entity) {
         return TransportUnitResponse.builder()

@@ -55,7 +55,7 @@ public class EmailListenerService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // KÍCH HOẠT HÀM NÀY CHẠY ĐỊNH KỲ
-//    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
+    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây (10000 ms) để debug nhanh hơn
     public void scheduleEmailCheck() {
         System.out.println("--- SCHEDULED TASK: Checking emails at " + System.currentTimeMillis() + " ---");
         checkEmailsAndOnboard();
@@ -74,112 +74,6 @@ public class EmailListenerService {
     }
 
 
-    public void checkEmailsAndOnboard() {
-        Properties properties = new Properties();
-        properties.put("mail.imap.host", imapHost);
-        properties.put("mail.imap.port", imapPort);
-        properties.put("mail.imap.ssl.enable", "true");
-        properties.put("mail.imap.auth", "true");
-        properties.put("mail.mime.charset", "UTF-8");
-        properties.put("mail.imaps.partialfetch", "false");
-
-        Session emailSession = Session.getDefaultInstance(properties);
-        Store store = null;
-        Folder inbox = null;
-
-        try {
-            store = emailSession.getStore("imap");
-            store.connect(imapHost, mailUsername, mailPassword);
-            inbox = store.getFolder("INBOX");
-            inbox.open(Folder.READ_WRITE);
-
-            LocalDateTime since = LocalDateTime.now().minusHours(24);
-            Date date = Date.from(since.atZone(ZoneId.systemDefault()).toInstant());
-            SearchTerm searchTerm = new AndTerm(
-                    new ReceivedDateTerm(ComparisonTerm.GT, date),
-                    new FlagTerm(new Flags(Flags.Flag.SEEN), false)
-            );
-
-            Message[] messages = inbox.search(searchTerm);
-            System.out.println("Found " + messages.length + " unread emails in last 24h");
-            int maxEmailsToProcess = 20;
-            int total = Math.min(messages.length, maxEmailsToProcess);
-            for (int i = 0; i < total; i++) {
-                Message message = messages[i];
-                String subject = message.getSubject();
-                String sender = extractSender(message);
-
-                if (subject == null || !subject.contains("[ĐĂNG KÝ ĐƠN VỊ VẬN CHUYỂN MỚI]")) {
-                    sendSuggestionEmailToSender(sender);
-                    message.setFlag(Flags.Flag.SEEN, true);
-                    continue;
-                }
-
-                System.out.println("\n--- Email " + (i + 1) + "/" + messages.length + " ---");
-                String content = getTextFromMessage(message);
-                TransportUnitEmailRequest request = parseEmailContent(content, sender);
-
-                // Step 1: Ưu tiên file đính kèm
-                byte[] frontBytes = null;
-                byte[] backBytes = null;
-
-                if (message.isMimeType("multipart/*")) {
-                    Multipart mp = (Multipart) message.getContent();
-                    int index = 0;
-                    for (int j = 0; j < mp.getCount(); j++) {
-                        BodyPart part = mp.getBodyPart(j);
-                        if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
-                            byte[] data = part.getInputStream().readAllBytes();
-                            if (index == 0) frontBytes = data;
-                            else if (index == 1) backBytes = data;
-                            index++;
-                        }
-                    }
-                }
-
-                // Step 2: Nếu không có file thì thử tải từ link (nếu có)
-                if (frontBytes == null && request.getCertificateFrontUrl() != null) {
-                    frontBytes = downloadImageFromUrl(request.getCertificateFrontUrl());
-                }
-                if (backBytes == null && request.getCertificateBackUrl() != null) {
-                    backBytes = downloadImageFromUrl(request.getCertificateBackUrl());
-                }
-
-                // Step 3: Upload lên Cloudinary
-                try {
-                    if (frontBytes != null) {
-                        String url = cloudinaryService.uploadImage(frontBytes, "certificate_front_" + System.currentTimeMillis());
-                        request.setCertificateFrontUrl(url);
-                    }
-                    if (backBytes != null) {
-                        String url = cloudinaryService.uploadImage(backBytes, "certificate_back_" + System.currentTimeMillis());
-                        request.setCertificateBackUrl(url);
-                    }
-                } catch (Exception e) {
-                    System.err.println("⚠️ Upload ảnh thất bại: " + e.getMessage());
-                }
-
-                // Step 4: Gửi về API
-                if (request != null) {
-                    sendToOnboardingApi(request);
-                } else {
-                    sendSuggestionEmailToSender(sender);
-                }
-
-                message.setFlag(Flags.Flag.SEEN, true);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (inbox != null && inbox.isOpen()) inbox.close(true);
-                if (store != null && store.isConnected()) store.close();
-            } catch (MessagingException e) {
-                System.err.println("❌ Lỗi khi đóng email: " + e.getMessage());
-            }
-        }
-    }
 
     private String getTextFromMessage(Message message) throws IOException, MessagingException {
         if (message.isMimeType("text/plain")) {
@@ -289,6 +183,113 @@ public class EmailListenerService {
         Matcher m = p.matcher(src);
         return m.find() ? m.group(1).trim() : null;
     }
+    public void checkEmailsAndOnboard() {
+        Properties properties = new Properties();
+        properties.put("mail.imap.host", imapHost);
+        properties.put("mail.imap.port", imapPort);
+        properties.put("mail.imap.ssl.enable", "true");
+        properties.put("mail.imap.auth", "true");
+        properties.put("mail.mime.charset", "UTF-8");
+        properties.put("mail.imaps.partialfetch", "false");
+
+        Session emailSession = Session.getDefaultInstance(properties);
+        Store store = null;
+        Folder inbox = null;
+
+        try {
+            store = emailSession.getStore("imap");
+            store.connect(imapHost, mailUsername, mailPassword);
+            inbox = store.getFolder("INBOX");
+            inbox.open(Folder.READ_WRITE);
+
+            LocalDateTime since = LocalDateTime.now().minusHours(24);
+            Date date = Date.from(since.atZone(ZoneId.systemDefault()).toInstant());
+            SearchTerm searchTerm = new AndTerm(
+                    new ReceivedDateTerm(ComparisonTerm.GT, date),
+                    new FlagTerm(new Flags(Flags.Flag.SEEN), false)
+            );
+
+            Message[] messages = inbox.search(searchTerm);
+            System.out.println("Found " + messages.length + " unread emails in last 24h");
+            int maxEmailsToProcess = 20;
+            int total = Math.min(messages.length, maxEmailsToProcess);
+            for (int i = 0; i < total; i++) {
+                Message message = messages[i];
+                String subject = message.getSubject();
+                String sender = extractSender(message);
+
+                if (subject == null || !subject.contains("[ĐĂNG KÝ ĐƠN VỊ VẬN CHUYỂN MỚI]")) {
+                    sendSuggestionEmailToSender(sender);
+                    message.setFlag(Flags.Flag.SEEN, true);
+                    continue;
+                }
+
+                System.out.println("\n--- Email " + (i + 1) + "/" + messages.length + " ---");
+                String content = getTextFromMessage(message);
+                TransportUnitEmailRequest request = parseEmailContent(content, sender);
+
+                // Step 1: Ưu tiên file đính kèm
+                byte[] frontBytes = null;
+                byte[] backBytes = null;
+
+                if (message.isMimeType("multipart/*")) {
+                    Multipart mp = (Multipart) message.getContent();
+                    int index = 0;
+                    for (int j = 0; j < mp.getCount(); j++) {
+                        BodyPart part = mp.getBodyPart(j);
+                        if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+                            byte[] data = part.getInputStream().readAllBytes();
+                            if (index == 0) frontBytes = data;
+                            else if (index == 1) backBytes = data;
+                            index++;
+                        }
+                    }
+                }
+
+                // Step 2: Nếu không có file thì thử tải từ link (nếu có)
+                if (frontBytes == null && request.getCertificateFrontUrl() != null) {
+                    frontBytes = downloadImageFromUrl(request.getCertificateFrontUrl());
+                }
+                if (backBytes == null && request.getCertificateBackUrl() != null) {
+                    backBytes = downloadImageFromUrl(request.getCertificateBackUrl());
+                }
+
+                // Step 3: Upload lên Cloudinary
+                try {
+                    if (frontBytes != null) {
+                        String url = cloudinaryService.uploadImage(frontBytes, "certificate_front_" + System.currentTimeMillis());
+                        request.setCertificateFrontUrl(url);
+                    }
+                    if (backBytes != null) {
+                        String url = cloudinaryService.uploadImage(backBytes, "certificate_back_" + System.currentTimeMillis());
+                        request.setCertificateBackUrl(url);
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Upload ảnh thất bại: " + e.getMessage());
+                }
+
+                // Step 4: Gửi về API
+                if (request != null && isValidRequest(request)) {
+                    sendToOnboardingApi(request);
+                } else {
+                    sendSuggestionEmailToSender(sender);
+                }
+
+
+                message.setFlag(Flags.Flag.SEEN, true);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (inbox != null && inbox.isOpen()) inbox.close(true);
+                if (store != null && store.isConnected()) store.close();
+            } catch (MessagingException e) {
+                System.err.println("❌ Lỗi khi đóng email: " + e.getMessage());
+            }
+        }
+    }
 
 
     private void sendToOnboardingApi(TransportUnitEmailRequest request) {
@@ -305,14 +306,6 @@ public class EmailListenerService {
             System.err.println("Lỗi khi gửi dữ liệu đến API webhook: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-    private String extractField(String content, String prefix) {
-        for (String line : content.split("\n")) {
-            if (line.trim().toLowerCase().startsWith(prefix.toLowerCase())) {
-                return line.replaceFirst("(?i)" + prefix, "").trim(); // bỏ prefix (không phân biệt hoa thường)
-            }
-        }
-        return null;
     }
 
     private void sendSuggestionEmailToSender(String to) {
@@ -368,6 +361,18 @@ public class EmailListenerService {
             return null;
         }
     }
+    private boolean isValidRequest(TransportUnitEmailRequest req) {
+
+
+        return req.getNameCompany() != null && !req.getNameCompany().isBlank()
+                && req.getNamePersonContact() != null && !req.getNamePersonContact().isBlank()
+                && req.getPhone() != null && !req.getPhone().isBlank()
+                && req.getSenderEmail() != null && !req.getSenderEmail().isBlank()
+                && req.getLicensePlate() != null && !req.getLicensePlate().isBlank()
+                && req.getNumberOfVehicles() != null
+                && req.getCapacityPerVehicle() != null;
+    }
+
 
 
 }

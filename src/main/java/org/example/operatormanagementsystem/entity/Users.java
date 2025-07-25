@@ -90,44 +90,19 @@
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
         private LocalDateTime lastPasswordResetDate; // Thời gian cuối cùng mật khẩu được đặt lại thành công
     
-    
-    
+
     
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
-            // Trả về danh sách các quyền (roles) của người dùng.
-            // Dựa trên trường 'role' (enum UserRole) bạn đã có.
-            // Spring Security thường yêu cầu các quyền có tiền tố "ROLE_".
+
             return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
         }
     
 
-    
-        @Override
-        public boolean isAccountNonExpired() {
-            // Trả về true nếu tài khoản không hết hạn.
-            // Mặc định là true nếu bạn không có logic hết hạn tài khoản.
-            return true;
-        }
-    
-        @Override
-        public boolean isAccountNonLocked() {
-            // Trả về true nếu tài khoản không bị khóa.
-            // Mặc định là true nếu bạn không có logic khóa tài khoản.
-            return true;
-        }
-    
-        @Override
-        public boolean isCredentialsNonExpired() {
-            // Trả về true nếu thông tin xác thực (mật khẩu) không hết hạn.
-            // Mặc định là true nếu bạn không có logic hết hạn mật khẩu.
-            return true;
-        }
-    
+
         @Override
         public boolean isEnabled() {
-            // Trả về true nếu tài khoản được kích hoạt.
-            // Dựa trên trường 'status' (enum UserStatus) bạn đã có.
+
             return this.status == UserStatus.ACTIVE;
         }
     
