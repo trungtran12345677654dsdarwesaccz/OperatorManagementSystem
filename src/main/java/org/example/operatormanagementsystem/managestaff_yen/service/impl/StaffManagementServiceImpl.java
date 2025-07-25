@@ -180,7 +180,6 @@ public class StaffManagementServiceImpl implements StaffManagementService {
                 .createdAt(user.getCreatedAt())
                 .totalBookings(staff.getBookings() != null ? (long) staff.getBookings().size() : 0L)
                 .totalFeedbacks(staff.getFeedbacks() != null ? (long) staff.getFeedbacks().size() : 0L)
-                .totalChatbotLogs(staff.getChatbotLogs()!= null ? (long) staff.getChatbotLogs().size() : 0L)
                 .build();
     }
 

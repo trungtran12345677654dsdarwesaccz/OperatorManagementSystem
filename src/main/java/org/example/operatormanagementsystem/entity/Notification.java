@@ -30,7 +30,7 @@ public class Notification {
 
     @CreationTimestamp
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    @Column(name = "sent_at",  updatable = false,columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "sent_at",  updatable = false,columnDefinition = "DATETIME2 DEFAULT GETDATE()")
     private LocalDateTime sentAt;
 
     @Column(name = "order_id")

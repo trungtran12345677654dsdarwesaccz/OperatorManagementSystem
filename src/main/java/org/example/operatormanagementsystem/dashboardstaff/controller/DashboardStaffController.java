@@ -13,10 +13,8 @@ import org.example.operatormanagementsystem.dashboardstaff.dto.response.RecentAc
 import org.example.operatormanagementsystem.dashboardstaff.dto.response.TeamRankingResponse;
 import org.example.operatormanagementsystem.dashboardstaff.dto.response.AchievementResponse;
 import org.example.operatormanagementsystem.dashboardstaff.service.DashboardStaffService;
-import org.example.operatormanagementsystem.entity.Position;
 import org.example.operatormanagementsystem.entity.Users;
 import org.example.operatormanagementsystem.repository.UserRepository;
-import org.example.operatormanagementsystem.dashboardstaff.repository.PositionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,7 +33,6 @@ public class DashboardStaffController {
 
     private final DashboardStaffService dashboardStaffService;
     private final UserRepository userRepository;
-    private final PositionRepository positionRepository;
 
     // Helper method to create consistent error response
     private ResponseEntity<Map<String, String>> createErrorResponse(HttpStatus status, String message) {
@@ -43,20 +40,6 @@ public class DashboardStaffController {
                 .body(Collections.singletonMap("error", message));
     }
 
-    @PostMapping("/positions")
-    @PreAuthorize("hasAnyRole('STAFF', 'MANAGER')")
-    public ResponseEntity<Map<String, String>> addPosition(@Valid @RequestBody DashboardStaffRequest request) {
-        try {
-            dashboardStaffService.addPosition(request);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Thêm hoặc cập nhật chức vụ thành công!"));
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return createErrorResponse(HttpStatus.BAD_REQUEST, "Lỗi khi thêm/cập nhật chức vụ: " + e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi server khi thêm/cập nhật chức vụ: " + e.getMessage());
-        }
-    }
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('STAFF')")
@@ -84,23 +67,7 @@ public class DashboardStaffController {
         }
     }
 
-    @GetMapping("/positions")
-    @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<?> getUserPositions() {
-        try {
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            String username = principal instanceof UserDetails ? ((UserDetails) principal).getUsername() : principal.toString();
-            Users user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + username));
-            List<Position> positions = positionRepository.findByUserId(user.getId());
-            return positions.isEmpty()
-                    ? ResponseEntity.status(HttpStatus.NO_CONTENT).build()
-                    : ResponseEntity.ok(positions);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi khi lấy danh sách chức vụ: " + e.getMessage());
-        }
-    }
+
 
     @GetMapping("/monthly-revenue")
     @PreAuthorize("hasRole('STAFF')")

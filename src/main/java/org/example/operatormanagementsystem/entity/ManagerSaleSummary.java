@@ -42,7 +42,7 @@ public class ManagerSaleSummary {
 
     @CreationTimestamp
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    @Column(name = "generated_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "generated_at", updatable = false, columnDefinition = "DATETIME2 DEFAULT GETDATE()")
     private LocalDateTime generatedAt;
 
     // Các trường khác có thể thêm vào tùy theo nhu cầu thống kê

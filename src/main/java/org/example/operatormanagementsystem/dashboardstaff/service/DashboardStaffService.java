@@ -14,7 +14,6 @@ import org.example.operatormanagementsystem.dashboardstaff.dto.response.Achievem
 import java.util.List;
 
 public interface DashboardStaffService {
-    void addPosition(DashboardStaffRequest request);
     DashboardStaffResponse getDashboardStats();
     List<RecentActivityResponse> getRecentActivities();
     List<MonthlyRevenueResponse> getMonthlyRevenue(String year, String unit, String startMonth, String endMonth);

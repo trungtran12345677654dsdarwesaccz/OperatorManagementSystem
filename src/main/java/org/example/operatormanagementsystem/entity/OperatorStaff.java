@@ -39,8 +39,7 @@ public class OperatorStaff {
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Feedback> feedbacks;
 
-    @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<ChatbotLog> chatbotLogs;
+
 
     @OneToMany(mappedBy = "operatorStaff", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ManagerFeedbackToStaff> receivedFeedbacks;

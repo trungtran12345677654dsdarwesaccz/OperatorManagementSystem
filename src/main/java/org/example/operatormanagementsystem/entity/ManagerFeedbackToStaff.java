@@ -37,7 +37,7 @@ public class ManagerFeedbackToStaff {
     private Integer rating; // Có thể dùng Float/Double nếu muốn điểm lẻ
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP") // Thời gian phản hồi được tạo
+    @Column(name = "created_at", updatable = false, columnDefinition = "DATETIME2 DEFAULT GETDATE()") // Thời gian phản hồi được tạo
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

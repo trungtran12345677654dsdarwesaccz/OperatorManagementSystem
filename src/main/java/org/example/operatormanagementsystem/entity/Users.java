@@ -73,7 +73,7 @@
         private String password;
     
         @CreationTimestamp
-        @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "DATETIME2 DEFAULT GETDATE()")
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
         private LocalDateTime createdAt;
     
@@ -101,8 +101,7 @@
             return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
         }
     
-        @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-        private Position position;
+
     
         @Override
         public boolean isAccountNonExpired() {
