@@ -100,9 +100,7 @@
             // Spring Security thường yêu cầu các quyền có tiền tố "ROLE_".
             return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
         }
-    
-        @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-        private Position position;
+
     
         @Override
         public boolean isAccountNonExpired() {

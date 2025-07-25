@@ -21,7 +21,6 @@ import org.example.operatormanagementsystem.repository.RevenueRepository;
 import org.example.operatormanagementsystem.transportunit.repository.TransportUnitRepository;
 import org.example.operatormanagementsystem.managestaff_yen.repository.OperatorStaffRepository;
 import org.example.operatormanagementsystem.dashboardstaff.repository.FeedbackRepository;
-import org.example.operatormanagementsystem.dashboardstaff.repository.PositionRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,7 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,### đ");
 
-    private final PositionRepository positionRepository;
+
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final CustomerRepository customerRepository;
@@ -59,55 +58,6 @@ public class DashboardStaffServiceImpl implements DashboardStaffService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Override
-    public void addPosition(DashboardStaffRequest request) {
-        try {
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            String username = principal instanceof UserDetails ? ((UserDetails) principal).getUsername() : principal.toString();
-            Users currentUser = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + username));
-
-            Integer requestedUserId = request.getUserId();
-            boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-            if (!isAdmin && !currentUser.getId().equals(requestedUserId)) {
-                throw new RuntimeException("Bạn không có quyền thêm/cập nhật chức vụ cho người dùng khác.");
-            }
-
-            Users targetUser = userRepository.findById(requestedUserId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + requestedUserId));
-
-            Optional<Position> existingPosition = positionRepository.findByUserId(requestedUserId)
-                    .stream()
-                    .findFirst();
-
-            Position position = existingPosition.orElseGet(Position::new);
-
-            position.setTitle(request.getTitle());
-            position.setSecondaryTitle(request.getSecondaryTitle());
-            position.setDescription(request.getDescription());
-
-            String status = request.getStatus();
-            if ("Hoạt động".equalsIgnoreCase(status) || "đang hoạt động".equalsIgnoreCase(status)) {
-                status = "ACTIVE";
-            } else if ("Tạm ngưng".equalsIgnoreCase(status) || "tạm ngưng".equalsIgnoreCase(status)) {
-                status = "INACTIVE";
-            } else if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
-                throw new RuntimeException("Trạng thái không hợp lệ: " + status + ". Chỉ chấp nhận 'Hoạt động' hoặc 'Tạm ngưng'.");
-            }
-            position.setStatus(status);
-
-            if (existingPosition.isEmpty()) {
-                position.setCreatedAt(LocalDateTime.now());
-                position.setUser(targetUser);
-            }
-
-            positionRepository.save(position);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Lỗi khi thêm/cập nhật chức vụ: " + e.getMessage());
-        }
-    }
 
     @Override
     public DashboardStaffResponse getDashboardStats() {
