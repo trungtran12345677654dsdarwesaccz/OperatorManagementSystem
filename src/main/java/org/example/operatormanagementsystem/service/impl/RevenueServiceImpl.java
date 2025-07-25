@@ -13,12 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import jakarta.persistence.criteria.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -136,21 +138,10 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     public Page<RevenueResponse> getPagedRevenues(Pageable pageable, String startDate, String endDate, String sourceType, String beneficiaryId, String bookingId, String minAmount, String maxAmount) {
-        // Basic implementation: fetch all, filter in memory (for demo, replace with JPA Specification for production)
-        List<Revenue> all = revenueRepository.findAll();
-        List<Revenue> filtered = all.stream()
-            .filter(r -> startDate == null || startDate.isEmpty() || !r.getDate().isBefore(LocalDate.parse(startDate)))
-            .filter(r -> endDate == null || endDate.isEmpty() || !r.getDate().isAfter(LocalDate.parse(endDate)))
-            .filter(r -> sourceType == null || sourceType.isEmpty() || sourceType.equals(r.getSourceType()))
-            .filter(r -> beneficiaryId == null || beneficiaryId.isEmpty() || beneficiaryId.equals(String.valueOf(r.getBeneficiaryId())))
-            .filter(r -> bookingId == null || bookingId.isEmpty() || (r.getBooking() != null && bookingId.equals(String.valueOf(r.getBooking().getBookingId()))))
-            .filter(r -> minAmount == null || minAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(minAmount)) >= 0)
-            .filter(r -> maxAmount == null || maxAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(maxAmount)) <= 0)
-            .toList();
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), filtered.size());
-        List<RevenueResponse> content = filtered.subList(start, end).stream().map(this::convertToRevenueResponse).toList();
-        return new PageImpl<>(content, pageable, filtered.size());
+        Specification<Revenue> spec = buildRevenueSpecification(startDate, endDate, sourceType, beneficiaryId, bookingId, minAmount, maxAmount);
+        Page<Revenue> page = revenueRepository.findAll(spec, pageable);
+        List<RevenueResponse> content = page.getContent().stream().map(this::convertToRevenueResponse).toList();
+        return new PageImpl<>(content, pageable, page.getTotalElements());
     }
 
     @Override
@@ -165,17 +156,9 @@ public class RevenueServiceImpl implements RevenueService {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(columns[i]);
             }
-            // Filter data (same as getPagedRevenues, but no paging)
-            List<Revenue> all = revenueRepository.findAll();
-            List<Revenue> filtered = all.stream()
-                .filter(r -> startDate == null || startDate.isEmpty() || !r.getDate().isBefore(LocalDate.parse(startDate)))
-                .filter(r -> endDate == null || endDate.isEmpty() || !r.getDate().isAfter(LocalDate.parse(endDate)))
-                .filter(r -> sourceType == null || sourceType.isEmpty() || sourceType.equals(r.getSourceType()))
-                .filter(r -> beneficiaryId == null || beneficiaryId.isEmpty() || beneficiaryId.equals(String.valueOf(r.getBeneficiaryId())))
-                .filter(r -> bookingId == null || bookingId.isEmpty() || (r.getBooking() != null && bookingId.equals(String.valueOf(r.getBooking().getBookingId()))))
-                .filter(r -> minAmount == null || minAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(minAmount)) >= 0)
-                .filter(r -> maxAmount == null || maxAmount.isEmpty() || r.getAmount().compareTo(new BigDecimal(maxAmount)) <= 0)
-                .toList();
+            // Filter data using JPA Specification
+            Specification<Revenue> spec = buildRevenueSpecification(startDate, endDate, sourceType, beneficiaryId, bookingId, minAmount, maxAmount);
+            List<Revenue> filtered = revenueRepository.findAll(spec);
             // Create data rows
             int rowNum = 1;
             for (Revenue revenue : filtered) {
@@ -198,6 +181,34 @@ public class RevenueServiceImpl implements RevenueService {
         } catch (Exception e) {
             throw new RuntimeException("Error generating Excel file: " + e.getMessage());
         }
+    }
+
+    private Specification<Revenue> buildRevenueSpecification(String startDate, String endDate, String sourceType, String beneficiaryId, String bookingId, String minAmount, String maxAmount) {
+        return (root, query, cb) -> {
+            Predicate predicate = cb.conjunction();
+            if (startDate != null && !startDate.isEmpty()) {
+                predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("date"), LocalDate.parse(startDate)));
+            }
+            if (endDate != null && !endDate.isEmpty()) {
+                predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("date"), LocalDate.parse(endDate)));
+            }
+            if (sourceType != null && !sourceType.isEmpty()) {
+                predicate = cb.and(predicate, cb.equal(root.get("sourceType"), sourceType));
+            }
+            if (beneficiaryId != null && !beneficiaryId.isEmpty()) {
+                predicate = cb.and(predicate, cb.equal(root.get("beneficiaryId"), Integer.valueOf(beneficiaryId)));
+            }
+            if (bookingId != null && !bookingId.isEmpty()) {
+                predicate = cb.and(predicate, cb.equal(root.join("booking").get("bookingId"), Integer.valueOf(bookingId)));
+            }
+            if (minAmount != null && !minAmount.isEmpty()) {
+                predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("amount"), new BigDecimal(minAmount)));
+            }
+            if (maxAmount != null && !maxAmount.isEmpty()) {
+                predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("amount"), new BigDecimal(maxAmount)));
+            }
+            return predicate;
+        };
     }
 
     private RevenueResponse convertToRevenueResponse(Revenue revenue) {
