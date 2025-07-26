@@ -49,7 +49,7 @@ public class StorageUnit {
     private Integer slotCount;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "DATETIME2 DEFAULT GETDATE()")
+    @Column(name = "created_at", updatable = false, nullable = false,  columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdAt;
 

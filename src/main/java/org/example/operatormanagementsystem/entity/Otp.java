@@ -26,14 +26,14 @@ public class Otp {
     @Column(name = "created_date",
             nullable = false,
             updatable = false,
-            columnDefinition = "DATETIME2 DEFAULT GETDATE()")
+            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdDate;
 
     @UpdateTimestamp                // ← thay vì chỉ @Column
     @Column(name = "updated_date",
             nullable = false,
-            columnDefinition = "DATETIME2 DEFAULT GETDATE()")
+            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime updatedDate;
 
