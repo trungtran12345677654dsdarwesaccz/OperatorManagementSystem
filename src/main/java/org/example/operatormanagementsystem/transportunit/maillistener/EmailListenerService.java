@@ -217,6 +217,11 @@ public class EmailListenerService {
                 Message message = messages[i];
                 String subject = message.getSubject();
                 String sender = extractSender(message);
+                if (sender.equalsIgnoreCase(mailUsername)) {
+                    System.out.println("⚠️ Bỏ qua email gửi từ hệ thống: " + sender);
+                    message.setFlag(Flags.Flag.SEEN, true);
+                    continue;
+                }
 
                 if (subject == null || !subject.contains("[ĐĂNG KÝ ĐƠN VỊ VẬN CHUYỂN MỚI]")) {
                     sendSuggestionEmailToSender(sender);
@@ -227,6 +232,13 @@ public class EmailListenerService {
                 System.out.println("\n--- Email " + (i + 1) + "/" + messages.length + " ---");
                 String content = getTextFromMessage(message);
                 TransportUnitEmailRequest request = parseEmailContent(content, sender);
+
+// Nếu request null hoặc không hợp lệ → đánh dấu SEEN và bỏ qua, không gửi lại email phản hồi nữa
+                if (request == null || !isValidRequest(request)) {
+                    System.err.println("❌ Email không hợp lệ, không gửi phản hồi lặp lại.");
+                    message.setFlag(Flags.Flag.SEEN, true);
+                    continue;
+                }
 
                 // Step 1: Ưu tiên file đính kèm
                 byte[] frontBytes = null;
